@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.swp
+*.*~
+*~
+*.sublime-workspace
+*.scannerwork
+.vscode
+
+static
+node_modules
+package-lock.json
+tsconfig.tsbuildinfo
