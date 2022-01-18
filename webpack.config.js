@@ -142,6 +142,13 @@ module.exports = {
         }),
     ],
 
+    /***************************************************************************
+     * Performance
+     */
+    performance: {
+        maxEntrypointSize: 512000,  // increase the size a bit (default was 250kb)
+        maxAssetSize: 512000
+    },
 
     /***************************************************************************
      * Optimization

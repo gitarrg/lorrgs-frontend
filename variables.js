@@ -27,6 +27,8 @@ const CONFIG_DEV = {
 const CONFIG_PROD = {
     GOOGLE_ANALYTICS_ID: "G-Y92VPCY6QW",
 
+    BACKEND_URL: "http://lorrgs.nw.r.appspot.com/",
+
     CDN_TAGS: [
         // React
         { src: "https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js",         integrity: "sha512-qlzIeUtTg7eBpmEaS12NZgxz52YYZVF5myj89mjJEesBd/oE9UPsYOX2QAXzvOAZYEvQohKdcY8zKE02ifXDmA=="},
