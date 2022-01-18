@@ -47,7 +47,7 @@ export function get_spec_for_spell_id(state: RootState, spell_id : number) {
 
 function _process_spec(spec: Spec) {
     spec.loaded = false
-    spec.icon_path = `/static/img/specs/${spec.full_name_slug}.jpg`
+    spec.icon_path = `/img/specs/${spec.full_name_slug}.jpg`
     return spec
 }
 

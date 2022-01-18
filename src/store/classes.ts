@@ -45,7 +45,7 @@ const SLICE = createSlice({
             state.class_names = []
             
             Object.values(action.payload).forEach(wow_class => {
-                wow_class.icon_path = `/static/img/classes/${wow_class.name_slug}.webp`
+                wow_class.icon_path = `/img/classes/${wow_class.name_slug}.webp`
 
                 state.class_names.push(wow_class.name_slug)
                 state.classes[wow_class.name_slug] = wow_class

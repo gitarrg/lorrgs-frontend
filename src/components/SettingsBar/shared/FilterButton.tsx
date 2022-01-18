@@ -14,7 +14,7 @@ export default function FilterButton(
     const group_context = useContext(ButtonGroupContext)
 
     full_name = full_name || name
-    const icon_path = `/static/img/${icon_name}.jpg`
+    const icon_path = `/img/${icon_name}.jpg`
     const disabled = show ? "" : "disabled"
 
     function toggle_button() {

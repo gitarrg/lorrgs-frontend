@@ -45,10 +45,10 @@ module.exports = {
      * Output
      */
     output: {
-        path: path.resolve(__dirname, "static"),
+        path: path.resolve(__dirname, "build"),
         filename: '[name].js',
         chunkFilename: DEBUG ? '[name].bundle.js' : '[name].[contenthash].bundle.js',
-        publicPath: "/static/",
+        publicPath: "/",
 
         clean: true, // Clean the output directory before emit.
     },
