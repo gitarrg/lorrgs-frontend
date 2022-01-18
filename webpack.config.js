@@ -180,11 +180,11 @@ module.exports = {
 
         static: {
             directory: path.join(__dirname, "/public"),
-            publicPath: "/static",       // as "/"
+            publicPath: "/",       // as "/"
         },
 
         historyApiFallback: {
-            index: '/static/index.html'
+            index: '/index.html'
         }
     }
 }
