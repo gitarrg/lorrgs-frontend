@@ -1,16 +1,20 @@
 
 // Imports
+const webpack = require('webpack')
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 const CopyPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 const TerserPlugin = require("terser-webpack-plugin")
+const { GitRevisionPlugin } = require('git-revision-webpack-plugin')
 const path = require("path")
 
 const variables = require("./variables.js")
 
 // Constants
 const DEBUG = process.env.NODE_ENV !== "production";
+
+const gitRevisionPlugin = new GitRevisionPlugin()
 
 
 // Config
@@ -140,6 +144,15 @@ module.exports = {
             analyzerMode: 'disabled', // will be used via CLI
             // generateStatsFile: true,
         }),
+
+        gitRevisionPlugin,
+        new webpack.DefinePlugin({
+          VERSION: JSON.stringify(gitRevisionPlugin.version()),
+          COMMITHASH: JSON.stringify(gitRevisionPlugin.commithash()),
+          BRANCH: JSON.stringify(gitRevisionPlugin.branch()),
+          LASTCOMMITDATETIME: JSON.stringify(gitRevisionPlugin.lastcommitdatetime()),
+        }),
+
     ],
 
     /***************************************************************************
