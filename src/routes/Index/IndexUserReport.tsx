@@ -3,7 +3,7 @@ import styles from "./Index.scss"
 
 function UserReportIcon() {
 
-    const icon_path = "./static/img/inv_inscription_80_scroll.jpg"
+    const icon_path = "./img/inv_inscription_80_scroll.jpg"
 
     return <img
     className={`${styles.user_report_icon} wow-border-artifact icon-l rounded`}

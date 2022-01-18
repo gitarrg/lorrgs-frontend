@@ -8,6 +8,7 @@ __pycache__/
 .vscode
 
 static
+build
 node_modules
 package-lock.json
 tsconfig.tsbuildinfo
