@@ -1,9 +1,10 @@
 import styles from "./UserReportLoading.scss"
+import { FaCircleNotch } from "react-icons/fa";
 import { Fragment } from "react";
+import { PATREON_LINK } from "../../constants";
 import { fetch_data } from "../../api";
 import { useHistory, useLocation } from "react-router";
 import { useInterval } from 'react-use';
-import { PATREON_LINK } from "../../constants";
 
 
 /** Frequency in ms how often to check for task status updates */
@@ -95,7 +96,7 @@ export default function UserReportLoading() {
         <div className={styles.wrapper}>
             <div className={styles.container}>
                 <h1>
-                    <i className="fas fa-circle-notch fa-spin mr-2"></i>
+                    <FaCircleNotch className="mr-2 icon-spin" />
                     loading...
                 </h1>
 
