@@ -1,9 +1,3 @@
-
-import { useDispatch } from 'react-redux'
-import { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import { useTitle } from 'react-use'
-
 import * as ui_store from "../store/ui"
 import LoadingOverlay from "./../components/shared/LoadingOverlay"
 import Navbar from "./../components/Navbar/Navbar"
@@ -11,25 +5,39 @@ import PlayerNamesList from "./../components/PlayerNames/PlayerNamesList"
 import SpecRankingsHeader from './SpecRankings/SpecRankingsHeader'
 import SpecSettingsBar from './SpecRankings/SpecSettingsBar'
 import TimelineCanvas from "./../components/Timeline/TimelineCanvas"
+import type Spec from '../types/spec'
+import useQuery from "../hooks/useQuery"
 import { get_boss, load_boss_spells } from '../store/bosses'
 import { get_spec, load_spec_spells } from '../store/specs'
 import { load_fights } from "../store/fights"
 import { useAppSelector } from '../store/store_hooks'
-
+import { useDispatch } from 'react-redux'
+import { useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+import { useTitle } from 'react-use'
 
 ////////////////////////////////////////////////////////////////////////////////
 // Component
 //
 
+function spec_metric(spec : Spec) {
+    return spec && spec.role == "heal" ? "hps" : "dps"
+}
+
+
 export default function SpecRankings() {
 
     ////////////////////////////////////////////////////////////////////////////
     // Hooks
-    const { spec_slug, boss_slug, difficulty="mythic" } = useParams<{spec_slug: string, boss_slug: string, difficulty: string}>();
+    const { spec_slug, boss_slug } = useParams<{spec_slug: string, boss_slug: string}>();
+    const query = useQuery()
     const dispatch = useDispatch()
     const is_loading = useAppSelector(state => ui_store.get_is_loading(state))
     const boss = useAppSelector(state => get_boss(state, boss_slug))
     const spec = useAppSelector(state => get_spec(state, spec_slug))
+
+    const difficulty = query.get("difficulty") || "mythic"
+    const metric = query.get("metric") || spec_metric(spec)
 
     // const
     const mode = ui_store.MODES.SPEC_RANKING
@@ -44,6 +52,7 @@ export default function SpecRankings() {
     useEffect(() => { dispatch(ui_store.set_boss_slug(boss_slug)) }, [boss_slug])
     useEffect(() => { dispatch(ui_store.set_spec_slug(spec_slug)) }, [spec_slug])
     useEffect(() => { dispatch(ui_store.set_difficulty(difficulty)) }, [difficulty])
+    useEffect(() => { dispatch(ui_store.set_metric(metric)) }, [metric])
 
     useEffect(() => {
         if (!spec) { return }

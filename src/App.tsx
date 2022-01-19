@@ -43,7 +43,6 @@ export default function App() {
                 <Switch>
 
                     {/* Spec Rankings */}
-                    <Route path="/spec_ranking/:spec_slug/:boss_slug/:difficulty" component={SpecRankings} />
                     <Route path="/spec_ranking/:spec_slug/:boss_slug" component={SpecRankings} />
 
                     {/* Comp Rankings */}

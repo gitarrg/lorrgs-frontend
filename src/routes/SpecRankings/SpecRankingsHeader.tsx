@@ -3,7 +3,7 @@ import type Boss from '../../types/boss'
 import type Spec from '../../types/spec'
 import { WCL_URL } from '../../constants'
 import { get_boss } from '../../store/bosses'
-import { get_difficulty } from '../../store/ui'
+import { get_difficulty, get_metric } from '../../store/ui'
 import { get_spec } from '../../store/specs'
 import { useAppSelector } from '../../store/store_hooks'
 
@@ -14,11 +14,9 @@ DIFFICULTY_IDS["heroic"] = 4
 DIFFICULTY_IDS["normal"] = 3
 
 
-function get_spec_ranking_url(spec: Spec, boss: Boss, difficulty: string) {
+function get_spec_ranking_url(spec: Spec, boss: Boss, difficulty: string, metric: string) {
 
-    const metric = spec.role == "heal" ? "hps" : "dps"
     const difficulty_id = DIFFICULTY_IDS[difficulty] ?? 5
-
     const search_params = new URLSearchParams({
         boss: boss.id.toString(),
         class: spec.class.name.replace(" ", ""),  // WCL uses no spaces in classnames
@@ -40,12 +38,13 @@ export default function SpecRankingsHeader({spec_slug, boss_slug} : {spec_slug: 
     const spec = useAppSelector(state => get_spec(state, spec_slug))
     const boss = useAppSelector(state => get_boss(state, boss_slug))
     const difficulty = useAppSelector(get_difficulty)
+    const metric = useAppSelector(get_metric)
     if (!spec || !boss) { return null }
 
     // prep vars
     const spec_name = spec.full_name + "s"
     const class_name = "wow-" + spec.class.name_slug
-    const url = get_spec_ranking_url(spec, boss, difficulty)
+    const url = get_spec_ranking_url(spec, boss, difficulty, metric)
 
     // Render
     return (

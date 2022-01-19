@@ -1,13 +1,13 @@
 import DropdownMenu from "../DropdownMenu";
 import NavbarGroup from './NavbarGroup';
+import QueryNavLink from "../shared/QueryNavLink"
 import styles from "./NavbarDifficulty.scss"
-import { NavLink } from 'react-router-dom';
 import { applyStatics, MenuItem } from '@szhsin/react-menu';
 import { get_difficulty, get_mode } from '../../store/ui';
 import { useAppSelector } from '../../store/store_hooks';
 
 
-const DIFFICULTY_COLOR = {
+const DIFFICULTY_COLOR: {[key: string]: string} = {
     mythic: "wow-astounding",
     heroic: "wow-artifact",
 }
@@ -28,21 +28,15 @@ function DifficultyIcon({difficulty} : {difficulty : string}) {
 
 function NavbarDifficultyOption({ difficulty, ...props } : { difficulty: string }) {
 
-    const mode = useAppSelector(get_mode);
-    const boss_slug : string = useAppSelector(state => state.ui.boss_slug);
-    const spec_slug = useAppSelector(state => state.ui.spec_slug);
-
-    difficulty = difficulty.toLowerCase()
-    const link = `/${mode}/${spec_slug}/${boss_slug}/${difficulty}`;
     const class_name = DIFFICULTY_COLOR[difficulty] || ""
 
     return (
-        <NavLink to={link} className={`${class_name} ${styles.option}`} activeClassName="active">
+        <QueryNavLink params={{"difficulty": difficulty}} className={`${class_name} ${styles.option}`} activeClassName="active">
             <MenuItem {...props}>
                 <DifficultyIcon difficulty={difficulty}/>
                 <span className={`${styles.label} ${class_name} ml-1`}>{difficulty}</span>
             </MenuItem>
-        </NavLink>
+        </QueryNavLink>
     )
 }
 applyStatics(MenuItem)(NavbarDifficultyOption)
