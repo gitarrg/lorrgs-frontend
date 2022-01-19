@@ -25,6 +25,13 @@ $sizes: (
 }
 
 
+#app_root {
+    display: flex;
+    flex-direction: column;
+    height: 100% !important;
+}
+
+
 /** Wrapper to center content in the middle of the page */
 .content_center {
 

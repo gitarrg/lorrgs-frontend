@@ -1,3 +1,4 @@
+import Footer from "./components/Footer/Footer";
 import GlobalDataLoader from "./components/GlobalDataLoader";
 import UserProvider from "./routes/auth/UserProvider";
 import data_store from "./store/store"
@@ -35,12 +36,13 @@ export default function App() {
             <GlobalDataLoader />
             <UserProvider />
 
+            <main className="flex-grow-1">
+
             <Router>
                 <Suspense fallback={<div>Loading...</div>}>
                 <Switch>
 
                     {/* Spec Rankings */}
-                    <Route path="/spec_ranking/:spec_slug/:boss_slug/:difficulty" component={SpecRankings} />
                     <Route path="/spec_ranking/:spec_slug/:boss_slug" component={SpecRankings} />
 
                     {/* Comp Rankings */}
@@ -66,6 +68,10 @@ export default function App() {
                 </Switch>
                 </Suspense>
             </Router>
+
+            </main>
+
+            <Footer />
 
         </StrictMode>
         </Provider>
