@@ -1,5 +1,6 @@
-import { DISCORD_LINK } from "../../constants"
 import styles from "./Help.scss"
+import { DISCORD_LINK } from "../../constants"
+import { ReactNode } from "react"
 
 
 const WARNING = <p className="text-black h3 text-center">(🚧 Work in progress and subject to UI changes. 🚧)</p>
@@ -242,9 +243,9 @@ const NAVIGATION = <div>
 ////////////////////////////////////////////////////////////////////////////////
 
 
-function Block({class_names="", children}) {
+function Block({children, ...props} : {children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
     return (
-        <div className={class_names}>
+        <div {...props} >
             {children}
         </div>
     )
@@ -257,7 +258,9 @@ export default function HelpContent() {
     return (
         <div className={styles.content}>
 
-            <Block class_names="border rounded bg-warning">{WARNING}</Block>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
+
+            <Block className="border rounded bg-warning">{WARNING}</Block>
 
             <Block>{OVERVIEW}</Block>
 
