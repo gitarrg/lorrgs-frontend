@@ -1,10 +1,12 @@
 import ButtonGroup, { ButtonGroupContext } from './shared/ButtonGroup'
+import MetricSelect from "./MetricSelect"
 import styles from "./DisplaySettings.scss";
 import { FaClock, FaHourglass, FaImage, FaStream } from 'react-icons/fa';
 import { ReactNode, useContext, useEffect } from 'react'
 import { update_settings } from '../../store/ui'
 import { useAppSelector } from '../../store/store_hooks'
 import { useDispatch } from 'react-redux'
+
 
 
 function Button({attr_name, children, tooltip=""} : {attr_name: string, children: ReactNode, tooltip?: string}) {
@@ -61,6 +63,9 @@ export default function DisplaySettings() {
             <Button attr_name="show_casttime" tooltip="cast time"><FaClock /></Button>
             <Button attr_name="show_duration" tooltip="duration"><FaStream /></Button>
             <Button attr_name="show_cooldown" tooltip="cooldown" ><FaHourglass /></Button>
+
+            <MetricSelect />
+
         </ButtonGroup>
     )
 }
