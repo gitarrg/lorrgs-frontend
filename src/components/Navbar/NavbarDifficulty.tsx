@@ -7,10 +7,9 @@ import { get_difficulty, get_mode } from '../../store/ui';
 import { useAppSelector } from '../../store/store_hooks';
 
 
-// matched to Raider.io's colors for CE and AOTC
 const DIFFICULTY_COLOR = {
-    mythic: "wow-legendary",
-    heroic: "wow-epic",
+    mythic: "wow-astounding",
+    heroic: "wow-artifact",
 }
 
 
@@ -24,11 +23,10 @@ function DifficultyIcon({difficulty} : {difficulty : string}) {
             <div className={styles.icon_label}>{label}</div>
         </span>
     )
-
 }
 
 
-function NavbarDifficultyOption({difficulty, className, ...props} : {difficulty: string, className: string}) {
+function NavbarDifficultyOption({ difficulty, ...props } : { difficulty: string }) {
 
     const mode = useAppSelector(get_mode);
     const boss_slug : string = useAppSelector(state => state.ui.boss_slug);
@@ -39,7 +37,7 @@ function NavbarDifficultyOption({difficulty, className, ...props} : {difficulty:
     const class_name = DIFFICULTY_COLOR[difficulty] || ""
 
     return (
-        <NavLink to={link} className={`${className} ${styles.option}`} activeClassName="active">
+        <NavLink to={link} className={`${class_name} ${styles.option}`} activeClassName="active">
             <MenuItem {...props}>
                 <DifficultyIcon difficulty={difficulty}/>
                 <span className={`${styles.label} ${class_name} ml-1`}>{difficulty}</span>
@@ -59,8 +57,8 @@ export default function NavbarDifficulty() {
     return (
         <NavbarGroup>
             <DropdownMenu button={button}>
-                <NavbarDifficultyOption difficulty="mythic" className="wow-epic" />
-                <NavbarDifficultyOption difficulty="heroic" className="wow-rare" />
+                <NavbarDifficultyOption difficulty="mythic" />
+                <NavbarDifficultyOption difficulty="heroic" />
             </DropdownMenu>
         </NavbarGroup>
     )

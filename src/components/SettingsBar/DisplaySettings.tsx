@@ -1,12 +1,13 @@
 import ButtonGroup, { ButtonGroupContext } from './shared/ButtonGroup'
-import FaButton from './shared/FaButton'
+import styles from "./DisplaySettings.scss";
+import { FaClock, FaHourglass, FaImage, FaStream } from 'react-icons/fa';
+import { ReactNode, useContext, useEffect } from 'react'
 import { update_settings } from '../../store/ui'
 import { useAppSelector } from '../../store/store_hooks'
-import { useContext, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 
 
-function Button({attr_name, icon_name, tooltip=""} : {attr_name: string, icon_name: string, tooltip?: string}) {
+function Button({attr_name, children, tooltip=""} : {attr_name: string, children: ReactNode, tooltip?: string}) {
 
     ////////////////////////
     // Hooks
@@ -38,7 +39,17 @@ function Button({attr_name, icon_name, tooltip=""} : {attr_name: string, icon_na
     ////////////////////////
     // Render
     //
-    return <FaButton icon_name={icon_name} onClick={onClick} tooltip={tooltip} disabled={!attr_value} />
+    const tt = tooltip ? {"data-tooltip": tooltip} : {}
+
+    return (
+        <div
+            className={`${styles.button} button icon-s rounded border-white ${attr_value ? "" : "disabled"}`}
+            onClick={onClick}
+            {...tt}
+        >
+            {children}
+        </div>
+    )
 }
 
 
@@ -46,10 +57,10 @@ export default function DisplaySettings() {
 
     return (
         <ButtonGroup name="Timeline">
-            <Button attr_name="show_casticon" icon_name="fas fa-image" tooltip="spell icon" />
-            <Button attr_name="show_casttime" icon_name="fas fa-clock" tooltip="cast time" />
-            <Button attr_name="show_duration" icon_name="fas fa-stream" tooltip="duration" />
-            <Button attr_name="show_cooldown" icon_name="fas fa-hourglass" tooltip="cooldown" />
+            <Button attr_name="show_casticon" tooltip="spell icon"><FaImage /></Button>
+            <Button attr_name="show_casttime" tooltip="cast time"><FaClock /></Button>
+            <Button attr_name="show_duration" tooltip="duration"><FaStream /></Button>
+            <Button attr_name="show_cooldown" tooltip="cooldown" ><FaHourglass /></Button>
         </ButtonGroup>
     )
 }

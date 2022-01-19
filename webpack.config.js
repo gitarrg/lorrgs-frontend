@@ -184,7 +184,7 @@ module.exports = {
         },
 
         historyApiFallback: {
-            index: '/static/index.html'
+            index: '/index.html'
         }
     }
 }
