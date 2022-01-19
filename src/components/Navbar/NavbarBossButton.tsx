@@ -12,7 +12,7 @@ import WebpImg from '../WebpImg';
 function get_link(mode : string, boss: Boss, spec?: Spec, difficulty?: string) {
     // is this the time to rename "mode" ?
     if (mode == MODES.COMP_RANKING) { return `/${mode}/${boss.full_name_slug}` }
-    if (mode == MODES.SPEC_RANKING) { return `/${mode}/${spec?.full_name_slug}/${boss.full_name_slug}` }
+    if (mode == MODES.SPEC_RANKING) { return `/${mode}/${spec?.full_name_slug}/${boss.full_name_slug}/${difficulty}` }
     return "/"
 }
 

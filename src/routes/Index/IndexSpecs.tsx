@@ -18,7 +18,7 @@ function SpecButton({spec_slug=""}) {
     if (!spec) { return null }
 
     return (
-        <Link to={`/spec_ranking/${spec_slug}/${DEFAULT_BOSS}`} data-tooltip={spec.full_name}>
+        <Link to={`/spec_ranking/${spec_slug}/${DEFAULT_BOSS}/${DEFAULT_DIFF}`} data-tooltip={spec.full_name}>
             <Icon spec={spec} alt={spec.full_name} />
         </Link>
     )

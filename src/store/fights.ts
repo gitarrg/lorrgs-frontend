@@ -164,7 +164,7 @@ function _pin_first_fight(fights: Fight[]) {
 
 async function _load_spec_rankings(spec_slug : string, boss_slug: string, difficulty: string) {
 
-    const url = `/api/spec_ranking/${spec_slug}/${boss_slug}?limit=100`;
+    const url = `/api/spec_ranking/${spec_slug}/${boss_slug}/${difficulty}?limit=100`;
     const fight_data: {fights: Fight[]} = await fetch_data(url);
 
     // post process
