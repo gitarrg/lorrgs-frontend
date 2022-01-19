@@ -16,7 +16,7 @@ export default function Navbar() {
         <div className="ml-auto">
             <div className={styles.navbar_container}>
                 { mode == MODES.SPEC_RANKING && <NavbarSpecGroup /> }
-                { mode == MODES.SPEC_RANKING && <NavbarDifficulty /> }
+                {/* { mode == MODES.SPEC_RANKING && <NavbarDifficulty /> } */}
                 <NavbarBossGroup />
             </div>
         </div>
