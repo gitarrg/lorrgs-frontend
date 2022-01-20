@@ -9,10 +9,10 @@ import styles from "./Navbar.scss"
 import WebpImg from '../WebpImg';
 
 
-function get_link(mode : string, boss: Boss, spec?: Spec, difficulty?: string) {
+function get_link(mode : string, boss: Boss, spec?: Spec) {
     // is this the time to rename "mode" ?
     if (mode == MODES.COMP_RANKING) { return `/${mode}/${boss.full_name_slug}` }
-    if (mode == MODES.SPEC_RANKING) { return `/${mode}/${spec?.full_name_slug}/${boss.full_name_slug}/${difficulty}` }
+    if (mode == MODES.SPEC_RANKING) { return `/${mode}/${spec?.full_name_slug}/${boss.full_name_slug}` }
     return "/"
 }
 
@@ -21,8 +21,7 @@ export default function NavbarBossButton({boss} : {boss: Boss}) {
 
     const mode = useAppSelector(get_mode)
     const spec = useAppSelector(state => get_spec(state))
-    const diff = useAppSelector(get_difficulty)
-    const link = get_link(mode, boss, spec, diff)
+    const link = get_link(mode, boss, spec)
 
     // preserve query string
     const { search } = useLocation();

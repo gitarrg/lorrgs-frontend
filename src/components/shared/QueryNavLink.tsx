@@ -6,6 +6,8 @@ import { useLocation, NavLink, NavLinkProps } from 'react-router-dom';
 
 interface QueryNavLinkProps {
 
+    to?: string
+
     // Object with new parms to set
     params: {[key: string]: string}
 
@@ -13,7 +15,7 @@ interface QueryNavLinkProps {
 }
 
 
-export default function QueryNavLink({ params, children, ...props } : QueryNavLinkProps ) {
+export default function QueryNavLink({ to, params, children, ...props } : QueryNavLinkProps) {
 
     const location = useLocation();
 
@@ -23,7 +25,7 @@ export default function QueryNavLink({ params, children, ...props } : QueryNavLi
         ...params
     });
 
-    const link = `${location.pathname}?${new_query.toString()}`;
+    const link = `${to || location.pathname}?${new_query.toString()}`;
     return (
         <NavLink to={link} {...props}>
             {children}
