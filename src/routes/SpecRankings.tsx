@@ -68,8 +68,8 @@ export default function SpecRankings() {
 
     // load fights
     useEffect(() => {
-        dispatch(load_fights(mode, {spec_slug, boss_slug, difficulty}))
-    }, [spec_slug, boss_slug, difficulty])
+        dispatch(load_fights(mode, {spec_slug, boss_slug, difficulty, metric}))
+    }, [spec_slug, boss_slug, difficulty, metric])
 
 
     ////////////////////////////////////////////////////////////////////////////

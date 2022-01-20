@@ -27,7 +27,7 @@ const CONFIG_DEV = {
 const CONFIG_PROD = {
     GOOGLE_ANALYTICS_ID: "G-Y92VPCY6QW",
 
-    BACKEND_URL: "https://lorrgs.nw.r.appspot.com",
+    BACKEND_URL: "https://api.lorrgs.io",
 
     CDN_TAGS: [
         // React
