@@ -1,9 +1,9 @@
 import DiscordLogo from '../../assets/DiscordLogo'
 import PatreonLogo from '../../assets/PatreonLogo'
-import { DISCORD_LINK, PATREON_LINK, BUYMEACOFFEE_LINK } from '../../constants'
-
 import style from "./IndexLink.scss"
 import type { ReactNode } from 'react'
+import { DISCORD_LINK, PATREON_LINK, BUYMEACOFFEE_LINK } from '../../constants'
+import { FaInfoCircle } from 'react-icons/fa'
 
 
 function LinkButton({url, children} : {url: string, children: ReactNode }) {
@@ -25,7 +25,7 @@ export default function IndexLinks() {
             <div className={style.container}>
 
                 <LinkButton url="/help">
-                    <i className="fas fa-info-circle"></i>
+                    <FaInfoCircle />
                     <span>Help</span>
                 </LinkButton>
 

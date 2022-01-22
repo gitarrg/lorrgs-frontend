@@ -30,3 +30,35 @@
     width: 3.23rem;
     height: 3.23rem;
 }
+
+
+// based off "fa-spin2
+.icon-spin {
+    -webkit-animation: icon-spin 2s linear infinite;
+    animation: icon-spin 2s linear infinite
+}
+
+@-webkit-keyframes icon-spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg)
+    }
+
+    to {
+        -webkit-transform: rotate(1turn);
+        transform: rotate(1turn)
+    }
+}
+
+@keyframes icon-spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg)
+    }
+
+    to {
+        -webkit-transform: rotate(1turn);
+        transform: rotate(1turn)
+    }
+}
+

@@ -9,7 +9,6 @@ import styles from "./IndexSpecs.scss"
 
 
 const DEFAULT_BOSS = "the-tarragrue"
-const DEFAULT_DIFF = "mythic"
 
 
 function SpecButton({spec_slug=""}) {
