@@ -57,6 +57,10 @@ export function get_difficulty(state: RootState) {
 }
 
 
+export function get_metric(state: RootState) {
+    return state.ui.metric
+}
+
 export function get_filters(state: RootState) {
     return state.ui.filters
 }
@@ -99,6 +103,8 @@ export interface FilterValues {
     covenant: {[key: string]: boolean}
 }
 
+export type MetricOptions = "dps" | "hps" | "bossdps" | undefined
+
 
 export interface UiSliceState {
 
@@ -115,6 +121,8 @@ export interface UiSliceState {
 
     /** selected difficulty */
     difficulty: string
+
+    metric?: MetricOptions
 
     // Timeline Options
     settings: { [key: string]: boolean}
@@ -189,6 +197,11 @@ const SLICE = createSlice({
             return state
         },
 
+        set_metric: (state, action: PayloadAction<string>) => {
+            state.metric = action.payload as MetricOptions
+            return state
+        },
+
         update_settings: (state, action) => {
             state.settings = {...state.settings, ...action.payload}
             return state
@@ -233,6 +246,7 @@ export const {
     set_difficulty,
     set_filter,
     set_filters,
+    set_metric,
     set_mode,
     set_spec_slug,
     set_tooltip,

@@ -1,4 +1,5 @@
 import style from "./LoginPage.scss"
+import { FaCircleNotch } from "react-icons/fa"
 import { get_current_user, login } from "../../store/user"
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import { useEffect } from "react"
@@ -47,7 +48,7 @@ export default function LoginPage() {
     return (
         <div className={style.container}>
             <h4>
-                <i className="fas fa-circle-notch fa-spin mr-1"></i>
+                <FaCircleNotch className="icon-spin mr-1"/>
                 <span>logging in...</span>
             </h4>
         </div>

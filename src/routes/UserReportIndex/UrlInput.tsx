@@ -1,9 +1,10 @@
+import styles from "./UrlInput.scss"
+import { FaChevronRight, FaSyncAlt } from 'react-icons/fa';
 import { KeyboardEvent, useEffect } from 'react'
 import { load_report_overview, get_is_loading, get_user_report } from "../../store/user_reports";
 import { useAppDispatch, useAppSelector } from '../../store/store_hooks'
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useLocation } from 'react-router';
-import styles from "./UrlInput.scss"
 
 
 /** text to show when the URL input is empty */
@@ -108,8 +109,9 @@ export default function UrlInput({input_name="report_url"}) {
                     className="button"
                     disabled={!is_valid || is_loading}
                     data-tooltip="Load Report"
-                    onClick={onClick}>
-                        <i className="fas fa-chevron-right"></i>
+                    onClick={onClick}
+                >
+                    <FaChevronRight />
                 </button>
 
                 {/* Button: Reload */}
@@ -118,8 +120,9 @@ export default function UrlInput({input_name="report_url"}) {
                     className="button"
                     disabled={!is_valid || is_loading}
                     data-tooltip="Reload"
-                    onClick={onClickReload}>
-                        <i className="fas fa-sync-alt"></i>
+                    onClick={onClickReload}
+                >
+                    <FaSyncAlt />
                 </button>
 
             </div>
