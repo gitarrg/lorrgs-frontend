@@ -78,7 +78,7 @@ export function TabGroup({children, initial_tab=0} : {children : ReactElement[],
                     )}
                 </div>
 
-                <div className="d-flex gap-2">
+                <div className="d-flex flex-wrap gap-2">
                     {children.map((child, i) =>
                         cloneElement(child, {key: i, index: i})
                     )}
