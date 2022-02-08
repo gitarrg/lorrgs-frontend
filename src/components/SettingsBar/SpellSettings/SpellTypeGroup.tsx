@@ -58,7 +58,6 @@ export function SpellTypeGroup({ spell_type }: SpellTypeGroupProps) {
         return null;
     }
 
-
     const name_slug = type.class?.name_slug || type.full_name_slug || type.name_slug
     const className=`wow-${name_slug}`
 
