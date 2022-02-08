@@ -7,7 +7,7 @@ import { get_boss } from "../../../store/bosses"
 import { get_class, get_class_names } from "../../../store/classes"
 import { get_occuring_bosses } from "../../../store/fights"
 import { get_spec } from "../../../store/specs"
-import { get_type_has_used_spells } from "../../../store/spells"
+import { get_types_have_used_spells } from "../../../store/spells"
 import { useAppSelector } from "../../../store/store_hooks"
 
 
@@ -26,7 +26,7 @@ function SpellGroupSpecs({icon_name} : {icon_name : string}) {
     // @ts-ignore
     const groups = [icon_name, ...(type?.specs || [])]
 
-    const has_spells = groups.some(group => useAppSelector(state => get_type_has_used_spells(state, group)))
+    const has_spells = useAppSelector(state => get_types_have_used_spells(state, groups))
     if (!has_spells) { return null }
 
     return (
