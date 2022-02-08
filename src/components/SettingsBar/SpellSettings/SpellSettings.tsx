@@ -23,11 +23,11 @@ function get_spell_type(spell_type: string): Spec|Boss|Class {
 function SpellGroupSpecs({icon_name} : {icon_name : string}) {
 
     const type = get_spell_type(icon_name)
-    const has_spells = useAppSelector(state => get_type_has_used_spells(state, icon_name))
-    if (!has_spells) { return null }
-
     // @ts-ignore
     const groups = [icon_name, ...(type?.specs || [])]
+
+    const has_spells = groups.some(group => useAppSelector(state => get_type_has_used_spells(state, group)))
+    if (!has_spells) { return null }
 
     return (
         <CollapsableSpellGroup spec={type}>
