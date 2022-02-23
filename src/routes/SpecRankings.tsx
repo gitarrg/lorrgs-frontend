@@ -52,7 +52,7 @@ export default function SpecRankings() {
     useEffect(() => { dispatch(ui_store.set_boss_slug(boss_slug)) }, [boss_slug])
     useEffect(() => { dispatch(ui_store.set_spec_slug(spec_slug)) }, [spec_slug])
     useEffect(() => { dispatch(ui_store.set_difficulty(difficulty)) }, [difficulty])
-    useEffect(() => { dispatch(ui_store.set_metric(metric)) }, [metric])
+    useEffect(() => { dispatch(ui_store.set_metric(metric)) }, [spec, metric])
 
     useEffect(() => {
         if (!spec) { return }
