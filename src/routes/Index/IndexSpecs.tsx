@@ -8,7 +8,7 @@ import type Role from '../../types/role'
 import styles from "./IndexSpecs.scss"
 
 
-const DEFAULT_BOSS = "the-tarragrue"
+const DEFAULT_BOSS = "vigilant-guardian"
 
 
 function SpecButton({spec_slug=""}) {
