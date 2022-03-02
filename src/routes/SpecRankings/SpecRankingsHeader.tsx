@@ -1,7 +1,7 @@
 import HeaderLogo from './../../components/HeaderLogo'
 import type Boss from '../../types/boss'
 import type Spec from '../../types/spec'
-import { WCL_URL } from '../../constants'
+import { WCL_URL, ZONE_ID } from '../../constants'
 import { get_boss } from '../../store/bosses'
 import { get_difficulty, get_metric } from '../../store/ui'
 import { get_spec } from '../../store/specs'
@@ -26,7 +26,7 @@ function get_spec_ranking_url(spec: Spec, boss: Boss, difficulty: string, metric
     })
 
     let url = new URL(WCL_URL)
-    url.pathname = "/zone/rankings/28"
+    url.pathname = `/zone/rankings/${ZONE_ID}`  // TODO: make dynamic
     url.hash = search_params.toString()
     return url.toString()
 }
