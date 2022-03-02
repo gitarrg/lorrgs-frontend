@@ -68,6 +68,7 @@ const SLICE = createSlice({
             state.name_slug = action.payload.name_slug
 
             // array to object (by full_name_slug)
+            action.payload.bosses = action.payload.bosses || []  // ensure its not empty
             action.payload.bosses.forEach(boss => {
                 _post_process_boss(state, boss)
                 state.bosses[boss.full_name_slug] = boss
@@ -98,14 +99,16 @@ export default SLICE.reducer
 // Extra Actions
 
 /* load all bosses */
-export function load_bosses() {
+export function load_bosses(zone_id?: number) {
+
+    zone_id = zone_id || ZONE_ID
 
     return async (dispatch: AppDispatch) => {
 
         dispatch({type: "ui/set_loading", payload: {key: "zone", value: true}})
 
         // Request
-        const zone_info = await fetch_data(`/api/zones/${ZONE_ID}`);
+        const zone_info = await fetch_data(`/api/zones/${zone_id}`);
 
         dispatch(SLICE.actions.set_zone(zone_info))
         dispatch({type: "ui/set_loading", payload: {key: "zone", value: false}})
