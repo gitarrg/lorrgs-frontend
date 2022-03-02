@@ -14,6 +14,7 @@ export interface UserReportData {
 
     title: string
     report_id: string
+    zone_id?: number
 
     fights: {[key: string]: Fight}
     players: {[key: string]: Actor}
@@ -160,6 +161,10 @@ export function load_report_overview(report_id: string, refresh?: boolean) {
 
         // store result
         dispatch(SLICE.actions.report_overview_loaded(report_data))
+
+        if (report_data.zone_id) {
+            dispatch({type: "bosses/load_bosses", payload: {zone_id: 29}})
+        }
     }
 }
 
