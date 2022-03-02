@@ -84,14 +84,13 @@
 
 
 .boss_name {
-    background: hsl(175, 20%, 55%);
-    color:  hsl(175, 20%, 20%);
+
+    background: hsl(55, 80%, 80%);
+    color:  hsl(45, 45%, 20%);
     font-weight: bold;
-
-    // border-top-left-radius: 0.25rem;
-
+    
     &:hover {
-        background:  hsl(175, 50%, 60%);
+        background:  hsl(57, 100%, 80%);
     }
 }
 
