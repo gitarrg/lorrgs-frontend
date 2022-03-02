@@ -26,8 +26,10 @@ export default function CollapsableSpellGroup({spec, children} : CollapsableSpel
         setCollapsed(!collapsed)
     }
 
+    if (!spec) { return null }
+
     // @ts-ignore
-    const wow_class = spec.code ?? spec.class?.name_slug ?? spec.name_slug
+    const wow_class = spec?.code ?? spec.class?.name_slug ?? spec.name_slug
 
     /////////////////////////////////////
     // Render
