@@ -8,7 +8,7 @@ import type Stage from "./Stage"
 import { toMMSS } from "../../utils"
 
 
-const ICON_ROOT = "https://wow.zamimg.com/images/wow/icons/small"
+const ICON_ROOT = "/img/spells"
 
 
 export default class EventLine extends Konva.Group {
