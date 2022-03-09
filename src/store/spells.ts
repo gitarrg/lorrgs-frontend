@@ -7,7 +7,7 @@ import { set_fights } from './fights'
 import { set_spec_spells } from './specs'
 
 
-const ICON_ROOT = "https://wow.zamimg.com/images/wow/icons/medium"
+const ICON_ROOT = "/img/spells"
 
 
 export interface SpellSliceState {
@@ -115,9 +115,7 @@ export function process_spells(spells?: SpellDict ) {
 
     Object.values(spells).forEach(spell => {
         spell.specs = spell.specs || []
-
-        spell.icon_path = spell.icon.startsWith("/") ? spell.icon : `${ICON_ROOT}/${spell.icon}`
-        spell.icon_path = spell.icon_path.replace("/static/", "/")  // TMP Fix, because the Tranquiltiy Icon still comes with a "/static"/-prefix
+        spell.icon_path = `${ICON_ROOT}/${spell.icon}`
     })
     return spells;
 }
