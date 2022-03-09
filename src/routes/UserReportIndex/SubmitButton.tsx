@@ -12,12 +12,11 @@ import useUser from "../auth/useUser";
  * step 1: extract indicies (put null where it was undefined)
  * step 2: filter out only the indicies that are non null
  */
- export function filter_form_select(values: [boolean|undefined]) {
+export function filter_form_select(values: [boolean|undefined]) {
 
     const indicies = values.map((v, i) => v ? i : -1) // list of: index for selected items & -1 for unselected
     return indicies.filter(i => i >= 0) // only keep selected
 }
-
 
 
 export function SubmitButton() {
@@ -83,6 +82,7 @@ export function SubmitButton() {
     return <button
         className={`${styles.submit_button} button grow-when-touched`}
         disabled={!enabled}
+        data-tooltip={enabled ? "" : "Please select at least one Pull and one Player."}
         onClick={handleSubmit(submit)}
         type="submit">
         Load
