@@ -83,6 +83,7 @@ export function SubmitButton() {
         className={`${styles.submit_button} button grow-when-touched`}
         disabled={!enabled}
         data-tooltip={enabled ? "" : "Please select at least one Pull and one Player."}
+        data-tooltip-dir="down"
         onClick={handleSubmit(submit)}
         type="submit">
         Load
