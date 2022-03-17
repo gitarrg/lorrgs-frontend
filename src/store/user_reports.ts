@@ -4,6 +4,7 @@ import { AppDispatch, RootState } from './store'
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { fetch_data } from '../api'
+import { ZONE_ID } from '../constants'
 
 
 export interface UserReportData {
@@ -162,9 +163,8 @@ export function load_report_overview(report_id: string, refresh?: boolean) {
         // store result
         dispatch(SLICE.actions.report_overview_loaded(report_data))
 
-        if (report_data.zone_id) {
-            dispatch({type: "bosses/load_bosses", payload: {zone_id: 29}})
-        }
+        const zone_id = report_data.zone_id || ZONE_ID
+        dispatch({type: "bosses/load_bosses", payload: {zone_id}})
     }
 }
 

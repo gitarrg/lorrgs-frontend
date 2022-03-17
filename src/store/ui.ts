@@ -13,42 +13,11 @@ export const MODES = {
 
 export type Mode = "none" | "spec_ranking" | "comp_ranking"
 
-
-// TODO: ModeSettings should be in some "constants"-file
-
-interface ModeSetting {
-    /** space in pixels between each fight row */
-    fight_space: number
-}
-
-const MODE_SETTINGS: {[key: string]: ModeSetting } = {}
-
-
-const default_setting: ModeSetting = {
-    fight_space: 10,
-}
-
-MODE_SETTINGS[MODES.NONE] = default_setting
-
-MODE_SETTINGS[MODES.SPEC_RANKING] = {
-    ...default_setting,
-    fight_space: 0,
-}
-
-MODE_SETTINGS[MODES.COMP_RANKING] = default_setting
-MODE_SETTINGS[MODES.USER_REPORT] = default_setting
-
-
-
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 // Actions
 //
 export function get_mode(state: RootState) {
     return state.ui.mode
-}
-
-export function get_mode_setting(state: RootState) {
-    return MODE_SETTINGS[state.ui.mode] || default_setting
 }
 
 
@@ -153,6 +122,7 @@ const INITIAL_STATE: UiSliceState = {
         show_casttime: true,
         show_duration: true,
         show_cooldown: true,
+        show_deaths: false,
     },
 
     // fight/player filter settings
