@@ -47,6 +47,9 @@ export default function TimelineCanvas() {
         console.log("creating canvas", is_loading)
         stage_ref.current!.set_fights(fights)
         stage_ref.current!.handle_event(constants.EVENT_APPLY_FILTERS, filters)
+
+        // initial values
+        stage_ref.current!.handle_event(constants.EVENT_DISPLAY_SETTINGS, ui_settings)
     }, [is_loading])
 
     // Pass trough UI Settings like "show_cooldown", "show_duration"

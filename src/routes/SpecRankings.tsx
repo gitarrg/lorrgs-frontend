@@ -83,7 +83,7 @@ export default function SpecRankings() {
                 <Navbar />
             </div>
 
-             <div className={`${is_loading ? "loading_trans" : ""}`}>
+            <div className={`${is_loading ? "loading_trans" : ""}`}>
                 <SpecSettingsBar />
             </div>
             {is_loading && <LoadingOverlay />}
