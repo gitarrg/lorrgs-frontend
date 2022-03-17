@@ -42,6 +42,11 @@ export default function UserReport() {
 
     useEffect(() => {
         dispatch(ui_store.set_mode(mode)) // in useEffect to only run once
+
+        // initial display settings
+        dispatch(ui_store.update_settings({
+            show_deaths: true,
+        }))
     }, [])
 
 

@@ -1,7 +1,7 @@
 import ButtonGroup, { ButtonGroupContext } from './shared/ButtonGroup'
 import MetricSelect from "./MetricSelect"
 import styles from "./DisplaySettings.scss";
-import { FaClock, FaHourglass, FaImage, FaStream } from 'react-icons/fa';
+import { FaClock, FaHourglass, FaImage, FaSkull, FaStream } from 'react-icons/fa';
 import { ReactNode, useContext, useEffect } from 'react'
 import { update_settings } from '../../store/ui'
 import { useAppSelector } from '../../store/store_hooks'
@@ -59,10 +59,11 @@ export default function DisplaySettings() {
 
     return (
         <ButtonGroup name="Timeline">
-            <Button attr_name="show_casticon" tooltip="spell icon"><FaImage /></Button>
-            <Button attr_name="show_casttime" tooltip="cast time"><FaClock /></Button>
-            <Button attr_name="show_duration" tooltip="duration"><FaStream /></Button>
-            <Button attr_name="show_cooldown" tooltip="cooldown" ><FaHourglass /></Button>
+            <Button attr_name="show_casticon" tooltip="Spell Icons"><FaImage /></Button>
+            <Button attr_name="show_casttime" tooltip="Cast Time"><FaClock /></Button>
+            <Button attr_name="show_duration" tooltip="Duration"><FaStream /></Button>
+            <Button attr_name="show_cooldown" tooltip="Cooldown" ><FaHourglass /></Button>
+            <Button attr_name="show_deaths" tooltip="Deaths" ><FaSkull /></Button>
 
             <MetricSelect />
 
