@@ -130,7 +130,10 @@ const SLICE = createSlice({
             state.fights_by_id = {}
             state.fight_ids = []
             fights.forEach(fight => {
-                const fight_key = `${fight.report_id}/${fight.fight_id}`
+                // include the player ID, in case there are multiple top100 parses
+                // of the same spec in a single fight
+                const player_id = fight.players[0]?.source_id || 0
+                const fight_key = `${fight.report_id}/${fight.fight_id}/${player_id}`
                 state.fights_by_id[fight_key] = fight
                 state.fight_ids.push(fight_key)
             })
