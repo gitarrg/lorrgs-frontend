@@ -4,4 +4,27 @@
     display: grid;
     grid-template-columns: repeat(2, auto);
     gap: 0.25rem;
+
+    pre {
+        margin: 0;
+        padding: 0;
+    }
+}
+
+.title {
+
+    margin-bottom: 0;
+
+    & > div {
+        height: 2rem;
+
+        svg {
+            margin-top: 0;
+        }
+    }
+
+}
+
+.avatar {
+    height: 62px; // matched user_info
 }
