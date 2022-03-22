@@ -6,7 +6,7 @@ import { useAppSelector } from "../../store/store_hooks"
 
 
 // default boss name to show here
-const BOSS_NAME = "sylvanas-windrunner"
+const BOSS_NAME = "the-jailer-zovaal"
 
 
 function RolesList() {
