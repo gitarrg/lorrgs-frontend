@@ -20,7 +20,9 @@ interface UserSliceState {
     logged_in: boolean
     name: string
     id: string
-    permissions: string[],
+    permissions: string[]
+    avatar?: string
+    discriminator?: string
 
     error?: string
     error_message?: string
@@ -72,6 +74,15 @@ const SLICE = createSlice({
             localStorage.removeItem(LOCAL_STORAGE_KEY)
             return INITIAL_STATE
         },
+
+        user_loaded: (state, action: PayloadAction<UserSliceState>) => {
+            return {
+                ...state,
+                ...action.payload,
+                logged_in: true,
+            }
+        },
+
     }, // reducers
 })
 
@@ -109,6 +120,14 @@ export function load_user() {
 
         const token = localStorage.getItem(LOCAL_STORAGE_KEY) || ""
         if (!token) { return }
-        dispatch(SLICE.actions.token_loaded(token))
+
+        let user_info: UserSliceState = jwt_decode(token)
+
+        // load additional info
+        const repsonce = await fetch_data(`/api/auth/info/${user_info.id}`);
+        user_info = {...user_info, ...repsonce}
+
+        dispatch(SLICE.actions.user_loaded(user_info))
+
     }
 }
