@@ -104,6 +104,9 @@ export default class Cast extends Konva.Group {
 
     tooltip_content?: string
 
+    // default opacity (might be different for procs)
+    _default_opacity: number = 1.0
+
 
     constructor(cast_data: CastType) {
         super()
@@ -144,6 +147,14 @@ export default class Cast extends Konva.Group {
         this.cast_text = create_cast_text(this)
         this.cast_text && this.add(this.cast_text)
 
+        // Dim procs
+        if ( this.is_proc(cast_data) )
+        {
+            this._default_opacity = 0.5
+            this.opacity(this._default_opacity)
+            this.cast_cooldown?.remove()
+        }
+
         // invisible box for mouse events
         // (some casts might not have a duration-bar to use)
         this.mouse_event_bbox = new Konva.Rect({
@@ -172,6 +183,24 @@ export default class Cast extends Konva.Group {
         this.tooltip_content += `${toMMSS(this.timestamp)}`
     }
 
+    /**
+     * @param cast_data 
+     * @returns Boolean True if a Cast is a Proc
+     */
+    is_proc(cast_data: CastType) {
+        // no duration --> can't be a proc
+        if (!cast_data.d) { return false }
+
+        const reg_duration = this.spell?.duration || 0 // regular cast duration
+
+        // longer than regular --> prob normal cast + proc
+        // so proc yes.. but also regular cast. Pref to categorize as regular cast in this case
+        if (cast_data.d > reg_duration) { return false}
+
+        // more than 3sec diff to regular duration
+        return (Math.abs(cast_data.d - reg_duration) > 3)
+    }
+
     update_style() {
 
         if (!this.visible()) { return;}
@@ -186,7 +215,7 @@ export default class Cast extends Konva.Group {
         this.cast_cooldown?.opacity(0.1)
         this.cast_icon?.opacity(1.0)
         this.cast_icon?.strokeWidth(1)
-        this.opacity(1.0)
+        this.opacity(this._default_opacity)
 
         if (stage.has_selection) {
             if (this.selected) {
@@ -199,10 +228,6 @@ export default class Cast extends Konva.Group {
                 this.cast_icon?.opacity(0.5)
                 this.cast_icon?.strokeWidth(0)
             }
-        }
-        else if (this.hovering) {
-            this.cast_duration?.opacity(0.75)
-            this.cast_cooldown?.opacity(0.3)
         }
     }
 
@@ -251,13 +276,10 @@ export default class Cast extends Konva.Group {
 
         this.hovering = hovering;
 
-        this.update_style()
-
         // update cursor
         const stage = this.getStage() as Stage | null
         if (!stage) { return }
         stage.container().style.cursor = this.hovering ? "pointer" : "grab";
-        stage.batchDraw()
 
         //////////////////
         // handle tooltip
