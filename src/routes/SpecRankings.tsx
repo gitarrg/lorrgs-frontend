@@ -36,7 +36,7 @@ export default function SpecRankings() {
     const boss = useAppSelector(state => get_boss(state, boss_slug))
     const spec = useAppSelector(state => get_spec(state, spec_slug))
 
-    const difficulty = query.get("difficulty") || "heroic"
+    const difficulty = query.get("difficulty") || "mythic"
     const metric = query.get("metric") || spec_metric(spec)
 
     // const
