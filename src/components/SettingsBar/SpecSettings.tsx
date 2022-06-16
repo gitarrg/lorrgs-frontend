@@ -1,6 +1,6 @@
 import ButtonGroup from "./shared/ButtonGroup"
 import FilterButton from "./shared/FilterButton"
-import { get_boss } from "../../store/bosses"
+import { get_boss, get_zone } from "../../store/bosses"
 import { get_occuring_bosses, get_occuring_specs } from "../../store/fights"
 import { get_spec } from "../../store/specs"
 import { set_filter } from "../../store/ui"
@@ -10,7 +10,7 @@ import { useAppSelector, useAppDispatch } from "../../store/store_hooks"
 function BossFilterButton({name} : {name: string}) {
 
     const boss = useAppSelector(state => get_boss(state, name))
-    const zone = "sanctum-of-domination"  // FIXME
+    const zone = useAppSelector(state => get_zone(state))
     const dispatch = useAppDispatch()
     if (!boss) { return null }
 
@@ -23,7 +23,7 @@ function BossFilterButton({name} : {name: string}) {
             onClick={onClick}
             name="boss"
             full_name={boss.full_name}
-            icon_name={`bosses/${zone}/${boss.full_name_slug}`}
+            icon_name={`bosses/${zone.name_slug}/${boss.full_name_slug}`}
         />
     )
 }

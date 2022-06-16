@@ -12,6 +12,10 @@ import type RaidZone from '../types/raid_zone'
 // Selectors
 //
 
+export function get_zone(state: RootState) {
+    return state.raid_zone
+}
+
 /** all bosses in the zone, keyed by their full_name_slug */
 export function get_bosses(state: RootState) {
     return state.raid_zone.bosses
