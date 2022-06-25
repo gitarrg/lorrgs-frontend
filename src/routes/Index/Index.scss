@@ -8,7 +8,12 @@
 .container {
     display: flex;
     justify-content: center;
+}
+
+.center {
     gap: 1rem;
+    display: flex;
+	flex-wrap: wrap;
 }
 
 
