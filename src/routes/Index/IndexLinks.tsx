@@ -40,7 +40,7 @@ export default function IndexLinks() {
                 </LinkButton>
 
                 <LinkButton url={BUYMEACOFFEE_LINK}>
-                    <span style={{marginLeft: "-2px"}}>☕ Buy me a Coffee</span>
+                    <span style={{marginLeft: "-2px"}}>☕ Coffee</span>
                 </LinkButton>
 
             </div>
