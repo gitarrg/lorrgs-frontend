@@ -8,23 +8,29 @@ import { ZONE_ID } from '../constants'
 import type RaidZone from '../types/raid_zone'
 
 
+// TODO:
+// Split Zones and Bosses Slices?
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Selectors
 //
 
 export function get_zone(state: RootState) {
-    return state.raid_zone
+    return state.zones
 }
+
 
 /** all bosses in the zone, keyed by their full_name_slug */
 export function get_bosses(state: RootState) {
-    return state.raid_zone.bosses
+    return state.zones.bosses
 }
+
 
 /** a single boss from the zone (defaults to the currently selected boss) */
 export function get_boss(state: RootState, boss_slug?: string) {
     boss_slug = boss_slug ?? state.ui.boss_slug
-    return state.raid_zone.bosses[boss_slug] || null
+    return state.zones.bosses[boss_slug] || null
 }
 
 
@@ -35,6 +41,7 @@ export function get_boss(state: RootState, boss_slug?: string) {
 function _post_process_boss(zone: RaidZone, boss: Boss) {
     boss.loaded = false
     boss.icon_path = `/img/bosses/${zone.name_slug}/${boss.full_name_slug}.jpg`
+    boss.zone_id = zone.id
 
     // insert some static data
     boss.role = "boss"
@@ -59,7 +66,7 @@ interface RaidZoneAPIResponse {
 
 
 const SLICE = createSlice({
-    name: "raid_zone",
+    name: "zones",
 
     initialState: INITIAL_STATE,
 

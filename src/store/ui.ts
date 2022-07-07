@@ -1,6 +1,7 @@
 import type { RootState } from './store'
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { ZONE_ID } from '../constants'
 
 
 // modes to switch some page related features
@@ -22,12 +23,12 @@ export function get_mode(state: RootState) {
 
 
 export function get_difficulty(state: RootState) {
-    return state.ui.difficulty
+    return state.ui.difficulty || "mythic"
 }
 
 
 export function get_metric(state: RootState) {
-    return state.ui.metric
+    return state.ui.metric || "dps"
 }
 
 export function get_filters(state: RootState) {
@@ -88,6 +89,8 @@ export interface UiSliceState {
     /** currently selected boss */
     boss_slug: string
 
+    zone_id: number,
+
     /** selected difficulty */
     difficulty: string
 
@@ -114,6 +117,7 @@ const INITIAL_STATE: UiSliceState = {
 
     spec_slug: "", // currently selected spec
     boss_slug: "", // currently selected boss
+    zone_id: ZONE_ID,
     difficulty: "mythic", // currently selected difficulty
 
     // Timeline Options

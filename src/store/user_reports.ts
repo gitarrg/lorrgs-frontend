@@ -5,6 +5,7 @@ import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { fetch_data } from '../api'
 import { ZONE_ID } from '../constants'
+import { load_bosses } from './bosses'
 
 
 export interface UserReportData {
@@ -164,7 +165,7 @@ export function load_report_overview(report_id: string, refresh?: boolean) {
         dispatch(SLICE.actions.report_overview_loaded(report_data))
 
         const zone_id = report_data.zone_id || ZONE_ID
-        dispatch({type: "bosses/load_bosses", payload: {zone_id}})
+        dispatch(load_bosses(zone_id))
     }
 }
 
