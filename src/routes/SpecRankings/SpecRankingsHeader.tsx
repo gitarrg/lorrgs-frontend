@@ -26,7 +26,7 @@ function get_spec_ranking_url(spec: Spec, boss: Boss, difficulty: string, metric
     })
 
     let url = new URL(WCL_URL)
-    url.pathname = `/zone/rankings/${ZONE_ID}`  // TODO: make dynamic
+    url.pathname = `/zone/rankings/${boss.zone_id || ZONE_ID}`
     url.hash = search_params.toString()
     return url.toString()
 }

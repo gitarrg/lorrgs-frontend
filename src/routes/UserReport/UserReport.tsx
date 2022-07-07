@@ -82,7 +82,7 @@ export default function UserReport() {
                 <UserReportNavbar />
             </div>
 
-             <div className={`${is_loading ? "loading_trans" : ""} mt-2`}>
+            <div className={`${is_loading ? "loading_trans" : ""} mt-2`}>
                 <ReportSettingsBar />
             </div>
             {is_loading && <LoadingOverlay />}

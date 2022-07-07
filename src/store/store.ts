@@ -28,7 +28,7 @@ const store = configureStore({
     reducer: {
         classes: classes_reducer,
         fights: fights_reducer,
-        raid_zone: bosses_reducer,
+        zones: bosses_reducer,
         roles: roles_reducer,
         specs: specs_reducer,
         spells: spells_reducer,

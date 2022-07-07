@@ -18,22 +18,5 @@ export default interface Boss extends Spec {
     /** encounter ID */
     id: number
 
-    /** Nice short Name */
-    // name: string
-
-    /** Complete Name */
-    // full_name: string
-
-    // name_slug: "painsmith" NOT USED
-
-    /** Complete name slugified. Primary identifier */
-    // full_name_slug: string
-
-    /** URL to the icon */
-    // icon_path: string
-
-    // loaded: boolean
-
-    // spells_by_type: {[key: string]: number[] } // todo: spell type
+    zone_id: number
 }
-
