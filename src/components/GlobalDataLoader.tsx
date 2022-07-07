@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
-
 import { load_bosses } from "../store/bosses"
 import { load_classes } from '../store/classes'
 import { load_roles } from "../store/roles"
