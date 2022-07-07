@@ -17,16 +17,13 @@ import type RaidZone from '../types/raid_zone'
 //
 
 export function get_zone(state: RootState) {
-    return state.zones.zones[state.ui.zone_id]
+    return state.zones
 }
 
 
 /** all bosses in the zone, keyed by their full_name_slug */
 export function get_bosses(state: RootState) {
-    const zone = state.zones.zones[state.ui.zone_id]
-    const boss_names = zone?.boss_names || []
-
-    return boss_names.map(name => state.zones.bosses[name])
+    return state.zones.bosses
 }
 
 
