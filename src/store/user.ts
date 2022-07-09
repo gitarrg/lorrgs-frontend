@@ -124,10 +124,11 @@ export function load_user() {
         let user_info: UserSliceState = jwt_decode(token)
 
         // load additional info
-        const repsonce = await fetch_data(`/api/auth/info/${user_info.id}`);
-        user_info = {...user_info, ...repsonce}
+        const repsonce = await fetch_data(`/api/auth/users/${user_info.id}`);
 
-        dispatch(SLICE.actions.user_loaded(user_info))
-
+        if (repsonce) {
+            // user_info = {...user_info, ...repsonce}
+            dispatch(SLICE.actions.user_loaded(repsonce))
+        }
     }
 }
