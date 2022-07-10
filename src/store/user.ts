@@ -22,8 +22,6 @@ interface UserSliceState {
     id: string
     permissions: string[]
     avatar?: string
-    discriminator?: string
-
     error?: string
     error_message?: string
 }
@@ -100,20 +98,21 @@ export function login(code: string) {
     return async (dispatch: AppDispatch) => {
 
         // Request
-        const repsonce = await fetch_data("/api/auth/token", {code});
+        const repsonse = await fetch_data("/api/auth/token", {code});
 
-        const token = repsonce.token
+        const token = repsonse.token
         if (token) {
             dispatch(SLICE.actions.token_received(token))
             dispatch(SLICE.actions.token_loaded(token))
+            dispatch(load_user())
         } else {
-            dispatch(SLICE.actions.token_failed(repsonce))
+            dispatch(SLICE.actions.token_failed(repsonse))
         }
     }
 }
 
 
-/** load a previously logged in user  */
+/** load info for the logged in user  */
 export function load_user() {
 
     return async (dispatch: AppDispatch) => {
@@ -124,10 +123,10 @@ export function load_user() {
         let user_info: UserSliceState = jwt_decode(token)
 
         // load additional info
-        const repsonce = await fetch_data(`/api/auth/info/${user_info.id}`);
-        user_info = {...user_info, ...repsonce}
+        const repsonse = await fetch_data(`/api/auth/users/${user_info.id}`);
 
-        dispatch(SLICE.actions.user_loaded(user_info))
-
+        if (repsonse) {
+            dispatch(SLICE.actions.user_loaded(repsonse))
+        }
     }
 }
