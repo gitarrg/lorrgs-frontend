@@ -1,12 +1,9 @@
-import Icon from '../../components/shared/Icon'
-import IndexModuleLink from "./IndexModuleLink"
+import { DEFAULT_BOSS_COMP } from '../../constants'
 import { get_boss } from "../../store/bosses"
 import { get_player_roles } from '../../store/roles'
 import { useAppSelector } from "../../store/store_hooks"
-
-
-// default boss name to show here
-const BOSS_NAME = "the-jailer-zovaal"
+import Icon from '../../components/shared/Icon'
+import IndexModuleLink from "./IndexModuleLink"
 
 
 function RolesList() {
@@ -25,7 +22,7 @@ function RolesList() {
 
 export default function IndexCompsGroup() {
 
-    const boss = useAppSelector(state => get_boss(state, BOSS_NAME))
+    const boss = useAppSelector(state => get_boss(state, DEFAULT_BOSS_COMP))
     if (!boss) { return null }
 
     // Render
