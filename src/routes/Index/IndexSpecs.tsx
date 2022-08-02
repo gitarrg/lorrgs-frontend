@@ -1,14 +1,12 @@
+import { DEFAULT_BOSS } from "./../../constants"
 import { Fragment } from 'react'
-import { Link } from 'react-router-dom'
-import Icon from '../../components/shared/Icon'
 import { get_player_roles } from '../../store/roles'
 import { get_spec } from '../../store/specs'
+import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../store/store_hooks'
-import type Role from '../../types/role'
+import Icon from '../../components/shared/Icon'
 import styles from "./IndexSpecs.scss"
-
-
-const DEFAULT_BOSS = "vigilant-guardian"
+import type Role from '../../types/role'
 
 
 function SpecButton({spec_slug=""}) {

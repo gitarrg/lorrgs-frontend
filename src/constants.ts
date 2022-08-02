@@ -9,7 +9,6 @@ export const DISCORD_LINK = "https://discord.gg/jZWj6djJk2"
 export const PATREON_LINK = "https://www.patreon.com/lorrgs"
 export const BUYMEACOFFEE_LINK = "https://www.buymeacoffee.com/lorrgs"
 
-export const ZONE_ID = 29
 
 
 // Timeline Vars
@@ -20,3 +19,13 @@ export const DEFAULT_ZOOM = 4
 
 export const DISCORD_CLIENT_ID = "903080290925293628"
 export const DISCORD_LOGIN_URL = "https://discord.com/oauth2/authorize"
+
+
+///////////////////////////////////
+// ZONE SETTINGS
+
+export const ZONE_ID = 26
+export const DEFAULT_BOSS = "shriekwing"
+export const DEFAULT_BOSS_COMP = "sire-denathrius"
+
+
