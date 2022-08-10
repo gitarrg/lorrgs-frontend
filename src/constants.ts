@@ -24,8 +24,8 @@ export const DISCORD_LOGIN_URL = "https://discord.com/oauth2/authorize"
 ///////////////////////////////////
 // ZONE SETTINGS
 
-export const ZONE_ID = 26
-export const DEFAULT_BOSS = "shriekwing"
-export const DEFAULT_BOSS_COMP = "sire-denathrius"
+export const ZONE_ID = 28
+export const DEFAULT_BOSS = "the-tarragrue"
+export const DEFAULT_BOSS_COMP = "sylvanas-windrunner"
 
 
