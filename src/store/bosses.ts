@@ -16,8 +16,12 @@ import type RaidZone from '../types/raid_zone'
 // Selectors
 //
 
-export function get_zone(state: RootState) {
-    return state.zones
+export function get_zones(state: RootState) {
+    return state.zones.zones
+}
+
+export function get_zone(state: RootState, zone_id: number) {
+    return state.zones.zones[zone_id]
 }
 
 
@@ -49,14 +53,6 @@ function _post_process_boss(zone: RaidZone, boss: Boss) {
 }
 
 
-const INITIAL_STATE: RaidZone = {
-    id: -1,
-    name: "",
-    name_slug: "",
-    bosses: {},
-}
-
-
 interface RaidZoneAPIResponse {
     id: -1,
     name: "",
@@ -64,6 +60,11 @@ interface RaidZoneAPIResponse {
     bosses: Boss[],
 }
 
+
+const INITIAL_STATE = {
+    zones: {} as {[key: number] : RaidZone},
+    bosses: {} as {[key: string]: Boss},
+}
 
 const SLICE = createSlice({
     name: "zones",
@@ -74,16 +75,23 @@ const SLICE = createSlice({
 
         set_zone: (state, action: PayloadAction<RaidZoneAPIResponse> ) => {
 
-            state.id        = action.payload.id
-            state.name      = action.payload.name
-            state.name_slug = action.payload.name_slug
 
-            // array to object (by full_name_slug)
+            const zone: RaidZone = {
+                id: action.payload.id,
+                name: action.payload.name,
+                name_slug: action.payload.name_slug,
+                bosses: []
+            }
+            state.zones[zone.id] = zone
+
             action.payload.bosses = action.payload.bosses || []  // ensure its not empty
             action.payload.bosses.forEach(boss => {
-                _post_process_boss(state, boss)
+                _post_process_boss(zone, boss)
+
                 state.bosses[boss.full_name_slug] = boss
+                zone.bosses.push(boss.full_name_slug)
             });
+
             return state
         },
 

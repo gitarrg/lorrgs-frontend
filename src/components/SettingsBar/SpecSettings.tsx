@@ -10,7 +10,7 @@ import { useAppSelector, useAppDispatch } from "../../store/store_hooks"
 function BossFilterButton({name} : {name: string}) {
 
     const boss = useAppSelector(state => get_boss(state, name))
-    const zone = useAppSelector(state => get_zone(state))
+    const zone = useAppSelector(state => get_zone(state, boss.zone_id))
     const dispatch = useAppDispatch()
     if (!boss) { return null }
 
