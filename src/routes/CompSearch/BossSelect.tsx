@@ -2,19 +2,24 @@
 
 import FormGroup from './FormGroup';
 import WebpImg from "../../components/WebpImg";
-import type Boss from '../../types/boss';
-import { get_bosses } from '../../store/bosses';
+import { get_boss, get_zones } from '../../store/bosses';
 import { useAppSelector } from '../../store/store_hooks';
 import { useFormContext, useWatch } from "react-hook-form";
+import type RaidZone from '../../types/raid_zone';
 
 
 
 /* Button to select a single boss */
-function BossButton({boss} : {boss: Boss}) {
+function BossButton({boss_name} : {boss_name: string}) {
 
     // State Vars
     const form_methods = useFormContext();
     const selected_boss_name_slug = useWatch({name: "boss_name_slug"})
+
+    const boss = useAppSelector(state => get_boss(state, boss_name))
+    if (!boss) {
+        return null
+    }
 
     // Constants
     const is_selected = (selected_boss_name_slug == boss.full_name_slug ? "active" : "")
@@ -36,20 +41,28 @@ function BossButton({boss} : {boss: Boss}) {
     )
 }
 
+
+function RaidZoneGroup({zone} : {zone: RaidZone}) {
+
+    return (
+        <FormGroup name={zone.name} className="boss-button-container">
+            {zone.bosses.map(boss_name =>
+                <BossButton key={boss_name} boss_name={boss_name} />
+            )}
+        </FormGroup>
+    )
+}
+
 /* Group of Buttons to allow the user to choose a Boss */
 export default function BossSelect() {
 
-    const bosses = useAppSelector(state => get_bosses(state))
-
+    const zones = useAppSelector(state => get_zones(state))
 
     return (
-        <FormGroup name="Boss:" className="boss-button-container">
-            {Object.values(bosses).map(boss =>
-                <BossButton
-                key={boss.full_name_slug}
-                boss={boss}
-                />
-            )}
-        </FormGroup>
+        <>
+        {Object.values(zones).map(zone => 
+            <RaidZoneGroup key={zone.id} zone={zone} />
+        )}
+        </>
     )
 }

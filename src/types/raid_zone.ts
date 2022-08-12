@@ -9,6 +9,6 @@ export default interface RaidZone {
     name: string
     name_slug: string
 
-    /** all bosses in the zone, keyed by their full_name_slug */
-    bosses: {[key: string]: Boss}
+    /** boss names (slug) of all bosses in this zone (in order) */
+    bosses: string[]
 }

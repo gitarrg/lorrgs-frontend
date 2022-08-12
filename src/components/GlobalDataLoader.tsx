@@ -14,7 +14,12 @@ export default function GlobalDataLoader() {
 
     useEffect(() => {
         console.log("loading global data")
-        dispatch(load_bosses())
+
+        // All SL Raids
+        dispatch(load_bosses(26))
+        dispatch(load_bosses(28))
+        dispatch(load_bosses(29))
+
         dispatch(load_classes())
         dispatch(load_roles())
         dispatch(load_specs())
