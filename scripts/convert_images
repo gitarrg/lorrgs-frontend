@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# usage:
+# >>> scripts/convert_images public/img/bosses/vault-of-the-incarnates/
+
+shopt -s globstar
+
+folders=$1
+extensions=".jpg .png"
+
+# looks ulgy.. but works
+for folder in $folders; do
+    for ext in $extensions; do
+        for file in $folder/*$ext; do
+            ffmpeg -y -i $file -preset icon ${file%.*}.webp
+        done # file
+    done # ext
+done # folders
