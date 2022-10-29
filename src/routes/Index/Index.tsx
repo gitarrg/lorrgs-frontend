@@ -83,9 +83,9 @@ export default function Index() {
                     <IndexUserReport />
                     <IndexLinks />
                 </div>
-                <div className={styles.col_right}>
+{/*                 <div className={styles.col_right}>
                     {SPECIAL_THANKS}
-                </div>
+                </div> */}
             </div>
         </div>
 
