@@ -5,6 +5,7 @@ const CONFIG_DEV = {
     GOOGLE_ANALYTICS_ID: "dev_mode",
 
     BACKEND_URL: "http://127.0.0.1:5012",
+    // BACKEND_URL: "https://api.lorrgs.io",
 
     CDN_TAGS: [
         // React
@@ -27,7 +28,7 @@ const CONFIG_DEV = {
 const CONFIG_PROD = {
     GOOGLE_ANALYTICS_ID: "G-Y92VPCY6QW",
 
-    BACKEND_URL: "https://api.lorrgs.io",
+    BACKEND_URL: "https://aws.lorrgs.io",
 
     CDN_TAGS: [
         // React
