@@ -25,6 +25,8 @@ export default function IndexCompsGroup() {
     const boss = useAppSelector(state => get_boss(state, DEFAULT_BOSS_COMP))
     if (!boss) { return null }
 
+    return null
+
     // Render
     return (
         <IndexModuleLink title="Top Reports by Comp:" url="/comp_ranking/search">
