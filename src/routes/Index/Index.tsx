@@ -45,19 +45,6 @@ const DISCLAIMER = <div>
 </div> // disclaimer
 
 
-const SPECIAL_THANKS = <div>
-    <h3>❤️ Special Thanks</h3>
-    <div className="bg-dark rounded border p-2 pt-0 text-wrap">
-        <p>We'd like to thank all our Patrons and Contributors.<br />
-        Without your Help Lorrgs would not be possible!
-        </p>
-        <hr className="border-0" />
-        <p>A Honorable Mention to our biggest Supporter:</p> 
-        <p>Theo</p>
-    </div>
-</div> // special thanks
-
-
 export default function Index() {
 
     useTitle("Lorrgs: Index")
@@ -82,9 +69,6 @@ export default function Index() {
                     <IndexCompsGroup />
                     <IndexUserReport />
                     <IndexLinks />
-                </div>
-                <div className={styles.col_right}>
-                    {SPECIAL_THANKS}
                 </div>
             </div>
         </div>
