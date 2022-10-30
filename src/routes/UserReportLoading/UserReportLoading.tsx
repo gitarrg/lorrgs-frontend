@@ -1,6 +1,6 @@
 import styles from "./UserReportLoading.scss"
 import { FaCircleNotch } from "react-icons/fa";
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { PATREON_LINK } from "../../constants";
 import { fetch_data } from "../../api";
 import { useHistory, useLocation } from "react-router";
@@ -14,31 +14,27 @@ const TASK_CHECK_INVERVAL = 1000 // 500
 /** status when the task is still in the queue.
  * may or may not be already executing... all we know is that its not completed
  */
-const TASK_STATUS_PENDING = "pending"
+const TASK_STATUS_DONE = "done"
 
 
-async function get_task_status(queue: string, task_name : string) {
+async function get_task_status(task_name : string) {
     if (task_name === "done") { return "done" }
-    return fetch_data(`/api/tasks/${queue}/${task_name}`)
+    return fetch_data(`/api/tasks/${task_name}`)
 }
 
 
-function InfoBlock({ params } : { params: any }) {
+function InfoBlock({ params } : { params: object }) {
 
-    const found_keys: string[] = [] // keeps track of keys we already had
     const info_elements: JSX.Element[] = [] // keeps track of keys we already had
-    for (const key of params.keys()) {
 
-        // make sure we only add each key once
-        if (found_keys.includes(key)) { continue }
-        found_keys.push(key)
+    for (const [key, value] of Object.entries(params)) {
 
-        const values = params.getAll(key)
-        const value = values.join(", ")
+        // skip empty values
+        if (!value) { continue }
 
         info_elements.push(
             <Fragment key={key}>
-                <span>{key}{ values.length > 1 ? "s" : ""}</span>
+                <span>{key}:</span>
                 <span>{value}</span>
             </Fragment>
         )
@@ -63,6 +59,7 @@ export default function UserReportLoading() {
     const task_name = params.get("task")
     const queue = params.get("queue") || ""
 
+    const [task_info, set_task_info] = useState({status: "unknown", message: "", updated: 0})
 
     ////////////////////////////
     // Callback
@@ -70,11 +67,14 @@ export default function UserReportLoading() {
 
         if (!task_name) { return }
 
-        const info = await get_task_status(queue, task_name)
+        const info = await get_task_status(task_name)
         console.log("checking task status", info)
 
+
+        set_task_info(info)
+
         // still waiting
-        if (info.status == TASK_STATUS_PENDING) { return }
+        if (info.status != TASK_STATUS_DONE) { return }
 
         // go next!
         console.log("task completed!")
@@ -101,9 +101,13 @@ export default function UserReportLoading() {
                 </h1>
 
                 <div className={styles.info}>
-                    <InfoBlock params={params} />
+                    <InfoBlock params={{...Object.fromEntries(params)}} />
+                    <hr />
+                    <InfoBlock params={{
+                        status: task_info["status"],
+                        message: task_info["message"],
+                    }} />
                 </div>
-
 
                 { queue == "free" && 
                     <div className={styles.advert + " bg-dark mt-4 p-2 border rounded wow-border-druid"}>
