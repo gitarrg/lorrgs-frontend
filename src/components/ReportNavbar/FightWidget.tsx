@@ -23,7 +23,7 @@ export default function FightWidget({fight} : FightWidgetProps) {
     const className = `${styles.container} ${fight.kill ? "wow-kill": "wow-wipe"}`
 
     const label_percent = fight.kill ? "Kill! ⚑ " : `${format_percent(fight.percent || 0)}%`
-    const label_time = timetamp_to_time(fight.time || 0)
+    const label_time = timetamp_to_time(fight.time)
 
     ////////////////////////////////
     // Render
