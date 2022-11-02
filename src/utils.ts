@@ -38,12 +38,11 @@ export function seconds_to_time(seconds: number, {padding=true}) {
 /**
  * Format a unix timetamp in seconds to HH:MM
  */
-export function timetamp_to_time(timestamp: number) {
+export function timetamp_to_time(timestamp?: string) {
+    if (!timestamp) { return "00:00" }
 
-    const date =  new Date(timestamp * 1000)
-    const text = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-
-    // let text = new Date(timestamp * 1000).toISOString().substr(11, 5);
+    const date =  new Date(timestamp)
+    const text = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
     return text;
 }
 

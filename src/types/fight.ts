@@ -20,7 +20,7 @@ export default interface Fight {
 
     kill?: boolean
 
-    /** unix timestamp of the pull */
-    time?: number
+    /** isoformat of the time the fight began. */
+    time?: string
 }
 
