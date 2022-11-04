@@ -1,10 +1,11 @@
 import styles from "./UserReportLoading.scss"
 import { FaCircleNotch } from "react-icons/fa";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { PATREON_LINK } from "../../constants";
 import { fetch_data } from "../../api";
 import { useHistory, useLocation } from "react-router";
 import { useInterval } from 'react-use';
+import { TaskItems, task_item_status } from "./TaskItems";
 
 
 /** Frequency in ms how often to check for task status updates */
@@ -17,7 +18,7 @@ const TASK_CHECK_INVERVAL = 1000 // 500
 const TASK_STATUS_DONE = "done"
 
 
-async function get_task_status(task_name : string) {
+async function fetch_task_status(task_name : string) {
     if (task_name === "done") { return "done" }
     return fetch_data(`/api/tasks/${task_name}`)
 }
@@ -59,7 +60,8 @@ export default function UserReportLoading() {
     const task_name = params.get("task")
     const queue = params.get("queue") || ""
 
-    const [task_info, set_task_info] = useState({status: "unknown", message: "", updated: 0})
+    const [task_info, set_task_info] = useState({status: "unknown", message: "", updated: 0, items: {}})
+    const [delay, setDelay] = useState<number|null>(null)
 
     ////////////////////////////
     // Callback
@@ -67,9 +69,8 @@ export default function UserReportLoading() {
 
         if (!task_name) { return }
 
-        const info = await get_task_status(task_name)
+        const info = await fetch_task_status(task_name)
         console.log("checking task status", info)
-
 
         set_task_info(info)
 
@@ -87,7 +88,14 @@ export default function UserReportLoading() {
         const url = `/user_report/${report_id}?${rest_search}`
         history.push(url)
     }
-    useInterval(update_status, TASK_CHECK_INVERVAL);
+    useInterval(update_status, delay);
+
+    // Initial Update
+    useEffect(() => {
+        if (delay != null) { return }
+        update_status()
+        setDelay(TASK_CHECK_INVERVAL)
+    }, [])
 
 
     ////////////////////////////
@@ -104,9 +112,10 @@ export default function UserReportLoading() {
                     <InfoBlock params={{...Object.fromEntries(params)}} />
                     <hr />
                     <InfoBlock params={{
-                        status: task_info["status"],
+                        status: task_info["status"] + task_item_status(task_info.items),
                         message: task_info["message"],
                     }} />
+                    <TaskItems items={ task_info.items } />
                 </div>
 
                 { queue == "free" && 
