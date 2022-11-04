@@ -30,6 +30,7 @@
     // style for the tooltip body
     &::before {
         content: attr(data-tooltip);
+        white-space: pre;
         color: white;
 
         padding: 0.4rem;

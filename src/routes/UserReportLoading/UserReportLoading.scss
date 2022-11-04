@@ -18,6 +18,7 @@
         grid-template-columns: auto 1fr;
         gap: 0.25rem;
         font-size: small;
+        max-width: fit-content;
 
         pre {
             margin: 0;
@@ -37,5 +38,51 @@
     h1 {
         display: flex;
         align-items: center;
+    }
+}
+
+
+.task_items_container {
+    // take all columns of the parent grip
+    grid-column: 1 / -1;
+
+    display: flex;
+    flex: 0 0 33%;
+    grid-gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+
+.task_item {
+    --color: hsl(0, 0%, 30%);
+
+    width: .75rem;
+    height: .75rem;
+    border-radius: 0.05rem;
+    background: var(--color);
+
+    &:hover {
+        filter: brightness(1.25) saturate(75%);
+        border: 1px solid white;
+    }
+
+
+    &[data-status="new"] {
+        --color: hsl(0, 0%, 50%);
+    }
+
+    &[data-status="waiting"] {
+        --color: hsl(190, 50%, 50%);
+    }
+    
+    &[data-status="in-progress"] {
+        --color: hsl(40, 75%, 50%);
+    }
+    
+    &[data-status="done"] {
+        --color: hsl(120, 50%, 50%);
+    }
+    &[data-status="failed"] {
+        --color: hsl(0, 50%, 50%); 
     }
 }
