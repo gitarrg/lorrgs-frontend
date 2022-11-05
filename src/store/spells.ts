@@ -5,9 +5,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { set_boss_spells } from './bosses'
 import { set_fights } from './fights'
 import { set_spec_spells } from './specs'
-
-
-const ICON_ROOT = "/img/spells"
+import { ASSETS } from '../constants'
 
 
 export interface SpellSliceState {
@@ -115,7 +113,7 @@ export function process_spells(spells?: SpellDict ) {
 
     Object.values(spells).forEach(spell => {
         spell.specs = spell.specs || []
-        spell.icon_path = `${ICON_ROOT}/${spell.icon}`
+        spell.icon_path = `${ASSETS}/images/spells/${spell.icon}`
     })
     return spells;
 }

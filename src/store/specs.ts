@@ -1,11 +1,9 @@
-import type Fight from '../types/fight'
 import type Spec from "../types/spec"
 import type { RootState, AppDispatch } from './store'
-import { LOGO_URL } from '../constants'
+import { ASSETS } from '../constants'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { fetch_data } from '../api'
 import { group_spells_by_type } from './store_utils'
-import { set_fights } from './fights'
 
 
 export interface SpecSliceState {
@@ -47,7 +45,7 @@ export function get_spec_for_spell_id(state: RootState, spell_id : number) {
 
 function _process_spec(spec: Spec) {
     spec.loaded = false
-    spec.icon_path = `/img/specs/${spec.full_name_slug}.jpg`
+    spec.icon_path = `${ASSETS}/images/specs/${spec.full_name_slug}.jpg`
     return spec
 }
 
