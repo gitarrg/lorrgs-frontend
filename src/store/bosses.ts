@@ -4,7 +4,7 @@ import type Boss from "../types/boss"
 import type { AppDispatch, RootState } from './store'
 import { fetch_data } from '../api'
 import { group_spells_by_type } from './store_utils'
-import { ZONE_ID } from '../constants'
+import { ASSETS, ZONE_ID } from '../constants'
 import type RaidZone from '../types/raid_zone'
 
 
@@ -44,7 +44,7 @@ export function get_boss(state: RootState, boss_slug?: string) {
 
 function _post_process_boss(zone: RaidZone, boss: Boss) {
     boss.loaded = false
-    boss.icon_path = `/img/bosses/${zone.name_slug}/${boss.full_name_slug}.jpg`
+    boss.icon_path = `${ASSETS}/images/bosses/${zone.name_slug}/${boss.full_name_slug}.jpg`
     boss.zone_id = zone.id
 
     // insert some static data

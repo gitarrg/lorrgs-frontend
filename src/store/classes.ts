@@ -3,6 +3,7 @@ import { AppDispatch, RootState } from "./store"
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
 import { fetch_data } from "../api"
 import { sort_spell_types } from "./spells"
+import { ASSETS } from "../constants"
 
 
 type ClassesSlice = {
@@ -45,7 +46,7 @@ const SLICE = createSlice({
             state.class_names = []
             
             Object.values(action.payload).forEach(wow_class => {
-                wow_class.icon_path = `/img/classes/${wow_class.name_slug}.webp`
+                wow_class.icon_path = `${ASSETS}/images/classes/${wow_class.name_slug}.webp`
 
                 state.class_names.push(wow_class.name_slug)
                 state.classes[wow_class.name_slug] = wow_class
