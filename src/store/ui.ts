@@ -54,9 +54,8 @@ export function get_tooltip(state: RootState) {
 //
 type FilterGroup =
     | "role"
-    |  "spec"
+    | "spec"
     | "class"
-    | "covenant"
 
 
 export interface FilterValues {
@@ -70,7 +69,6 @@ export interface FilterValues {
     role: {[key: string]: boolean}
     spec: {[key: string]: boolean}
     class: {[key: string]: boolean}
-    covenant: {[key: string]: boolean}
 }
 
 export type MetricOptions = "dps" | "hps" | "bossdps" | undefined
@@ -136,7 +134,6 @@ const INITIAL_STATE: UiSliceState = {
         role: {},
         class: {},
         spec: {},
-        covenant: {},
 
         // fight filters
         killtime: {min: null, max: null},

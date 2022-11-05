@@ -6,8 +6,6 @@ export default interface Actor {
 
     class: string
 
-    covenant?: string
-
     name: string
 
     role: string
