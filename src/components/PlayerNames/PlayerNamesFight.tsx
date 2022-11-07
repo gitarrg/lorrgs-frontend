@@ -8,7 +8,7 @@ import { PlayerName, BossName} from "./PlayerName"
 
 
 function create_boss(fight: Fight) {
-    if (!(fight.boss?.name)) {return}
+    if (!(fight.boss?.boss_slug)) {return}
     return <BossName key="boss" fight={fight} boss={fight.boss} />
 }
 

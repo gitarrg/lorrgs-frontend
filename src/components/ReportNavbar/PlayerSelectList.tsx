@@ -8,11 +8,12 @@ import { get_roles } from '../../store/roles'
 import { get_user_report_players } from  '../../store/user_reports'
 import { group_by } from '../../utils'
 import { useAppSelector } from '../../store/store_hooks'
+import { get_specs } from '../../store/specs'
 
 
 function RoleGroup({role, players} : {role: Role, players: Actor[]}) {
     if (!players) { return null }
-    players = players.sort((a, b) => a.spec > b.spec ? -1 : 1)
+    players = players.sort((a, b) => a.spec_slug > b.spec_slug ? -1 : 1)
 
     // Render
     const icon = <Icon spec={role} size="m" className="button grow-when-touched" />
@@ -24,10 +25,12 @@ function RoleGroup({role, players} : {role: Role, players: Actor[]}) {
 export default function PlayerSelectList() {
 
     const players = useAppSelector(get_user_report_players)
-    const players_by_role = group_by(players, (player: Actor) => player.role || "mix")
     const roles = useAppSelector(get_roles)
-
+    const specs = useAppSelector(get_specs)
     if (players.length == 0) { return null }
+
+    const players_by_role = group_by(players, (player: Actor) => specs[player.spec_slug]?.role || "mix")
+
 
     // Render
     return (

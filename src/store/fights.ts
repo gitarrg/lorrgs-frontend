@@ -1,5 +1,6 @@
 import type Actor from '../types/actor';
 import type Fight from '../types/fight';
+import type SpecRanking from "../types/spec_ranking";
 import type { AppDispatch, RootState } from './store'
 import { MODES } from './ui'
 import { createSelector } from 'reselect'
@@ -43,7 +44,7 @@ export const get_occuring_specs = createSelector(
 
         fights.forEach(fight => {
             fight.players.forEach(player => {
-                specs_set.add(player.spec)
+                specs_set.add(player.spec_slug)
             });
         })
         return Array.from(specs_set) // Set to Array
@@ -51,6 +52,9 @@ export const get_occuring_specs = createSelector(
 )
 
 
+/** Get all specs that occur in any of the fights
+ * returns a list of boss_slugs
+ */
 export const get_occuring_bosses = createSelector(
     get_fights,
     ( fights ) => {
@@ -58,8 +62,8 @@ export const get_occuring_bosses = createSelector(
         const boss_names = new Set<string>()
 
         fights.forEach(fight => {
-            if (fight.boss?.name) {
-                boss_names.add(fight.boss.name)
+            if (fight.boss?.boss_slug) {
+                boss_names.add(fight.boss.boss_slug)
             }
         })
         return Array.from(boss_names)
@@ -98,10 +102,10 @@ function is_empty_fight(fight: Fight) {
 function _process_fight(fight: Fight) {
     if (fight.boss) {
         fight.boss = _process_actor(fight.boss)
-        fight.boss.class = "boss"
-        fight.boss.spec = fight.boss.name
+        fight.boss.class_slug = "boss"
+        fight.boss.spec_slug = fight.boss.name
     }
-    fight.players = fight.players.map(actor => _process_actor(actor))
+    fight.players.forEach(actor => _process_actor(actor))
     return fight
 }
 
@@ -165,24 +169,35 @@ function _pin_first_fight(fights: Fight[]) {
 }
 
 
-async function _load_spec_rankings(spec_slug : string, boss_slug: string, difficulty: string, metric: string = "") {
+async function _load_spec_rankings(
+    spec_slug : string,
+    boss_slug: string,
+    difficulty: string,
+    metric: string = ""
+) : Promise<Fight[]>{
 
     const query = new URLSearchParams({
         difficulty: difficulty,
         metric: metric,
-        limit: "100",
     })
 
     const url = `/api/spec_ranking/${spec_slug}/${boss_slug}?${query.toString()}`;
-    const fight_data: {fights: Fight[]} = await fetch_data(url);
+    const spec_ranking: SpecRanking = await fetch_data(url);
 
-    // post process
-    return fight_data.fights.map((fight, i) => {
-        fight.players.forEach(player => {
-            player.rank = i+1  // insert ranking data
+    // unpack the fights
+    let fights: Fight[] = []
+    spec_ranking.reports?.forEach((report, i) => {
+        report.fights?.forEach(fight => {
+            fight.report_id = report.report_id
+            fights.push(fight)
+            // insert ranking data
+            fight.players.forEach(player => {
+                player.rank = i + 1
+            })
         })
-        return fight
     })
+    fights = _pin_first_fight(fights)
+    return fights
 }
 
 
@@ -196,21 +211,20 @@ async function _load_comp_rankings(boss_slug : string, search="") {
 
 export function load_fights(
     mode: string,
-    { boss_slug, spec_slug="", difficulty="mythic", metric="dps", search="" } : { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
-    ) {
+    { boss_slug, spec_slug = "", difficulty = "mythic", metric = "dps", search = "" } : { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
+) {
 
     return async (dispatch: AppDispatch) => {
 
-        dispatch({type: "ui/set_loading", payload: {key: "fights", value: true}})
+        dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
 
         // load
         let fights = []
         switch (mode) {
             case MODES.SPEC_RANKING:
                 fights = await _load_spec_rankings(spec_slug, boss_slug, difficulty, metric)
-                fights = _pin_first_fight(fights)
                 break;
-                case MODES.COMP_RANKING:
+            case MODES.COMP_RANKING:
                 fights = await _load_comp_rankings(boss_slug, search)
                 break;
             default:
@@ -219,7 +233,7 @@ export function load_fights(
 
         // set
         dispatch(set_fights(fights))
-        dispatch({type: "ui/set_loading", payload: {key: "fights", value: false}})
+        dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
     } // async dispatch
 }
 
@@ -231,9 +245,6 @@ export function load_report_fights(report_id: string, search: string = "") {
 
         const url = `/api/user_reports/${report_id}/fights`;
         const report_data = await fetch_data(url, search)
-
-        // user_reports returns the fights as a dict
-        const fights = Object.values(report_data.fights)
 
         dispatch(set_fights(report_data.fights))
         dispatch({type: "ui/set_loading", payload: {key: "fights", value: false}})

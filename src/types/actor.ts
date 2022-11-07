@@ -4,26 +4,27 @@ import type Event from "./event";
 
 export default interface Actor {
 
-    class: string
-
-    name: string
-
-    role: string
-
+    //////////////////
+    // Base Actor
+    casts: Cast[]
     source_id?: number
 
-    /** spec_slug */
-    spec: string
-
+    //////////////////
+    // Player
+    name: string
+    spec_slug: string
+    class_slug: string
     total: number
-
-    casts: Cast[]
-
     deaths: Event[]
     resurrects: Event[]
 
-    pinned?: boolean
+    //////////////////
+    // Boss
+    boss_slug?: string
 
+    //////////////////
+    // Other
     // spec ranking
+    pinned?: boolean
     rank?: number
 }

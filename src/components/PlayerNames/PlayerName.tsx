@@ -28,7 +28,7 @@ export function BossName({fight, boss} : {fight: Fight, boss: Actor}) {
     ///////////////////
     // hooks
     const filters = useAppSelector(state => state.ui.filters)
-    const boss_type = useAppSelector(state => get_boss(state, boss.name))
+    const boss_type = useAppSelector(state => get_boss(state, boss.boss_slug))
 
     ///////////////////
     // apply filters
@@ -55,8 +55,8 @@ export function PlayerName({fight, player} : {fight: Fight, player: Actor}) {
     // hooks
     const mode = useAppSelector(state => state.ui.mode)
     const filters = useAppSelector(state => state.ui.filters)
-    const spec = useAppSelector(state => get_spec(state, player.spec))
-    const role = useAppSelector(state => get_role(state, player.role))
+    const spec = useAppSelector(state => get_spec(state, player.spec_slug))
+    const role = useAppSelector(state => get_role(state, spec.role))
     const mode_spec = mode == MODES.SPEC_RANKING
     const mode_comp = mode == MODES.COMP_RANKING
 
@@ -73,7 +73,7 @@ export function PlayerName({fight, player} : {fight: Fight, player: Actor}) {
         report_url = `${report_url}&source=${player.source_id}`
     }
 
-    const className = spec_ranking_color(player.rank) || `wow-${player.class}`
+    const className = spec_ranking_color(player.rank) || `wow-${player.class_slug}`
 
     ///////////////////
     // render
