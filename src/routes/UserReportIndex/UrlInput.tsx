@@ -57,13 +57,13 @@ export default function UrlInput({input_name="report_url"}) {
     // Handlers
     useEffect(() => {
         const search_params = new URLSearchParams(search)
-        const report_id = search_params.get("report_id")
+        const report_id = search_params.get("report_id") || user_report.report_id
         if (!report_id) { return }
         setValue("report_url", `https://www.warcraftlogs.com/reports/${report_id}`)
 
         setValue("report_code", report_id)
         dispatch(load_report_overview(report_id))
-    }, [search])
+    }, [search, user_report.report_id])
 
 
     /** Update the stored report code */

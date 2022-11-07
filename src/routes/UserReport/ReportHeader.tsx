@@ -7,7 +7,7 @@ export default function ReportHeader() {
     // Hooks
     const report = useAppSelector(get_user_report)
 
-    const date = new Date(report.date * 1000)
+    const date = new Date(report.start_time)
     const date_str = date.toLocaleDateString()  // ref: https://www.freecodecamp.org/news/how-to-format-dates-in-javascript/
     const date_str_full = date.toLocaleString()
 

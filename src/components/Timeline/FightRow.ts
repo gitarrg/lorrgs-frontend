@@ -55,9 +55,6 @@ export default class FightRow {
     }
 
     add_row(fight: Fight, player: Actor) {
-
-        if (!(player?.name)) { return}
-
         const row = new PlayerRow(fight, player)
         this.rows.push(row)
 
