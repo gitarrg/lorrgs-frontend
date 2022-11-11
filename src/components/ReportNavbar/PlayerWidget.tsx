@@ -14,7 +14,7 @@ export default function PlayerWidget({player} : {player: Actor}) {
 
     const field_name = `player[${player.source_id}]`
     const spec = useAppSelector(state => get_spec(state, player.spec_slug))
-    const wow_class_name = spec?.class.name_slug || player.class_slug
+    const wow_class_name = player.class_slug
     const wow_class = useAppSelector(state => get_class(state, wow_class_name))
     const className = `${styles.container} wow-${wow_class_name}`
 
