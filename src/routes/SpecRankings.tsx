@@ -68,8 +68,11 @@ export default function SpecRankings() {
 
     // load fights
     useEffect(() => {
+        if (!spec?.spells_by_type ) { return }
+        if (!boss?.spells_by_type ) { return }
+        if (!metric) { return }
         dispatch(load_fights(mode, {spec_slug, boss_slug, difficulty, metric}))
-    }, [spec_slug, boss_slug, difficulty, metric])
+    }, [spec, boss, difficulty, metric])
 
 
     ////////////////////////////////////////////////////////////////////////////
