@@ -16,7 +16,7 @@ export interface SpecSliceState {
 //
 
 export function get_specs(state : RootState ) {
-    return state.specs
+    return state.specs.specs_by_name
 }
 
 export function get_spec(state: RootState, spec_slug?: string) {

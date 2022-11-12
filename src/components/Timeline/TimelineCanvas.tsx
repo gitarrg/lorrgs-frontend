@@ -42,15 +42,14 @@ export default function TimelineCanvas() {
     }, [mode])
 
     useEffect(() => {
-        if (is_loading) { return } // not ready yet
-
         console.log("creating canvas", is_loading)
+        if (is_loading) { return } // not ready yet
         stage_ref.current!.set_fights(fights)
-        stage_ref.current!.handle_event(constants.EVENT_APPLY_FILTERS, filters)
-
+        
         // initial values
+        stage_ref.current!.handle_event(constants.EVENT_APPLY_FILTERS, filters)
         stage_ref.current!.handle_event(constants.EVENT_DISPLAY_SETTINGS, ui_settings)
-    }, [is_loading])
+    }, [is_loading, fights])
 
     // Pass trough UI Settings like "show_cooldown", "show_duration"
     useEffect(() => {

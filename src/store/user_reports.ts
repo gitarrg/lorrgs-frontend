@@ -1,38 +1,10 @@
-import type Actor from '../types/actor'
-import type Fight from '../types/fight'
+import type UserReport from '../types/user_report'
 import { AppDispatch, RootState } from './store'
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { fetch_data } from '../api'
-import { ZONE_ID } from '../constants'
 import { load_bosses } from './bosses'
 
-
-export interface UserReportData {
-    is_loading: boolean
-
-    /** optional error message */
-    error?: string,
-
-    title: string
-    report_id: string
-    zone_id?: number
-
-    fights: {[key: string]: Fight}
-    players: {[key: string]: Actor}
-
-    /**id of the task when loading the data */
-    task_id?: string
-
-    /**unix timestamp, when the report was created */
-    date: number
-
-    /** name of the guild this report belongs to */
-    guild?: string
-
-    /** user who logged this report */
-    owner: string
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +47,7 @@ export function get_is_loading(state: RootState) {
 }
 
 
-export const get_user_report_fights = createSelector<RootState, UserReportData, Fight[]>(
+export const get_user_report_fights = createSelector(
     get_user_report,
     (user_report) => {
         return Object.values(user_report.fights)
@@ -83,7 +55,7 @@ export const get_user_report_fights = createSelector<RootState, UserReportData, 
 )
 
 
-export const get_user_report_players = createSelector<RootState, UserReportData, Actor[]>(
+export const get_user_report_players = createSelector(
     get_user_report,
     (user_report) => {
         return Object.values(user_report.players)
@@ -94,16 +66,15 @@ export const get_user_report_players = createSelector<RootState, UserReportData,
 // Slice
 //
 
-const INITIAL_STATE: UserReportData = {
-    title: "",
+const INITIAL_STATE: UserReport = {
     report_id: "",
-    fights: {},
-    players: {},
-    task_id: "",
-    owner: "",
-    is_loading: false,
-    date: 0,
+    start_time: "",
+    zone_id: 0,
 
+    fights: [],
+    players: [],
+
+    is_loading: false,
     error: "",
 }
 
@@ -126,7 +97,7 @@ const SLICE = createSlice({
             return state
         },
 
-        report_overview_loaded: (state, action: PayloadAction<UserReportData>) => {
+        report_overview_loaded: (state, action: PayloadAction<UserReport>) => {
             // using initial state, to clear out previously loaded values
             return {
                 ...INITIAL_STATE,
@@ -159,13 +130,15 @@ export function load_report_overview(report_id: string, refresh?: boolean) {
         // Try to get existing one
         const url = `/api/user_reports/${report_id}/load_overview`;
 
-        const report_data = await fetch_data(url, {refresh: refresh || false});
+        const report_data: UserReport = await fetch_data(url, {refresh: refresh || false});
+
+        // load zone first
+        if ( report_data.zone_id > 0 ) {
+            dispatch(load_bosses(report_data.zone_id))
+        }
 
         // store result
         dispatch(SLICE.actions.report_overview_loaded(report_data))
-
-        const zone_id = report_data.zone_id || ZONE_ID
-        dispatch(load_bosses(zone_id))
     }
 }
 
