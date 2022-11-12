@@ -123,7 +123,7 @@ export default class Cast extends Konva.Group {
         this.spell_id = cast_data.id;
         this.timestamp = cast_data.ts / 1000;
         this.spell = state.spells.all_spells[this.spell_id];
-        this._duration = cast_data?.d ?? this.spell?.duration
+        this._duration = cast_data?.d ? cast_data.d /1000 : this.spell?.duration
 
         // Internal Attrs
         this.hovering = false

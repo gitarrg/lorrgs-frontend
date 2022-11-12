@@ -15,7 +15,7 @@ export function get_roles(state: RootState) {
 }
 
 
-export const get_player_roles = createSelector<RootState, { [key: string]: Role }, Role[]>(
+export const get_player_roles = createSelector(
     get_roles,
     (roles_map ) => {
         const roles = Object.values(roles_map)
@@ -65,6 +65,7 @@ const SLICE = createSlice({
 
             action.payload.forEach(role => {
                 role.icon_path = `${ASSETS}/images/roles/${role.code}.jpg`
+                role.specs.sort()
                 state[role.code] = role
             })
             return state

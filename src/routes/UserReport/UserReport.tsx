@@ -58,7 +58,6 @@ export default function UserReport() {
 
     useEffect(() => {
         specs.forEach(spec_slug => {
-            // todo: check if loaded
             dispatch(load_spec_spells(spec_slug))
         })
     }, [specs])

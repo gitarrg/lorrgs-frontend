@@ -21,6 +21,6 @@ export default interface Fight {
     kill?: boolean
 
     /** isoformat of the time the fight began. */
-    time?: string
+    start_time?: string
 }
 

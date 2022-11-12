@@ -17,7 +17,7 @@ export function FightInfo({ fight }: { fight: Fight; }) {
 
     const icon = fight.kill ? "⚑ " : ""
     const label_percent = fight.kill ? "Kill! ⚑ " : `${fight.percent || 0}%`
-    const label_time = timetamp_to_time(fight.time)
+    const label_time = timetamp_to_time(fight.start_time)
 
     const report_url = `${WCL_URL}/reports/${fight.report_id}#fight=${fight.fight_id}`
 
