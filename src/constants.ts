@@ -15,9 +15,9 @@ export const DISCORD_LOGIN_URL = "https://discord.com/oauth2/authorize"
 
 ///////////////////////////////////
 // Default Settings
-export const ZONE_ID = 28
-export const DEFAULT_BOSS = "the-tarragrue"
-export const DEFAULT_BOSS_COMP = "sylvanas-windrunner"
+export const ZONE_ID = 31
+export const DEFAULT_BOSS = "eranog"
+export const DEFAULT_BOSS_COMP = "eranog"
 
 
 ///////////////////////////////////
