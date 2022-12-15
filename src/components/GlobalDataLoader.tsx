@@ -1,30 +1,23 @@
 /* Loads Constant Data from the API that is used on all pages. */
 
-import { useEffect } from 'react'
-import { useDispatch } from 'react-redux'
-import { load_bosses } from "../store/bosses"
-import { load_classes } from '../store/classes'
-import { load_roles } from "../store/roles"
-import { load_specs } from "../store/specs"
-
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { ZONE_ID } from "../constants";
+import { load_bosses } from "../store/bosses";
+import { load_classes } from "../store/classes";
+import { load_roles } from "../store/roles";
+import { load_specs } from "../store/specs";
 
 export default function GlobalDataLoader() {
-
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        console.log("loading global data")
+        console.log("loading global data");
+        dispatch(load_bosses(ZONE_ID));
+        dispatch(load_classes());
+        dispatch(load_roles());
+        dispatch(load_specs());
+    }, []);
 
-        // All SL Raids
-        dispatch(load_bosses(26))
-        dispatch(load_bosses(28))
-        dispatch(load_bosses(29))
-
-        dispatch(load_classes())
-        dispatch(load_roles())
-        dispatch(load_specs())
-    }, [])
-
-    return null
+    return null;
 }
-
