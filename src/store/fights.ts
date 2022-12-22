@@ -12,7 +12,7 @@ import { fetch_data } from '../api'
 // Selectors
 //
 
-export function get_all_fights(state: RootState) : {[key: number]: Fight} {
+export function get_all_fights(state: RootState): { [key: number]: Fight } {
     return state.fights.fights_by_id
 }
 
@@ -29,7 +29,7 @@ export function get_fight_is_loaded(state: RootState, fight_id: number) {
 
 export const get_fights = createSelector(
     get_all_fights,
-    ( fights_by_id ) => {
+    (fights_by_id) => {
         return Object.values(fights_by_id)
     }
 )
@@ -38,7 +38,7 @@ export const get_fights = createSelector(
 /** Get all specs that occur in any of the fights */
 export const get_occuring_specs = createSelector(
     get_fights,
-    ( fights ) => {
+    (fights) => {
 
         const specs_set = new Set<string>()
 
@@ -57,7 +57,7 @@ export const get_occuring_specs = createSelector(
  */
 export const get_occuring_bosses = createSelector(
     get_fights,
-    ( fights ) => {
+    (fights) => {
 
         const boss_names = new Set<string>()
 
@@ -170,11 +170,11 @@ function _pin_first_fight(fights: Fight[]) {
 
 
 async function _load_spec_rankings(
-    spec_slug : string,
+    spec_slug: string,
     boss_slug: string,
     difficulty: string,
     metric: string = ""
-) : Promise<Fight[]>{
+): Promise<Fight[]> {
 
     const query = new URLSearchParams({
         difficulty: difficulty,
@@ -205,7 +205,7 @@ async function _load_spec_rankings(
 }
 
 
-async function _load_comp_rankings(boss_slug : string, search="") {
+async function _load_comp_rankings(boss_slug: string, search = "") {
 
     const url = `/api/comp_ranking/${boss_slug}${search}`;
     const fight_data = await fetch_data(url);
@@ -215,7 +215,7 @@ async function _load_comp_rankings(boss_slug : string, search="") {
 
 export function load_fights(
     mode: string,
-    { boss_slug, spec_slug = "", difficulty = "mythic", metric = "dps", search = "" } : { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
+    { boss_slug, spec_slug = "", difficulty = "mythic", metric = "dps", search = "" }: { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
 ) {
 
     return async (dispatch: AppDispatch) => {
@@ -245,12 +245,17 @@ export function load_fights(
 export function load_report_fights(report_id: string, search: string = "") {
 
     return async (dispatch: AppDispatch) => {
-        dispatch({type: "ui/set_loading", payload: {key: "fights", value: true}})
+        dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
 
         const url = `/api/user_reports/${report_id}/fights`;
         const report_data = await fetch_data(url, search)
 
+        // insert report id (for urls)
+        report_data.fights?.forEach(fight => {
+            fight.report_id = report_id
+        })
+
         dispatch(set_fights(report_data.fights))
-        dispatch({type: "ui/set_loading", payload: {key: "fights", value: false}})
+        dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
     }
 }
