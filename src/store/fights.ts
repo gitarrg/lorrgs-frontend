@@ -194,6 +194,10 @@ async function _load_spec_rankings(
             fight.players.forEach(player => {
                 player.rank = i + 1
             })
+
+            if (i > 0) {
+                fight.boss = undefined
+            }
         })
     })
     fights = _pin_first_fight(fights)
