@@ -60,15 +60,19 @@ type FilterGroup =
 
 export interface FilterValues {
 
-    killtime: {min: number | null, max: number | null}
+    killtime: { min: number | null, max: number | null }
 
     /** Filter Groups like:
      * role: { tank: false, heal: true}
      * spec: { holy-paladin: true}
      */
-    role: {[key: string]: boolean}
-    spec: {[key: string]: boolean}
-    class: {[key: string]: boolean}
+    role: { [key: string]: boolean }
+    spec: { [key: string]: boolean }
+    class: { [key: string]: boolean }
+
+    // Hide Player Rows if all spells are hiden.
+    hide_empty_rows: boolean
+
 }
 
 export type MetricOptions = "dps" | "hps" | "bossdps" | undefined
@@ -95,14 +99,14 @@ export interface UiSliceState {
     metric?: MetricOptions
 
     // Timeline Options
-    settings: { [key: string]: boolean}
+    settings: { [key: string]: boolean }
 
     // fight/player filter settings
-    filters: FilterValues // { [key: string]: { [key: string]: boolean | null } }
+    filters: FilterValues
 
     tooltip: {
         content: string
-        position: {x: number, y: number}
+        position: { x: number, y: number }
     }
 }
 
@@ -136,12 +140,15 @@ const INITIAL_STATE: UiSliceState = {
         spec: {},
 
         // fight filters
-        killtime: {min: null, max: null},
+        killtime: { min: null, max: null },
+
+        hide_empty_rows: false,
+        spells: {},
     },
 
     tooltip: {
         content: "",
-        position: {x: 0, y: 0}
+        position: { x: 0, y: 0 }
     }
 }
 
@@ -174,12 +181,12 @@ const SLICE = createSlice({
         },
 
         update_settings: (state, action) => {
-            state.settings = {...state.settings, ...action.payload}
+            state.settings = { ...state.settings, ...action.payload }
             return state
         },
 
         // Filters
-        set_filter: (state, action: PayloadAction<{group: FilterGroup, name: string, value: boolean}>) => {
+        set_filter: (state, action: PayloadAction<{ group: FilterGroup, name: string, value: boolean }>) => {
             const { group, name, value } = action.payload
             state.filters[group] = state.filters[group] || {}
             state.filters[group][name] = value
@@ -187,12 +194,12 @@ const SLICE = createSlice({
         },
 
         set_filters: (state, action) => {
-            state.filters = {...state.filters, ...action.payload}
+            state.filters = { ...state.filters, ...action.payload }
             return state
         },
 
         // loading
-        set_loading: (state, action: PayloadAction<{key: string, value: boolean}>) => {
+        set_loading: (state, action: PayloadAction<{ key: string, value: boolean }>) => {
             state._loading[action.payload.key] = action.payload.value
             return state
         },
@@ -203,7 +210,7 @@ const SLICE = createSlice({
         },
 
         set_tooltip: (state, action) => {
-            const {content, position } = action.payload
+            const { content, position } = action.payload
             state.tooltip.content = content
             state.tooltip.position = position
             return state

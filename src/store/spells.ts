@@ -16,13 +16,13 @@ export interface SpellSliceState {
     used_spell_ids: number[]
 
     /** toggle for visible spells */
-    spell_display: { [key: number] : boolean }
+    spell_display: { [key: number]: boolean }
 
     /** all spells that are currently selected/focused */
     selected_spells: number[]
 
     spell_types: string[],
-    spells_by_type: {[key: string]: number[]}
+    spells_by_type: { [key: string]: number[] }
 }
 
 
@@ -63,17 +63,21 @@ export function get_types_have_used_spells(state: RootState, spell_types: string
 }
 
 
-export function get_spell_visible(state: RootState, spell_id: number) : boolean {
+export function get_spell_display(state: RootState) {
+    return state.spells.spell_display;
+}
+
+export function get_spell_visible(state: RootState, spell_id: number): boolean {
     // undefined is considered true in this case
     return state.spells.spell_display[spell_id] !== false;
 }
 
 
 /* check if a given spell was ever used.
-   Used to eg.: avoid creating spell buttons for ever possible trinket,
-   even if nobody is using it.
+    Used to eg.: avoid creating spell buttons for ever possible trinket,
+    even if nobody is using it.
 */
-export function get_used_spells(state: RootState) : number[] {
+export function get_used_spells(state: RootState): number[] {
     return state.spells.used_spell_ids
 }
 
@@ -83,7 +87,7 @@ export function get_spell_was_used(state: RootState, spell_id: number) {
 }
 
 
-export function filter_used_spells(fights: Fight[]) : number[] {
+export function filter_used_spells(fights: Fight[]): number[] {
 
     if (!fights) { return [] }
 
@@ -108,7 +112,7 @@ export function filter_used_spells(fights: Fight[]) : number[] {
 
 
 // add the image and img path
-export function process_spells(spells?: SpellDict ) {
+export function process_spells(spells?: SpellDict) {
     if (!spells) { return {} }
 
     Object.values(spells).forEach(spell => {
@@ -127,16 +131,16 @@ export function process_spells(spells?: SpellDict ) {
 function _sort_spell_type_sort_key(spell_type: string) {
 
     let prefix = "50" // start middle
-    if (spell_type == "raid")           { prefix = "60"} // raid cd's after class
-    if (spell_type.startsWith("other")) { prefix = "80"} // other types go behind
+    if (spell_type == "raid") { prefix = "60" } // raid cd's after class
+    if (spell_type.startsWith("other")) { prefix = "80" } // other types go behind
 
     return [prefix, spell_type].join("-")
 }
 
 /* Sort spell types as:
-   - boss
-   - specs
-   - other
+    - boss
+    - specs
+    - other
 */
 export function sort_spell_types(spell_types: string[]) {
     return spell_types.sort((a, b) => {
@@ -150,10 +154,10 @@ export function sort_spell_types(spell_types: string[]) {
 /**
  * Shared logic to append new spells to the slice
  */
-function _add_spells_to_state(state: SpellSliceState , new_spells: SpellDict ) {
+function _add_spells_to_state(state: SpellSliceState, new_spells: SpellDict) {
 
     new_spells = process_spells(new_spells)
-    state.all_spells = {...state.all_spells, ...new_spells}
+    state.all_spells = { ...state.all_spells, ...new_spells }
 
     state.spells_by_type = {} // reset the list
     Object.values(state.all_spells).forEach(spell => {
@@ -169,7 +173,7 @@ function _add_spells_to_state(state: SpellSliceState , new_spells: SpellDict ) {
 }
 
 
-const INITIAL_STATE : SpellSliceState  = {
+const INITIAL_STATE: SpellSliceState = {
     all_spells: {},
     used_spell_ids: [],
     spell_display: {},
@@ -189,7 +193,7 @@ const SLICE = createSlice({
     reducers: {
 
         set_spells: (state, action: PayloadAction<SpellDict>) => {
-            const new_state = {...INITIAL_STATE}
+            const new_state = { ...INITIAL_STATE }
             return _add_spells_to_state(new_state, action.payload)
         },
 
@@ -204,19 +208,19 @@ const SLICE = createSlice({
             return _add_spells_to_state(state, action.payload)
         },
 
-        update_used_spells: (state, action: PayloadAction<{fights: Fight[] }>) => {
-            const {fights} = action.payload
+        update_used_spells: (state, action: PayloadAction<{ fights: Fight[] }>) => {
+            const { fights } = action.payload
             state.used_spell_ids = filter_used_spells(fights)
             return state
         },
 
-        set_spell_visible: (state, action: PayloadAction<{spell_id: number, visible: boolean}> ) => {
+        set_spell_visible: (state, action: PayloadAction<{ spell_id: number, visible: boolean }>) => {
             const { spell_id, visible } = action.payload
             state.spell_display[spell_id] = visible
             return state;
         },
 
-        spell_selected: (state, action: PayloadAction<{spell_id: number, selected: boolean, deselect_others?: boolean }>) => {
+        spell_selected: (state, action: PayloadAction<{ spell_id: number, selected: boolean, deselect_others?: boolean }>) => {
             const { spell_id, selected, deselect_others } = action.payload
 
             let selected_spells = new Set(state.selected_spells)
@@ -240,25 +244,25 @@ const SLICE = createSlice({
 
         builder
 
-        .addCase(set_fights, (state, action: PayloadAction<Fight[]> ) => {
-            const fights = action.payload
-            state.used_spell_ids = filter_used_spells(fights)
-            return state
-        })
+            .addCase(set_fights, (state, action: PayloadAction<Fight[]>) => {
+                const fights = action.payload
+                state.used_spell_ids = filter_used_spells(fights)
+                return state
+            })
 
-        /**
-         * Add spells to slice when a spec was loaded
-         */
-        .addCase(set_spec_spells, (state, action: PayloadAction<{spells: SpellDict}> ) => {
-            return _add_spells_to_state(state, action.payload.spells)
-        })
+            /**
+             * Add spells to slice when a spec was loaded
+             */
+            .addCase(set_spec_spells, (state, action: PayloadAction<{ spells: SpellDict }>) => {
+                return _add_spells_to_state(state, action.payload.spells)
+            })
 
-        /**
-         * Add spells to slice when a boss was loaded
-         */
-        .addCase(set_boss_spells, (state, action: PayloadAction<{spells: SpellDict}>) => {
-            return _add_spells_to_state(state, action.payload.spells)
-        })
+            /**
+             * Add spells to slice when a boss was loaded
+             */
+            .addCase(set_boss_spells, (state, action: PayloadAction<{ spells: SpellDict }>) => {
+                return _add_spells_to_state(state, action.payload.spells)
+            })
 
 
     }, // extraReducers

@@ -21,16 +21,16 @@ export function time_to_seconds(text: string) {
 
     const regex = /(?<minutes>\d+):(?<seconds>\d{2})/
     const found = text.match(regex)
-    if (!found?.groups) {return}
+    if (!found?.groups) { return }
     return parseInt(found.groups.minutes) * 60 + parseInt(found.groups.seconds)
 }
 
 /**
  * Formats a number in seconds into a time string with minutes and seconds.
  */
-export function seconds_to_time(seconds: number, {padding=true}) {
+export function seconds_to_time(seconds: number, { padding = true }) {
     let text = new Date(seconds * 1000).toISOString().substr(14, 5);
-    if(!padding && text.charAt(0) === '0') { text = text.substring(1); } // remove leading 0
+    if (!padding && text.charAt(0) === '0') { text = text.substring(1); } // remove leading 0
     return text;
 }
 
@@ -41,7 +41,7 @@ export function seconds_to_time(seconds: number, {padding=true}) {
 export function timetamp_to_time(timestamp?: string) {
     if (!timestamp) { return "00:00" }
 
-    const date =  new Date(timestamp)
+    const date = new Date(timestamp)
     const text = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
     return text;
 }
@@ -54,10 +54,10 @@ export function timetamp_to_time(timestamp?: string) {
  * @returns string
  */
 // based on: https://stackoverflow.com/a/9461657
-export function kFormatter(n: number, digits=1) {
+export function kFormatter(n: number, digits = 1) {
 
     if (n > 999) {
-        return(n/1000).toFixed(digits) + "k"
+        return (n / 1000).toFixed(digits) + "k"
     }
     return n.toFixed(0);
 }
@@ -74,11 +74,11 @@ export function slug(str: string) {
 
 
 export function get_pull_color(percent: number) {
-    if ( percent <=  3 ) { return "astounding" }
-    if ( percent <= 10 ) { return "legendary" }
-    if ( percent <= 25 ) { return "epic" }
-    if ( percent <= 50 ) { return "rare" }
-    if ( percent <= 75 ) { return "uncommon" }
+    if (percent <= 3) { return "astounding" }
+    if (percent <= 10) { return "legendary" }
+    if (percent <= 25) { return "epic" }
+    if (percent <= 50) { return "rare" }
+    if (percent <= 75) { return "uncommon" }
     return "common"
 }
 
@@ -89,10 +89,10 @@ export function get_pull_color(percent: number) {
  * and returns a Map of the array grouped by the grouping function.
  */
 export function group_by<T>(list: T[], key_getter: Function) {
-    const result: {[key: string|number]: T[]} = {};
+    const result: { [key: string | number]: T[] } = {};
     list.forEach((item) => {
-         const key = key_getter(item);
-         result[key] = [...(result[key] || []), item]
+        const key = key_getter(item);
+        result[key] = [...(result[key] || []), item]
     });
     return result;
 }
@@ -108,6 +108,6 @@ export function get_unique_values(items: any[], getter: Function) {
 }
 
 
-export async function sleep(duration=2000) {
+export async function sleep(duration = 2000) {
     return new Promise(r => setTimeout(r, duration));
 }

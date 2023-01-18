@@ -1,6 +1,7 @@
 import type Actor from '../types/actor';
 import type Fight from '../types/fight';
 import type SpecRanking from "../types/spec_ranking";
+import type CompRanking from "../types/spec_ranking";
 import type { AppDispatch, RootState } from './store'
 import { MODES } from './ui'
 import { createSelector } from 'reselect'
@@ -76,7 +77,7 @@ export const get_occuring_bosses = createSelector(
 //
 function _process_actor(actor: Actor) {
 
-    const spell_counter: {[key: number]: number} = {}
+    const spell_counter: { [key: number]: number } = {}
     actor.casts = actor.casts || []
     actor.casts.forEach(cast => {
         cast.counter = spell_counter[cast.id] = (spell_counter[cast.id] || 0) + 1
@@ -122,7 +123,7 @@ const SLICE = createSlice({
     name: "fights",
 
     initialState: {
-        fights_by_id: {} as {[key: string]: Fight},
+        fights_by_id: {} as { [key: string]: Fight },
         fight_ids: [] as string[],
     },
 
@@ -205,11 +206,22 @@ async function _load_spec_rankings(
 }
 
 
-async function _load_comp_rankings(boss_slug: string, search = "") {
-
+async function _load_comp_rankings(
+    boss_slug: string,
+    search = ""
+): Promise<Fight[]> {
     const url = `/api/comp_ranking/${boss_slug}${search}`;
-    const fight_data = await fetch_data(url);
-    return fight_data.fights || []
+    const comp_rankings: CompRanking = await fetch_data(url);
+
+    // unpack the fights
+    let fights: Fight[] = []
+    comp_rankings.reports?.forEach((report, i) => {
+        report.fights?.forEach(fight => {
+            fight.report_id = report.report_id
+            fights.push(fight)
+        })
+    })
+    return fights
 }
 
 
@@ -223,7 +235,7 @@ export function load_fights(
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
 
         // load
-        let fights = []
+        let fights: Fight[] = []
         switch (mode) {
             case MODES.SPEC_RANKING:
                 fights = await _load_spec_rankings(spec_slug, boss_slug, difficulty, metric)
