@@ -1,3 +1,5 @@
+import { get_spell_display } from "./store/spells"
+import store from "./store/store"
 import type { FilterValues } from "./store/ui"
 import type Actor from "./types/actor"
 import type Fight from "./types/fight"
@@ -16,13 +18,34 @@ function is_fight_visible(fight: Fight, filters: FilterValues) {
 }
 
 
-function is_player_visible(player: Actor , filters: FilterValues) {
+
+function player_has_visible_casts(player: Actor): boolean {
+
+    // WARNING: this does not listen to updates.
+    // so we need to manually retrigger the filtering whenever spell display changes
+    const state = store.getState()
+    const spell_display = get_spell_display(state);
+
+    return player.casts.some(cast =>
+        // can be True or Undefined
+        spell_display[cast.id] !== false
+    )
+}
+
+function is_player_visible(player: Actor, filters: FilterValues) {
 
     if (player.pinned) { return true }
 
-    if (filters["role"][player.role] === false ) { return false}
-    if (filters["class"][player.class] === false ) { return false}
-    if (filters["spec"][player.spec] === false ) { return false}
+    // TODO: is this still used?
+    if (filters["role"][player.role] === false) { return false }
+    if (filters["class"][player.class] === false) { return false }
+    if (filters["spec"][player.spec] === false) { return false }
+
+    if (filters.hide_empty_rows) {
+        if (!player_has_visible_casts(player)) {
+            return false
+        }
+    }
 
     const casts = player.casts
     return casts.length > 0

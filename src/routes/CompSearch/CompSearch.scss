@@ -1,0 +1,16 @@
+
+
+.warning {
+    grid-column: 1 / end;  // stretch first until last column
+
+    display: flex;
+    justify-content: center;
+
+    span {
+        padding: 0.5rem;
+        font-size: larger;
+        background: black;
+        border: 2px solid var(--warning);
+        border-radius: 0.25rem;
+    }
+}
