@@ -67,6 +67,9 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     const mode_spec = mode == MODES.SPEC_RANKING;
     const mode_comp = mode == MODES.COMP_RANKING;
 
+    // including "spell_display" because rows might be hidden when all casts are hidden
+    const spell_display = useAppSelector((state) => state.spells.spell_display);
+
     ///////////////////
     // apply filters
     if (!player) {
