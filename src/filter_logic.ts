@@ -42,6 +42,12 @@ function is_player_visible(player: Actor, filters: FilterValues) {
     if (filters["spec"][player.spec] === false) { return false }
 
     if (filters.hide_empty_rows) {
+
+        // never hide the boss lane
+        if (player.class_slug == "boss") {
+            return true
+        }
+
         if (!player_has_visible_casts(player)) {
             return false
         }
