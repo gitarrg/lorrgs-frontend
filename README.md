@@ -18,6 +18,20 @@ Please make sure to update tests as appropriate.
 
 
 # Dev
+
+## first time setup
+```sh
+# 1) install nodejs (v16.19)
+# https://www.digitalocean.com/community/tutorials/how-to-install-node-js-on-ubuntu-20-04
+cd ~
+curl -sL https://deb.nodesource.com/setup_16.x -o /tmp/nodesource_setup.sh
+sudo bash /tmp/nodesource_setup.sh
+sudo apt install nodejs
+
+# 2) install dependencies
+npm install
 ```
+
+```sh
 npm run server
 ```
