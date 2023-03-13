@@ -147,10 +147,10 @@ module.exports = {
 
         gitRevisionPlugin,
         new webpack.DefinePlugin({
-          VERSION: JSON.stringify(gitRevisionPlugin.version()),
-          COMMITHASH: JSON.stringify(gitRevisionPlugin.commithash()),
-          BRANCH: JSON.stringify(gitRevisionPlugin.branch()),
-          LASTCOMMITDATETIME: JSON.stringify(gitRevisionPlugin.lastcommitdatetime()),
+            VERSION: JSON.stringify(gitRevisionPlugin.version()),
+            COMMITHASH: JSON.stringify(gitRevisionPlugin.commithash()),
+            BRANCH: JSON.stringify(gitRevisionPlugin.branch()),
+            LASTCOMMITDATETIME: JSON.stringify(gitRevisionPlugin.lastcommitdatetime()),
         }),
 
     ],
@@ -190,6 +190,9 @@ module.exports = {
     devServer: {
 
         port: 9001,
+
+        // https://stackoverflow.com/questions/43619644/i-am-getting-an-invalid-host-header-message-when-connecting-to-webpack-dev-ser
+        allowedHosts: "all",
 
         static: {
             directory: path.join(__dirname, "/public"),

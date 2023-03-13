@@ -35,3 +35,26 @@ npm install
 ```sh
 npm run server
 ```
+
+
+## local AdSense testing:
+
+Ads are only shown if we serve the website is served from the correct domain.
+To allow local testing we can setup the following:
+
+1) on windows
+    edit: `C:\Windows\System32\drivers\etc\hosts` and add the following:
+    ```sh
+    # fake lorrgs domain to do ad sense testing
+    ::1 local.lorrgs.io
+    ```
+
+2) open the `webpack.config.js` file and add:
+    ```js
+    devServer: {
+        allowedHosts: "all",
+    }
+    ```
+
+3) browse the website via http://local.lorrgs.io:9001
+
