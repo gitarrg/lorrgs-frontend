@@ -1,5 +1,6 @@
 import HeaderLogo from '../../components/HeaderLogo'
 import LogoutButton from "./LogoutButton"
+import RefreshButton from "./RefreshButton"
 import style from "./UserPage.scss"
 import useUser from "./useUser"
 
@@ -36,7 +37,10 @@ export default function UserPage() {
                             <div>ID:</div><div><pre>{user.id}</pre></div>
                         </div>
 
-                        <LogoutButton />
+                        <div className="d-flex gap-2">
+                            <LogoutButton />
+                            <RefreshButton />
+                        </div>
                     </div>
                 </div>
             </div>
