@@ -7,6 +7,7 @@ import IndexUserReport from "./IndexUserReport"
 import LoginButton from "../auth/LoginButton"
 import styles from "./Index.scss"
 import { useTitle } from 'react-use'
+import Ad from "../../components/Ad"
 
 
 
@@ -71,7 +72,17 @@ export default function Index() {
                     <IndexLinks />
                 </div>
             </div>
-        </div>
+
+            </div>
+                <div
+                    style={{
+                        // "height": "30px",
+                        "background": "yellow",
+                    }}
+                >
+                    <Ad />
+                </div>
+
 
     </>
 }
