@@ -59,7 +59,7 @@ const SLICE = createSlice({
         },
 
         /** Store Error Inforation from a failed token request */
-        token_failed: (state, action: PayloadAction<{error: "", message: ""}>) => {
+        token_failed: (state, action: PayloadAction<{ error: "", message: "" }>) => {
             return {
                 ...INITIAL_STATE,
                 error: action.payload.error,
@@ -98,13 +98,13 @@ export function login(code: string) {
     return async (dispatch: AppDispatch) => {
 
         // Request
-        const repsonse = await fetch_data("/api/auth/token", {code});
+        const repsonse = await fetch_data("/api/auth/token", { code });
 
         const token = repsonse.token
         if (token) {
             dispatch(SLICE.actions.token_received(token))
             dispatch(SLICE.actions.token_loaded(token))
-            dispatch(load_user())
+            dispatch(load_user(true))
         } else {
             dispatch(SLICE.actions.token_failed(repsonse))
         }
@@ -113,7 +113,7 @@ export function login(code: string) {
 
 
 /** load info for the logged in user  */
-export function load_user() {
+export function load_user(refresh: boolean = false) {
 
     return async (dispatch: AppDispatch) => {
 
@@ -123,7 +123,11 @@ export function load_user() {
         let user_info: UserSliceState = jwt_decode(token)
 
         // load additional info
-        const repsonse = await fetch_data(`/api/auth/users/${user_info.id}`);
+        let url = `/api/auth/users/${user_info.id}`
+        if (refresh) {
+            url = `${url}/refresh`
+        }
+        const repsonse = await fetch_data(url);
 
         if (repsonse) {
             dispatch(SLICE.actions.user_loaded(repsonse))
