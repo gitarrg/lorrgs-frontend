@@ -19,6 +19,7 @@ const UserPage = lazy(() => import("./routes/auth/UserPage"));
 const UserReport = lazy(() => import("./routes/UserReport/UserReport"));
 const UserReportIndex = lazy(() => import("./routes/UserReportIndex/UserReportIndex"));
 const UserReportLoading = lazy(() => import("./routes/UserReportLoading/UserReportLoading"));
+const AdsTest = lazy(() => import("./routes/AdsTest"));
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +61,7 @@ export default function App() {
                     {/* other routes */}
                     <Route exact path="/help" component={Help} />
                     <Route exact path="/lorgmin" component={Admin} />
+                    <Route exact path="/dev/ads" component={AdsTest} />
 
                     {/* fallback --> Home */}
                     <Route exact path="/" component={Index} />
