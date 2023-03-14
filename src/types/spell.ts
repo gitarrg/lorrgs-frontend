@@ -25,6 +25,9 @@ export default interface Spell {
 
     show: boolean
 
+    /** Custom/Additional Tooltip for this Spell. */
+    readonly tooltip?: string
+
     readonly tooltip_info?: string
 
     readonly tags?: string[]
