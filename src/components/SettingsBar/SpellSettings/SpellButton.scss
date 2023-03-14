@@ -1,14 +1,14 @@
-
-
 .spell_button {
-
     position: relative;
+}
 
-    :global .dynamic_cd_warning {
-        position: absolute;
-        font-size: 8px;
-        right: 0;
-        top: 0;
-        cursor: help;
-    }
+
+.info_icon {
+    position: absolute;
+    font-size: 12px;
+    right: 0;
+    top: 0;
+    cursor: help;
+
+    text-shadow: 0 0 1px black, 0 0 1px black, 0 0 1px black, 0 0 1px black;
 }

@@ -1,4 +1,4 @@
-import { MouseEvent, useContext, useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 
 import styles from "./SpellButton.scss"
@@ -10,19 +10,24 @@ import { get_spell, set_spell_visible, get_spell_visible } from '../../../store/
 import { useAppSelector } from '../../../store/store_hooks'
 
 
-/* to avoid react rerenders when clicking the <a> tags */
-function no_link(e: MouseEvent<HTMLAnchorElement> ) {
-    e.preventDefault()
+const TOOLTIP_DYNAMIC_CD = "The displayed Cooldown for this spell is not exact and only shows an estimate."
+
+
+function CustomTooltip({tooltip = ""}) {
+
+    if (!tooltip) { return null }
+
+    return (
+        <div
+            className={styles.info_icon}
+            data-tooltip={tooltip}
+            data-tooltip-size="small"
+        >
+            ⚠️
+        </div>
+    )
 }
 
-const WARNING_SIGN = "⚠️"
-const DYNAMIC_CD_WARNING = (
-    <div
-        className="dynamic_cd_warning"
-        data-tooltip="The displayed Cooldown for this spell is not exact and only shows an estimate."
-        data-tooltip-size="small"
-    >{WARNING_SIGN}</div>
-)
 
 export default function SpellButton({spec, spell_id, onClick} : { spec: Spec|Boss|Class, spell_id: number, onClick?: Function } ) {
 
@@ -92,16 +97,17 @@ export default function SpellButton({spec, spell_id, onClick} : { spec: Spec|Bos
     // Render
     return (
         <div className={styles.spell_button}>
-        <a data-wowhead={spell.tooltip_info}>
-            <img
-                className={`button icon-s rounded wow-border-${wow_class} ${disabled}`}
-                src={spell.icon_path}
-                data-spell_id={spell.spell_id}
-                onClick={toggle_spell}
-            />
-        </a>
+            <a data-wowhead={spell.tooltip_info}>
+                <img
+                    className={`button icon-s rounded wow-border-${wow_class} ${disabled}`}
+                    src={spell.icon_path}
+                    data-spell_id={spell.spell_id}
+                    onClick={toggle_spell}
+                />
+            </a>
 
-        {visible && dynamic_cd && DYNAMIC_CD_WARNING}
+            {visible && <CustomTooltip tooltip={spell.tooltip} /> }
+            {visible && dynamic_cd && <CustomTooltip tooltip={TOOLTIP_DYNAMIC_CD} /> }
 
         </div>
     )
