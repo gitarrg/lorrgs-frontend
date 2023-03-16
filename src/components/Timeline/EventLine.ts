@@ -6,9 +6,10 @@ import store from "./../../store/store"
 import type Event from "../../types/event"
 import type Stage from "./Stage"
 import { toMMSS } from "../../utils"
+import { ASSETS } from "../../constants"
 
 
-const ICON_ROOT = "/img/spells"
+const ICON_ROOT = `${ASSETS}/images/spells`
 
 
 export default class EventLine extends Konva.Group {
@@ -74,8 +75,8 @@ export default class EventLine extends Konva.Group {
 
         if (this.tooltip_content) {
             this.listening(true)
-            this.mouse_event_bbox.on('mouseover', () => {this.hover(true)});
-            this.mouse_event_bbox.on('mouseout', () => {this.hover(false)});
+            this.mouse_event_bbox.on('mouseover', () => { this.hover(true) });
+            this.mouse_event_bbox.on('mouseout', () => { this.hover(false) });
         }
     }
 
@@ -90,15 +91,15 @@ export default class EventLine extends Konva.Group {
     /** Tooltip Text Helpers */
     _get_tooltip_elements() {
 
-        const items : any = {}
+        const items: any = {}
         const ed = this.event_data
 
         items["time"] = toMMSS(this.timestamp)
 
         // 18px is the native size of the "small"-images
-        items["icon"]   = ed.spell_icon    ? `<img src="${ICON_ROOT}/${ed.spell_icon}" width="18px" height="auto">` : ""
-        items["source"] = ed.source_name   ? `<span class=wow-${ed.source_class}>${ed.source_name}</span>` : ""
-        items["spell"]  = ed.spell_name    ? `<span class=wow-boss>${ed.spell_name}</span>` : ""
+        items["icon"] = ed.spell_icon ? `<img src="${ICON_ROOT}/${ed.spell_icon}" width="18px" height="auto">` : ""
+        items["source"] = ed.source_name ? `<span class=wow-${ed.source_class}>${ed.source_name}</span>` : ""
+        items["spell"] = ed.spell_name ? `<span class=wow-boss>${ed.spell_name}</span>` : ""
         items["player"] = this.player_data ? `<span class="wow-${this.player_data.class}">${this.player_data.name}</span>` : ""
 
         return items
@@ -122,7 +123,7 @@ export default class EventLine extends Konva.Group {
     }
 
     handle_event(event_name: string, payload: any) {
-        if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload)}
+        if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
     }
 
     hover(hovering: boolean) {
