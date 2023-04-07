@@ -1,5 +1,4 @@
 import * as ui_store from "../store/ui"
-import Ad from "../components/Ad"
 import LoadingOverlay from "./../components/shared/LoadingOverlay"
 import Navbar from "./../components/Navbar/Navbar"
 import PlayerNamesList from "./../components/PlayerNames/PlayerNamesList"
@@ -96,8 +95,6 @@ export default function SpecRankings() {
                 <PlayerNamesList />
                 <TimelineCanvas />
             </div>
-
-            <Ad className="mt-2" height="50px" />
         </div>
     );
 }
