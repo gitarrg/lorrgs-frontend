@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react'
+import { MouseEvent, useContext, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 
 import styles from "./SpellButton.scss"
@@ -49,8 +49,10 @@ export default function SpellButton({spec, spell_id, onClick} : { spec: Spec|Bos
     ////////////////////////////////////////////////////////////////////////////
 
     // onClick Callback
-    function toggle_spell() {
+    function toggle_spell(event: MouseEvent) {
         const new_value = !visible
+
+        event && event.preventDefault();
 
         // Toggle the spell itself
         dispatch(set_spell_visible({
@@ -97,12 +99,11 @@ export default function SpellButton({spec, spell_id, onClick} : { spec: Spec|Bos
     // Render
     return (
         <div className={styles.spell_button}>
-            <a data-wowhead={spell.tooltip_info}>
+            <a href="" data-wowhead={spell.tooltip_info} onClick={toggle_spell}>
                 <img
                     className={`button icon-s rounded wow-border-${wow_class} ${disabled}`}
                     src={spell.icon_path}
                     data-spell_id={spell.spell_id}
-                    onClick={toggle_spell}
                 />
             </a>
 

@@ -24,6 +24,10 @@
         gtag("js", new Date());
         gtag("config", "<%= GOOGLE_ANALYTICS_ID %>");
     </script>
+
+        <!-- wowhead -->
+    <script>const whTooltips = {colorLinks: false, iconizeLinks: false, renameLinks: false, iconSize: 'small'};</script>
+    <script src="https://wow.zamimg.com/js/tooltips.js"></script>
 </head>
 
 
@@ -34,10 +38,6 @@
     <div id=app_root class="vh-100"></div>
 
 </div>
-
-<!-- wowhead -->
-<script>const whTooltips = {colorLinks: false, iconizeLinks: false, renameLinks: false, iconSize: 'small'};</script>
-<script defer src="https://wow.zamimg.com/widgets/power.js"></script>
 
 <script>
 <% if (DEBUG) { %>
