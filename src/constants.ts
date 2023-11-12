@@ -15,8 +15,8 @@ export const DISCORD_LOGIN_URL = "https://discord.com/oauth2/authorize"
 
 ///////////////////////////////////
 // Default Settings
-export const ZONE_ID = 33
-export const DEFAULT_BOSS = "kazzara-the-hellforged"
+export const ZONE_ID = 35
+export const DEFAULT_BOSS = "gnarlroot"
 export const DEFAULT_BOSS_COMP = DEFAULT_BOSS
 
 
