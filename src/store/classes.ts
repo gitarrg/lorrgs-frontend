@@ -8,7 +8,7 @@ import { ASSETS } from "../constants"
 
 type ClassesSlice = {
     class_names: string[]
-    classes: {[key: string]: Class}
+    classes: { [key: string]: Class }
 }
 
 
@@ -21,7 +21,16 @@ export function get_class_names(state: RootState) {
 
 
 export function get_class(state: RootState, class_name_slug: string) {
+
+    // allow passing in a spec name
+    class_name_slug = class_name_slug.split("-")[0]
+
     return state.classes.classes[class_name_slug]
+}
+
+export function get_class_color(state: RootState, class_name_slug: string) {
+    const class_ = get_class(state, class_name_slug)
+    return class_?.color || ""
 }
 
 
@@ -40,11 +49,11 @@ const SLICE = createSlice({
     initialState: INITIAL_STATE,
 
     reducers: {
-        set_classes: (state, action: PayloadAction<{[key: string]: Class}>) => {
+        set_classes: (state, action: PayloadAction<{ [key: string]: Class }>) => {
 
             state.classes = {}
             state.class_names = []
-            
+
             Object.values(action.payload).forEach(wow_class => {
                 wow_class.icon_path = `${ASSETS}/images/classes/${wow_class.name_slug}.webp`
 
@@ -67,12 +76,12 @@ export default SLICE.reducer
 export function load_classes() {
 
     return async (dispatch: AppDispatch) => {
-        dispatch({type: "ui/set_loading", payload: {key: "classes", value: true}})
+        dispatch({ type: "ui/set_loading", payload: { key: "classes", value: true } })
 
         // Request
         const repsonce = await fetch_data("/api/classes");
         dispatch(SLICE.actions.set_classes(repsonce))
 
-        dispatch({type: "ui/set_loading", payload: {key: "classes", value: false}})
+        dispatch({ type: "ui/set_loading", payload: { key: "classes", value: false } })
     }
 }

@@ -9,6 +9,7 @@ import Konva from "konva";
 import PlayerRow from "./PlayerRow";
 import filter_logic from "../../filter_logic";
 import type Actor from "../../types/actor";
+import type Boss from "../../types/boss";
 import type Fight from "../../types/fight";
 import { FilterValues } from "../../store/ui";
 import { toMMSS } from "../../utils";
@@ -54,7 +55,7 @@ export default class FightRow {
 
     }
 
-    add_row(fight: Fight, player: Actor) {
+    add_row(fight: Fight, player: Actor | Boss) {
         const row = new PlayerRow(fight, player)
         this.rows.push(row)
 
@@ -67,7 +68,7 @@ export default class FightRow {
         return new Konva.Text({
             name: "cast_text",
             text: toMMSS(this.duration),
-            x: this.KILLTIME_MARGIN + (this.duration * constants.DEFAULT_ZOOM) ,
+            x: this.KILLTIME_MARGIN + (this.duration * constants.DEFAULT_ZOOM),
             y: 0,
             fontSize: 14,
 
@@ -103,7 +104,7 @@ export default class FightRow {
         return this._visible
     }
 
-    height() : number {
+    height(): number {
         const heights = this.rows.map(row => row.height())
         return heights.reduce((a, b) => a + b, 0)
     }
@@ -140,13 +141,13 @@ export default class FightRow {
     handle_event(event_name: string, payload: any) {
 
         // apply filters to the fight itself (before processing children)
-        if (event_name === constants.EVENT_APPLY_FILTERS ) { this._handle_apply_filters_pre(payload)}
+        if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_pre(payload) }
         if (!this.visible()) { return }
 
-        if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload)}
+        if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         this.rows.forEach(row => row.handle_event(event_name, payload))
 
         // postprocess after filters applied (in case height change due to child rows updating)
-        if (event_name === constants.EVENT_APPLY_FILTERS ) { this._handle_apply_filters_post()}
+        if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_post() }
     }
 }

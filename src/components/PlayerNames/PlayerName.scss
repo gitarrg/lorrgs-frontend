@@ -9,6 +9,12 @@
 }
 
 
+.icon {
+    width: var(--timeline-height);
+    height: var(--timeline-height);
+    border-right: 1px solid black;
+}
+
 
 /********************************
         Player Names
@@ -26,13 +32,7 @@
     overflow: hidden;
     position: relative;
 
-    &__spec_icon,
-    &__role_icon {
-        width: var(--timeline-height);
-        height: var(--timeline-height);
-        border-right: 1px solid black;
-    }
-
+    /*
     &__name,
     &__rank,
     &__total {
@@ -52,28 +52,26 @@
     &__total {
         right: 5px;
     }
+    */
 }
 
 
 .player_name {
     background: hsl(0, 0%, 30%);
-
     &:hover {
         background: hsl(0, 0%, 40%);
     }
+}
 
-    // slowly fade back
-    &:not(:hover) {
-        .player_name__rank,
-        .player_name__total,
-        .player_name__name {
-            transition-property: filter, opacity;
-            transition-timing-function: ease-in;
-            transition-duration: 4s;
-            transition-delay: 1s;
-        }
+
+.boss_name {
+    background: hsl(55, 80%, 80%);
+    color:  hsl(45, 45%, 20%);
+    font-weight: bold;
+    
+    &:hover {
+        background:  hsl(57, 100%, 80%);
     }
-
 }
 
 
@@ -83,14 +81,57 @@
 }
 
 
-.boss_name {
+/********************************
+        Text Sub Elements
+*********************************/
 
-    background: hsl(55, 80%, 80%);
-    color:  hsl(45, 45%, 20%);
-    font-weight: bold;
+
+@mixin text {
+    font-size: 1.2rem;
+    position: absolute;
+
+    // Y Position
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+
+.name, .rank {
+    @include text;
+    margin-left: 4px;
+}
+
+.copy, .total {
+    @include text;
+    right: 5px;
+}
+
+.copy {
+    // color: rgba(255, 255, 255, 0.5);
+    opacity: 0.5;
+    z-index: 999;
     
     &:hover {
-        background:  hsl(57, 100%, 80%);
+        opacity: 1.0;
+        color: white;
+    }
+
+}
+
+
+
+.player_name {
+    // slowly fade back
+    &:not(:hover) {
+        .rank,
+        .total,
+        .copy,
+        .name {
+            transition-property: filter, opacity;
+            transition-timing-function: ease-in;
+            transition-duration: 4s;
+            transition-delay: 1s;
+        }
     }
 }
 
@@ -116,9 +157,10 @@
     }
 
     // Hover Blur
-    .player_name:hover .player_name__rank,
-    .player_name:hover .player_name__total,
-    .player_name:not(:hover) .player_name__name {
+    .player_name:hover .rank,
+    .player_name:hover .total,
+    .player_name:not(:hover) .copy,
+    .player_name:not(:hover) .name {
         @include blur;
     }
 }}
@@ -142,8 +184,8 @@
 :global .comp_ranking {
     :local {
     // Hover Blur
-    .player_name:not(:hover) .player_name__total,
-    .player_name:hover .player_name__name {
+    .player_name:not(:hover) .total,
+    .player_name:hover .name {
         @include blur;
     }
 }}

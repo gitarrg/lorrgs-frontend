@@ -9,7 +9,7 @@ import type PlayerRow from "./PlayerRow"
 
 export default class Player extends Konva.Group {
 
-    row : PlayerRow
+    row: PlayerRow
     casts: Cast[]
     deaths: Death[]
     resurrections: Resurrection[]
@@ -32,6 +32,8 @@ export default class Player extends Konva.Group {
         // load casts
         this.casts = (player_data.casts || []).map(cast_data => new Cast(cast_data))
         this.casts = this.casts.filter(cast => cast.spell)
+
+        // sub events
         this.deaths = (player_data.deaths || []).map(death_data => new Death(player_data, death_data))
         this.resurrections = (player_data.resurrects || []).map(resurrect_data => new Resurrection(player_data, resurrect_data))
         this.layout_children()
@@ -87,13 +89,13 @@ export default class Player extends Konva.Group {
     }
 
     handle_event(event_name: string, payload: any) {
-        if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload)}
+        if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         this.casts.forEach(cast => cast.handle_event(event_name, payload))
         this.deaths.forEach(event => event.handle_event(event_name, payload))
         this.resurrections.forEach(event => event.handle_event(event_name, payload))
 
         // after cast update, so we can handle the cast visibility in there
-        if (event_name === constants.EVENT_SPELL_DISPLAY) {this._handle_spell_display()}
+        if (event_name === constants.EVENT_SPELL_DISPLAY) { this._handle_spell_display() }
 
         this.schedule_cache()
     }

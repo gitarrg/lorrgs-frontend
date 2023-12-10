@@ -116,6 +116,7 @@ module.exports = {
     plugins: [
         new MiniCssExtractPlugin({
             filename: DEBUG ? "[name].bundle.css" : "[name].[contenthash].bundle.css",
+            ignoreOrder: true, // ignore issues with file ordering.
         }),
 
         new CopyPlugin({

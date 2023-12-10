@@ -13,7 +13,7 @@ import { MODES } from "../../store/ui";
 Konva.autoDrawEnabled = false;
 
 
-export default class Stage extends Konva.Stage{
+export default class Stage extends Konva.Stage {
 
     static ZOOM_RATE = 1.1
     static ZOOM_MIN = 0.5
@@ -52,7 +52,7 @@ export default class Stage extends Konva.Stage{
 
         ////////////////////////////////
         // create layers
-        this.back_layer = new Konva.Layer({listening: false})
+        this.back_layer = new Konva.Layer({ listening: false })
         this.add(this.back_layer);
 
         this.main_layer = new Konva.Layer()
@@ -65,8 +65,8 @@ export default class Stage extends Konva.Stage{
         this.back_layer.add(this.ruler)
 
         // update canvas on window resize
-        this.on("dragmove",  this.on_dragmove)
-        this.on("wheel",  this.on_wheel)
+        this.on("dragmove", this.on_dragmove)
+        this.on("wheel", this.on_wheel)
         this.on("contextmenu", this.contextmenu)
 
         // update canvas on window resize
@@ -76,9 +76,9 @@ export default class Stage extends Konva.Stage{
 
     get FIGHT_SPACE() {
         // distance between fights in pixels
-        if (this.MODE == MODES.SPEC_RANKING ) { return -1; }
-        if (this.MODE == MODES.COMP_RANKING ) { return 10; }
-        if (this.MODE == MODES.USER_REPORT ) { return 38; } // 1 row + 10px gap
+        if (this.MODE == MODES.SPEC_RANKING) { return -1; }
+        if (this.MODE == MODES.COMP_RANKING) { return 10; }
+        if (this.MODE == MODES.USER_REPORT) { return 38; } // 1 row + 10px gap
 
         return -1;
     }
@@ -103,7 +103,7 @@ export default class Stage extends Konva.Stage{
                 y += row.height() + this.FIGHT_SPACE + 1 // 1px for border
             }
         })
-        this.height(y+1) // 1 extra to show the border
+        this.height(y + 1) // 1 extra to show the border
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -124,10 +124,10 @@ export default class Stage extends Konva.Stage{
         this.batchDraw();
     }
 
-    on_wheel(event: Konva.KonvaEventObject<WheelEvent> ) {
+    on_wheel(event: Konva.KonvaEventObject<WheelEvent>) {
 
         // only zoom on shift/ctrl + scroll
-        if (! (event.evt.shiftKey || event.evt.ctrlKey)) { return;}
+        if (!(event.evt.shiftKey || event.evt.ctrlKey)) { return; }
         event.evt.preventDefault();
 
         ////////////////////////////////////
@@ -136,7 +136,7 @@ export default class Stage extends Konva.Stage{
         let pointer = this.getPointerPosition();
         if (!pointer) { return }
 
-        let old_offset = ( pointer.x - this.x()) / this.scale_x; // normalized distance between 0:00 and cursor
+        let old_offset = (pointer.x - this.x()) / this.scale_x; // normalized distance between 0:00 and cursor
 
         this.scale_x = event.evt.deltaY < 0 ? this.scale_x * Stage.ZOOM_RATE : this.scale_x / Stage.ZOOM_RATE;
         this.scale_x = Math.max(this.scale_x, Stage.ZOOM_MIN)
@@ -179,8 +179,8 @@ export default class Stage extends Konva.Stage{
 
     handle_event(event_name: string, payload?: any) {
 
-        if (event_name === constants.EVENT_SPELL_SELECTED ) { this._handle_spell_selected(payload)}
-        if (event_name === constants.EVENT_CHECK_IMAGES_LOADED ) { return this._handle_check_images_loaded() } // return here, as this event should not be passed on
+        if (event_name === constants.EVENT_SPELL_SELECTED) { this._handle_spell_selected(payload) }
+        if (event_name === constants.EVENT_CHECK_IMAGES_LOADED) { return this._handle_check_images_loaded() } // return here, as this event should not be passed on
 
         // pass to children
         this.ruler.handle_event(event_name, payload)

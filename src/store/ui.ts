@@ -2,6 +2,7 @@ import type { RootState } from './store'
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { ZONE_ID } from '../constants'
+import Actor from '../types/actor'
 
 
 // modes to switch some page related features
@@ -46,6 +47,15 @@ export const get_is_loading = createSelector(
 
 export function get_tooltip(state: RootState) {
     return state.ui.tooltip
+}
+
+
+export function get_show_copynote(state: RootState) {
+    return state.ui.show_copynote
+}
+
+export function get_copynote_player(state: RootState) {
+    return state.ui.copynote_player
 }
 
 
@@ -108,6 +118,9 @@ export interface UiSliceState {
         content: string
         position: { x: number, y: number }
     }
+
+    show_copynote: boolean
+    copynote_player: Actor | null
 }
 
 
@@ -149,7 +162,10 @@ const INITIAL_STATE: UiSliceState = {
     tooltip: {
         content: "",
         position: { x: 0, y: 0 }
-    }
+    },
+
+    show_copynote: false,
+    copynote_player: null,
 }
 
 
@@ -214,7 +230,19 @@ const SLICE = createSlice({
             state.tooltip.content = content
             state.tooltip.position = position
             return state
-        }
+        },
+
+        set_show_copynote: (state, action: PayloadAction<boolean>) => {
+            state.show_copynote = action.payload
+            return state
+        },
+
+        set_copynote_player: (state, action: PayloadAction<Actor>) => {
+            state.copynote_player = action.payload
+            return state
+        },
+
+
     }, // reducers
 }) // slice
 
@@ -229,6 +257,8 @@ export const {
     set_spec_slug,
     set_tooltip,
     update_settings,
+    set_show_copynote,
+    set_copynote_player,
 } = SLICE.actions
 
 

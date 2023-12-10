@@ -1,12 +1,3 @@
-import * as ui_store from "../store/ui"
-import LoadingOverlay from "./../components/shared/LoadingOverlay"
-import Navbar from "./../components/Navbar/Navbar"
-import PlayerNamesList from "./../components/PlayerNames/PlayerNamesList"
-import SpecRankingsHeader from './SpecRankings/SpecRankingsHeader'
-import SpecSettingsBar from './SpecRankings/SpecSettingsBar'
-import TimelineCanvas from "./../components/Timeline/TimelineCanvas"
-import type Spec from '../types/spec'
-import useQuery from "../hooks/useQuery"
 import { get_boss, load_boss_spells } from '../store/bosses'
 import { get_spec, load_spec_spells } from '../store/specs'
 import { load_fights } from "../store/fights"
@@ -15,6 +6,16 @@ import { useDispatch } from 'react-redux'
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTitle } from 'react-use'
+import * as ui_store from "../store/ui"
+import CopyNoteWindow from "../components/CopyNoteWindow"
+import LoadingOverlay from "./../components/shared/LoadingOverlay"
+import Navbar from "./../components/Navbar/Navbar"
+import PlayerNamesList from "./../components/PlayerNames/PlayerNamesList"
+import SpecRankingsHeader from './SpecRankings/SpecRankingsHeader'
+import SpecSettingsBar from './SpecRankings/SpecSettingsBar'
+import TimelineCanvas from "./../components/Timeline/TimelineCanvas"
+import type Spec from '../types/spec'
+import useQuery from "../hooks/useQuery"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Component
@@ -90,6 +91,7 @@ export default function SpecRankings() {
                 <SpecSettingsBar />
             </div>
             {is_loading && <LoadingOverlay />}
+            { <CopyNoteWindow />}
 
             <div className={`p-2 bg-dark rounded border d-flex ${is_loading ? "loading_trans" : ""}`}>
                 <PlayerNamesList />
