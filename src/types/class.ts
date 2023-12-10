@@ -13,6 +13,9 @@ export default interface Class {
     // just to silence some TS errors
     class?: any
 
+    // class color (incuding the #)
+    color: string
+
     /** URL to the icon */
     icon_path: string
 

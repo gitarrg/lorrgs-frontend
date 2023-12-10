@@ -26,7 +26,7 @@ export default class TimelineMarker extends Konva.Group {
     private label: Konva.Text
 
 
-    constructor(config={}) {
+    constructor(config = {}) {
         super(config)
         this.draggable(true)
         this.transformsEnabled("position")
@@ -76,8 +76,8 @@ export default class TimelineMarker extends Konva.Group {
 
 
         this.on("dragmove", this.on_dragmove)
-        this.on('mouseover', () => {this.hover(true)});
-        this.on('mouseout', () => {this.hover(false)});
+        this.on('mouseover', () => { this.hover(true) });
+        this.on('mouseout', () => { this.hover(false) });
 
         this.on("mousedown contextmenu", (e) => {
             e.evt.preventDefault();
@@ -107,9 +107,6 @@ export default class TimelineMarker extends Konva.Group {
     }
 
     set time(value) {
-
-        console.log("set time", value)
-
         this._time = value
 
         // update label
@@ -144,6 +141,6 @@ export default class TimelineMarker extends Konva.Group {
     }
 
     handle_event(event_name: string, payload: any) {
-        if (event_name === constants.EVENT_ZOOM_CHANGE) { this.handle_zoom_change(payload)}
+        if (event_name === constants.EVENT_ZOOM_CHANGE) { this.handle_zoom_change(payload) }
     }
 }
