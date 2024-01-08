@@ -9,7 +9,11 @@ import { TaskItems, task_item_status } from "./TaskItems";
 
 
 /** Frequency in ms how often to check for task status updates */
-const TASK_CHECK_INVERVAL = 1000 // 500
+const TASK_CHECK_INVERVAL = 2000  // 1 second
+
+
+// 10minutes
+const TASK_CHECK_MAX_ITER = (10 * 60 * 1000) / TASK_CHECK_INVERVAL
 
 
 /** status when the task is still in the queue.
@@ -62,12 +66,29 @@ export default function UserReportLoading() {
 
     const [task_info, set_task_info] = useState({status: "unknown", message: "", updated: 0, items: {}})
     const [delay, setDelay] = useState<number|null>(null)
+    const [num_checks, set_num_checks] = useState(0)
 
     ////////////////////////////
     // Callback
     async function update_status() {
 
         if (!task_name) { return }
+
+
+        // Stop after TASK_CHECK_MAX_ITER Iterations
+        set_num_checks(num_checks + 1)
+        if (num_checks > TASK_CHECK_MAX_ITER) {
+            console.log("TIMEOOUT")
+
+            set_task_info({
+                status: "Timeout",
+                message: "please reload / try again",
+                updated: 0,
+                items: {}
+            })
+            setDelay(null)
+            return
+        }
 
         const info = await fetch_task_status(task_name)
         console.log("checking task status", info)
