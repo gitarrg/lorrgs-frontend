@@ -124,7 +124,7 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
                 <WebpImg className={styles.icon} src={spec.icon_path} />
 
                 <span className={styles.name}>{player.name.substring(0, MAX_CHAR_NAME)}</span>
-                {mode_spec && <span className={styles.copy}><CopyAsNoteButton player={player}/></span>}
+                <span className={styles.copy}><CopyAsNoteButton player={player}/></span>
                 {mode_spec && player.rank && <span className={styles.rank}>#{player.rank}</span>}
                 {player.total && <span className={styles.total}>{kFormatter(player.total)}</span>}
             </a>
