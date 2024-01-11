@@ -4,7 +4,7 @@
 const PRINT_REQUEST_TIMES = true
 
 
-export async function fetch_data(url : string, params={}) {
+export async function fetch_data(url: string, params = {}) {
 
     if (Object.keys(params).length) {
         let search = new URLSearchParams(params)
@@ -20,10 +20,16 @@ export async function fetch_data(url : string, params={}) {
     const console_key = `request: ${url}`
 
     PRINT_REQUEST_TIMES && console.time(console_key)
-    let response = await fetch(url)
+    const response = await fetch(url)
     PRINT_REQUEST_TIMES && console.timeEnd(console_key)
 
-    if (!response.ok)            { return {} }
-    if (response.status !== 200) { return {} }
+    if (!response.ok) {
+        const data = await response.json()
+        return {
+            "status": response.status,
+            "error": data?.detail || response.statusText,
+        }
+    }
+
     return response.json()
 }

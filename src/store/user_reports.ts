@@ -129,11 +129,10 @@ export function load_report_overview(report_id: string, refresh?: boolean) {
 
         // Try to get existing one
         const url = `/api/user_reports/${report_id}/load_overview`;
-
-        const report_data: UserReport = await fetch_data(url, {refresh: refresh || false});
+        const report_data: UserReport = await fetch_data(url, { refresh: refresh || false });
 
         // load zone first
-        if ( report_data.zone_id > 0 ) {
+        if (report_data.zone_id > 0) {
             dispatch(load_bosses(report_data.zone_id))
         }
 
@@ -147,7 +146,7 @@ export function load_report(report_id: string, fight_ids: number[], player_ids: 
 
     return async (dispatch: AppDispatch) => {
 
-        const search_string = build_url_search_string({fight_ids, player_ids})
+        const search_string = build_url_search_string({ fight_ids, player_ids })
         let url = `/api/user_reports/${report_id}/load?${search_string}`;
         if (user_id) {
             url = `${url}&user_id=${user_id}`
