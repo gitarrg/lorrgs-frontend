@@ -3,17 +3,18 @@ import { useEffect } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useTitle } from "react-use";
 
-import * as ui_store from "../../store/ui";
-import CompRankingsHeader from "./CompRankingsHeader";
-import CompSettingsBar from "./CompSettingsBar";
-import LoadingOverlay from "../../components/shared/LoadingOverlay";
-import Navbar from "../../components/Navbar/Navbar";
-import PlayerNamesList from "../../components/PlayerNames/PlayerNamesList";
-import TimelineCanvas from "../../components/Timeline/TimelineCanvas";
 import { get_boss, load_boss_spells } from "../../store/bosses";
 import { load_fights } from "../../store/fights";
 import { load_spec_spells } from "../../store/specs";
 import { useAppSelector } from "../../store/store_hooks";
+import * as ui_store from "../../store/ui";
+import CompRankingsHeader from "./CompRankingsHeader";
+import CompSettingsBar from "./CompSettingsBar";
+import CopyNoteWindow from "../../components/CopyNoteWindow";
+import LoadingOverlay from "../../components/shared/LoadingOverlay";
+import Navbar from "../../components/Navbar/Navbar";
+import PlayerNamesList from "../../components/PlayerNames/PlayerNamesList";
+import TimelineCanvas from "../../components/Timeline/TimelineCanvas";
 
 export default function CompRankings() {
     ////////////////////////////////////////////////////////////////////////////
@@ -98,6 +99,7 @@ export default function CompRankings() {
             </div>
 
             {is_loading && <LoadingOverlay />}
+            { <CopyNoteWindow />}
 
             <div className={`p-2 bg-dark rounded border d-flex ${is_loading ? "loading_trans" : ""}`}>
                 <PlayerNamesList />

@@ -31,28 +31,6 @@
 
     overflow: hidden;
     position: relative;
-
-    /*
-    &__name,
-    &__rank,
-    &__total {
-        font-size: 1.2rem;
-        position: absolute;
-
-        // Y Position
-        top: 50%;
-        transform: translateY(-50%);
-    }
-
-    &__name,
-    &__rank {
-        margin-left: 4px;
-    }
-
-    &__total {
-        right: 5px;
-    }
-    */
 }
 
 
@@ -145,9 +123,28 @@
 }
 
 
+/*
+V = Visible by default / hide on hover
+H = Hidden by default / show on hover
+
+     | Rank | Name | DPS | Copy
+---- | ---- | ---- | --- | -----
+Spec |  V   |  H   |  V  |  H
+Comp |  -   |  V   |  V  |  H
+User |  -   |  V   |  V  |  H
+*/
+
+
+
+// Default Blur States
+.player_name:hover .total,
+.player_name:not(:hover) .copy {
+    @include blur;
+}
+
+
 // Edits for the Spec Rankings
 :global .spec_ranking { :local {
-
 
     .fight:first-of-type .boss_name {
         border-top-left-radius: 0.25rem;
@@ -156,11 +153,9 @@
         border-bottom-left-radius: 0.25rem;
     }
 
-    // Hover Blur
-    .player_name:hover .rank,
-    .player_name:hover .total,
-    .player_name:not(:hover) .copy,
-    .player_name:not(:hover) .name {
+    // Only blur names on Spec Rankings, in favor of "rank"
+    .player_name:not(:hover) .name,
+    .player_name:hover .rank {
         @include blur;
     }
 }}
@@ -183,12 +178,13 @@
 
 :global .comp_ranking {
     :local {
-    // Hover Blur
-    .player_name:not(:hover) .total,
-    .player_name:hover .name {
-        @include blur;
+
+        .player_name,
+        .boss_name {
+            width: calc(175px + 28px); // extra width for role icons
+        }
     }
-}}
+}
 
 
 :global .user_report {

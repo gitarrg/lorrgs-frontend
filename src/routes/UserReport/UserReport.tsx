@@ -1,10 +1,3 @@
-import * as ui_store from "../../store/ui"
-import LoadingOverlay from "./../../components/shared/LoadingOverlay"
-import PlayerNamesList from "./../../components/PlayerNames/PlayerNamesList"
-import ReportHeader from './ReportHeader'
-import ReportSettingsBar from './ReportSettingsBar'
-import TimelineCanvas from "./../../components/Timeline/TimelineCanvas"
-import UserReportNavbar from './UserReportNavbar'
 import { get_occuring_bosses, get_occuring_specs, load_report_fights } from "../../store/fights"
 import { load_boss_spells } from '../../store/bosses'
 import { load_report_overview } from '../../store/user_reports'
@@ -14,6 +7,14 @@ import { useDispatch } from 'react-redux'
 import { useEffect } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { useTitle } from 'react-use'
+import * as ui_store from "../../store/ui"
+import CopyNoteWindow from "../../components/CopyNoteWindow"
+import LoadingOverlay from "./../../components/shared/LoadingOverlay"
+import PlayerNamesList from "./../../components/PlayerNames/PlayerNamesList"
+import ReportHeader from './ReportHeader'
+import ReportSettingsBar from './ReportSettingsBar'
+import TimelineCanvas from "./../../components/Timeline/TimelineCanvas"
+import UserReportNavbar from './UserReportNavbar'
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,6 +86,7 @@ export default function UserReport() {
                 <ReportSettingsBar />
             </div>
             {is_loading && <LoadingOverlay />}
+            { <CopyNoteWindow />}
 
             <div className={`p-2 bg-dark rounded border d-flex ${is_loading ? "loading_trans" : ""}`}>
                 <PlayerNamesList />
