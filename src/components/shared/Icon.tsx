@@ -18,13 +18,13 @@ export default function Icon({
 } ) {
 
     // @ts-ignore
-    const name_slug = spec.code ?? spec.class?.name_slug ?? spec.name_slug
+    const name_slug = spec.code ?? spec.class?.name_slug ?? spec.name_slug ?? ""
 
 
     return (
         <WebpImg
             className={`icon-${size} rounded wow-border-${name_slug} ${className}`}
-            src={spec.icon_path}
+            src={spec.icon_path || "icon path missing"}
             alt={alt}
         />
     )
