@@ -1,7 +1,7 @@
 
 
 export const LOGO_URL = "/static/logo.svg";
-export const ASSETS = "https://assets.lorrgs.io"
+export const ASSETS = "http://assets2.lorrgs.io"
 
 
 // Third Party
