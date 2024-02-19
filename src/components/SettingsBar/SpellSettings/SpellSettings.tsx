@@ -10,6 +10,8 @@ import { get_spec } from "../../../store/specs"
 import { get_types_have_used_spells } from "../../../store/spells"
 import { useAppSelector } from "../../../store/store_hooks"
 
+import { SpellPresetSettings } from "../SpellPresets/SpellPresetSettings"
+
 
 function get_spell_type(spell_type: string): Spec|Boss|Class {
     const spec = useAppSelector(state => get_spec(state, spell_type));
@@ -67,6 +69,7 @@ export default function SpellSettings() {
 
     return (
         <>
+            <SpellPresetSettings />
             <BossSpells />
             <ClassSpells />
             <OtherSpells />

@@ -1,0 +1,9 @@
+.button {
+    text-align: center;
+
+    background-color: #5a5a5a;
+
+    &:global.disabled {
+        background-color: #3a3a3a;
+    }
+}

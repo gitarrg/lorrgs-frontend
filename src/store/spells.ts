@@ -220,6 +220,17 @@ const SLICE = createSlice({
             return state;
         },
 
+        set_spell_tag_visible: (state, action: PayloadAction<{ tag: string, visible: boolean }>) => {
+            const { tag, visible } = action.payload
+
+            Object.values(state.all_spells).forEach(spell => {
+                if (spell.tags?.includes(tag) || tag == "*") {
+                    state.spell_display[spell.spell_id] = visible
+                }
+            });
+            return state;
+        },
+
         spell_selected: (state, action: PayloadAction<{ spell_id: number, selected: boolean, deselect_others?: boolean }>) => {
             const { spell_id, selected, deselect_others } = action.payload
 
@@ -272,6 +283,7 @@ const SLICE = createSlice({
 export const {
     set_spells,
     set_spell_visible,
+    set_spell_tag_visible,
     update_used_spells,
     spell_selected,
 } = SLICE.actions
