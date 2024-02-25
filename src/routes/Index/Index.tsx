@@ -34,13 +34,13 @@ const DISCLAIMER = <div>
 
         <hr className="border-0" />
 
-        <p>Just seeing what people are doing successfully will not make it work for you,
+        <p>Just seeing what people are doing successfully will not make it work for you,&nbsp;
         <span className="wow-monk">unless you understand why</span>.</p>
 
         <p className="mb-0">By looking at the timelines represented here you should conclude something like:</p>
 
         <div className="ml-2">
-            <em className="text-light">"If we 4 heal this fight and push to phase 2 before 2:54, then it’s possible to achieve what I'm seeing here".</em>
+            <em className="text-light">"If we 4 heal this fight and push to phase 2 before 2:54, then it’s possible to achieve what I'm seeing here."</em>
         </div>
     </div>
 </div> // disclaimer
