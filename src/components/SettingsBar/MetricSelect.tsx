@@ -1,12 +1,8 @@
-
-
-
 import { ReactNode } from "react";
 import DropdownMenu from "../DropdownMenu";
 
 import styles from "./DisplaySettings.scss"
 
-import { FaAddressBook, FaAlignCenter, FaBeer, FaHourglass, FaImage, FaStream } from 'react-icons/fa';
 import { RiSwordFill } from 'react-icons/ri';
 import { BiPlusMedical } from 'react-icons/bi';
 import { IoSkullSharp } from 'react-icons/io5';
@@ -14,34 +10,59 @@ import { applyStatics, MenuItem } from "@szhsin/react-menu";
 import QueryNavLink from "../shared/QueryNavLink";
 import { useAppSelector } from "../../store/store_hooks";
 import { get_metric } from "../../store/ui";
+import { get_spec } from "../../store/specs";
+import { get_role } from "../../store/roles";
 
 
-const METRIC_ICONS : {[key: string]: ReactNode} = {}
-METRIC_ICONS["dps"] = <RiSwordFill />
-METRIC_ICONS["hps"] = <BiPlusMedical />
-METRIC_ICONS["bossdps"] = <IoSkullSharp />
+interface Metric {
+    icon: ReactNode,
+    label: string,
+    class: string,
+}
+
+const METRICS: {[key: string]: Metric} = {}
+
+METRICS["dps"] = {
+    label: "Damage",
+    icon: <RiSwordFill />,
+    class: "wow-mdps",
+}
+METRICS["hps"] = {
+    label: "Healing",
+    icon: <BiPlusMedical />,
+    class: "wow-heal",
+}
+
+METRICS["bossdps"] = {
+    label: "Boss DPS",
+    icon: <IoSkullSharp />,
+    class: "wow-boss",
+}
 
 
-function MetricIcon({metric, className="", ...props} : {metric: string}) {
+function MetricIcon({metric_name} : {metric_name: string}) {
 
-    const icon = METRIC_ICONS[metric]
-    if (!icon) { return null}
+    const metric = METRICS[metric_name]
+    if (!metric) { return null}
 
     return (
         <div className={`${styles.button} button icon-s rounded border-white`}>
-            {icon}
+            {metric.icon}
         </div>
     )
 }
 
 
-function MetricMenuOption({metric, className, label="", ...props} : {metric: string, label?: string}) {
+function MetricMenuOption({metric_name, ...props} : {metric_name: string}) {
+
+    const metric = METRICS[metric_name]
+    if (!metric) { return null}
 
     return (
-        <QueryNavLink params={{"metric": metric}}>
+        <QueryNavLink params={{"metric": metric_name}}>
             <MenuItem {...props}>
-                <MetricIcon metric={metric} className={className} />
-                <span className={`ml-1`}>{label}</span>
+                <MetricIcon metric_name={metric_name} />
+                <span className={`ml-1`}>{metric.label}</span>
             </MenuItem>
         </QueryNavLink>
     )
@@ -53,14 +74,15 @@ applyStatics(MenuItem)(MetricMenuOption)
 export default function MetricSelect() {
 
     const metric = useAppSelector(get_metric)
-    const button = <MetricIcon metric={metric} />
-
+    const button = <MetricIcon metric_name={metric} />
+    const spec = useAppSelector(get_spec)
+    const role = useAppSelector(state => get_role(state, spec?.role))
 
     return (
         <DropdownMenu button={button}>
-            <MetricMenuOption className="wow-mdps" metric="dps" label="Damage" />
-            <MetricMenuOption className="wow-heal" metric="hps" label="Healing" />
-            <MetricMenuOption className="wow-boss" metric="bossdps" label="Boss DPS"/>
+            {role?.metrics.map(metric => 
+                <MetricMenuOption key={metric} metric_name={metric} />
+            )}
         </DropdownMenu>
     )
 
