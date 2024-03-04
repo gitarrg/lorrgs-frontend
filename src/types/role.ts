@@ -5,6 +5,7 @@ export default interface Role {
     id: number
     name: string
     specs: string[]
-
+    metrics: string[]
     icon_path: string
+
 }
