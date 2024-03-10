@@ -2,6 +2,7 @@ import styles from "./SelectGrid.scss"
 import { useFormContext, useWatch } from 'react-hook-form'
 import { useContext, useEffect } from "react";
 import { SelectGroupContext } from "./SelectGroup";
+import { SelectGridContext } from "./SelectGrid";
 import useUser from "../../../routes/auth/useUser";
 
 
@@ -20,6 +21,7 @@ export default function SelectGridItem({field_name, className="", children}: Sel
     // Hooks
     const selected = useWatch({ name: field_name });
     const { setValue } = useFormContext();
+    const grid_selected = useContext(SelectGridContext)
     const group_selected = useContext(SelectGroupContext)
 
     const user = useUser()
@@ -37,6 +39,11 @@ export default function SelectGridItem({field_name, className="", children}: Sel
 
         setValue(field_name, !selected)
     }
+
+    // pass value when the entire grid gets selected
+    useEffect(() => {
+        setValue(field_name, grid_selected)
+    }, [grid_selected])
 
     // pass values when the group itself gets selected
     useEffect(() => {
