@@ -16,6 +16,7 @@ Konva.autoDrawEnabled = false;
 export default class Stage extends Konva.Stage {
 
     static ZOOM_RATE = 1.1
+    static SCROLL_RATE = 0.5
     static ZOOM_MIN = 0.5
 
     static THROTTLE = 200 // max update rate in ms
@@ -70,7 +71,7 @@ export default class Stage extends Konva.Stage {
         this.on("contextmenu", this.contextmenu)
 
         // update canvas on window resize
-        window.addEventListener("resize", () => {this.update_width()})
+        window.addEventListener("resize", () => { this.update_width() })
         this.update_width() // initial update
     }
 
@@ -125,6 +126,20 @@ export default class Stage extends Konva.Stage {
     }
 
     on_wheel(event: Konva.KonvaEventObject<WheelEvent>) {
+
+        // [alt] --> horizontal scroll
+        if (event.evt.altKey || event.evt.deltaX > 0) {
+            event.evt.preventDefault();
+
+            /// combine the delata of vertical and horizontal scroll
+            let delta = event.evt.deltaX + event.evt.deltaY
+
+            let x = this.x() - delta * Stage.SCROLL_RATE
+            this.x(x);
+
+            this.on_dragmove() // trigger updates
+            return;
+        }
 
         // only zoom on shift/ctrl + scroll
         if (!(event.evt.shiftKey || event.evt.ctrlKey)) { return; }
@@ -186,7 +201,7 @@ export default class Stage extends Konva.Stage {
         this.ruler.handle_event(event_name, payload)
         this.rows.forEach(row => row.handle_event(event_name, payload))
 
-        if (event_name === constants.EVENT_APPLY_FILTERS ) { this._handle_apply_filters()}
+        if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters() }
 
         this.batchDraw() // for now, just assume we need to redraw after every event
     }
