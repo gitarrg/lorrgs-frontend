@@ -1,4 +1,4 @@
-import style from "./LoginPage.scss"
+import * as style from "./LoginPage.scss"
 import useUser from "./useUser"
 import { DISCORD_LOGIN_URL, DISCORD_CLIENT_ID } from "../../constants"
 import { Link } from "react-router-dom"

@@ -5,7 +5,7 @@ import IndexLinks from './IndexLinks'
 import IndexSpecs from './IndexSpecs'
 import IndexUserReport from "./IndexUserReport"
 import LoginButton from "../auth/LoginButton"
-import styles from "./Index.scss"
+import * as styles  from "./Index.scss"
 import { useTitle } from 'react-use'
 
 

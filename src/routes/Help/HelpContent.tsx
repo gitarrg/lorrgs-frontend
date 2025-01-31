@@ -1,4 +1,4 @@
-import styles from "./Help.scss"
+import * as styles  from "./Help.scss"
 import { DISCORD_LINK } from "../../constants"
 import { ReactNode } from "react"
 

@@ -1,4 +1,4 @@
-import styles from "./UrlInput.scss"
+import * as styles  from "./UrlInput.scss"
 import { FaChevronRight, FaSyncAlt } from 'react-icons/fa';
 import { KeyboardEvent, useEffect } from 'react'
 import { load_report_overview, get_is_loading, get_user_report } from "../../store/user_reports";

@@ -5,7 +5,7 @@ import type Spec from "../../types/spec"
 import { get_difficulty, get_mode, MODES } from '../../store/ui';
 import { get_spec } from "../../store/specs"
 import { useAppSelector } from '../../store/store_hooks';
-import styles from "./Navbar.scss"
+import * as styles from "./Navbar.scss"
 import WebpImg from '../WebpImg';
 
 
@@ -29,7 +29,11 @@ export default function NavbarBossButton({boss} : {boss: Boss}) {
 
     // Render
     return (
-        <NavLink to={full_link} className={styles.button} activeClassName="active" data-tooltip={boss.full_name} data-tooltip-dir="down">
+        <NavLink
+            to={full_link}
+            className={({ isActive }) => `${styles.button} ${isActive ? "active" : ""}`.trim()}
+            data-tooltip={boss.full_name} data-tooltip-dir="down"
+        >
             <WebpImg
                 className="icon-m wow-border-boss rounded grow-when-touched"
                 src={boss.icon_path}

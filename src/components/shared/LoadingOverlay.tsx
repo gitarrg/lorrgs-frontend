@@ -1,6 +1,6 @@
 /**Spinner Overlay to indicate when things are loading */
 import { FaCircleNotch } from "react-icons/fa"
-import styles from "./LoadingOverlay.scss"
+import * as styles  from "./LoadingOverlay.scss"
 
 export default function LoadingOverlay() {
     return (

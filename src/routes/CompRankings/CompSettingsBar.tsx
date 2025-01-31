@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 import DisplaySettings from '../../components/SettingsBar/DisplaySettings'
 import SettingsBar from '../../components/SettingsBar/SettingsBar'
-import styles from "./CompSettingsBar.scss"
+import * as styles  from "./CompSettingsBar.scss"
 import SpellSettings from '../../components/SettingsBar/SpellSettings/SpellSettings';
 
 

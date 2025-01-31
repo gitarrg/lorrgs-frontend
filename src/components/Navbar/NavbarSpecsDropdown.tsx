@@ -1,5 +1,5 @@
 import NavBarSpecButton from './NavBarSpecButton';
-import styles from "./Navbar.scss"
+import * as styles from "./Navbar.scss"
 
 export default function NavbarSpecsDropdown({ specs } : { specs: string[] }) {
 

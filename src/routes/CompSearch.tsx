@@ -1,6 +1,6 @@
 /* Page/Form to search for specific Comps*/
 import { useTitle } from "react-use";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm, FormProvider } from "react-hook-form";
 
 import BossSelect from "./CompSearch/BossSelect";
@@ -12,7 +12,7 @@ import SearchSubmitButton from "./CompSearch/SearchSubmitButton";
 import KilltimeGroup from "./CompSearch/KilltimeGroup";
 import type { CompCountMap } from "../components/CompPreview";
 
-import style from "./CompSearch/CompSearch.scss";
+import * as style from "./CompSearch/CompSearch.scss";
 
 type FormValues = {
     /** Currently selected Boss */
@@ -68,7 +68,7 @@ export default function CompSearch() {
     ////////////////////////////////////////////////////////////////////////////
     // Hooks
     const form_methods = useForm<FormValues>();
-    const history = useHistory();
+    const navigate  = useNavigate()
 
     ////////////////////////////////////////////////////////////////////////////
     // Hooks Part2
@@ -85,7 +85,7 @@ export default function CompSearch() {
 
         // redirect to the new url
         console.log("new_url", rel_url);
-        history.push(rel_url);
+        navigate(rel_url);
     }
 
     ////////////////////////////////////////////////////////////////////////////

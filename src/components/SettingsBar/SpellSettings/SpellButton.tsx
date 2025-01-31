@@ -1,7 +1,7 @@
 import { MouseEvent, useContext, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 
-import styles from "./SpellButton.scss"
+import * as styles  from "./SpellButton.scss"
 import type Boss from '../../../types/boss'
 import type Class from '../../../types/class'
 import type Spec from '../../../types/spec'

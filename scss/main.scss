@@ -1,21 +1,21 @@
 
 // utils
-@import "mixins";
+@use "mixins";
 
-@import "settings";
+@use "settings";
 
 // general styles
-@import "base";
-@import "general";
-@import "layout";
-@import "reboot";
+@use "base";
+@use "general";
+@use "layout";
+@use "reboot";
 
 // General Elements
-@import "buttons";
-@import "icons";
-@import "tooltips";
-@import "menu";
+@use "buttons";
+@use "icons";
+@use "tooltips";
+@use "menu";
 
 // pages
-@import "styles/styles_dir";
-@import "wow";
+@use "styles/styles_dir";
+@use "wow";

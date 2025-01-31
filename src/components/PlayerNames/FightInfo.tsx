@@ -2,7 +2,7 @@ import Fight from "../../types/fight";
 import { useAppSelector } from '../../store/store_hooks';
 import { get_mode, MODES } from "../../store/ui";
 import { toMMSS, get_pull_color, timetamp_to_time } from "../../utils";
-import style from "./FightInfo.scss"
+import * as styles from "./FightInfo.scss"
 import { WCL_URL } from "../../constants";
 
 
@@ -13,7 +13,7 @@ export function FightInfo({ fight }: { fight: Fight; }) {
 
     const pull_color = get_pull_color(fight.percent || 0)
 
-    const className = `${style.container} ${fight.kill ? "wow-kill": "wow-wipe"}`
+    const className = `${styles.container} ${fight.kill ? "wow-kill": "wow-wipe"}`
 
     const icon = fight.kill ? "⚑ " : ""
     const label_percent = fight.kill ? "Kill! ⚑ " : `${fight.percent || 0}%`
@@ -23,19 +23,19 @@ export function FightInfo({ fight }: { fight: Fight; }) {
 
     // Render
     return (
-        <a target="_blank" href={report_url} className={style.link}>
+        <a target="_blank" href={report_url} className={styles.link}>
             <div className={className}>
 
-                <span className={style.label_pull}>#{fight.fight_id}</span>
-                <span className={style.label_duration}>{icon} ({toMMSS(fight.duration/1000) })</span>
+                <span className={styles.label_pull}>#{fight.fight_id}</span>
+                <span className={styles.label_duration}>{icon} ({toMMSS(fight.duration/1000) })</span>
 
-                <span className={style.label_percent}>{label_percent}</span>
-                <span className={style.label_time}>{label_time}</span>
+                <span className={styles.label_percent}>{label_percent}</span>
+                <span className={styles.label_time}>{label_time}</span>
 
                 <>
                 {!fight.kill &&
-                    <div className={style.pbar_outer}>
-                        <div className={`${style.pbar_inner} wow-${pull_color}`} style={{width: `${100-(fight.percent || 0)}%`}} />
+                    <div className={styles.pbar_outer}>
+                        <div className={`${styles.pbar_inner} wow-${pull_color}`} style={{width: `${100-(fight.percent || 0)}%`}} />
                     </div>
                 }
                 </>

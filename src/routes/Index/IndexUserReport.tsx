@@ -1,12 +1,12 @@
 import IndexModuleLink from "./IndexModuleLink";
-import styles from "./Index.scss"
+import * as styles  from "./Index.scss"
 
 function UserReportIcon() {
 
     const icon_path = "./img/inv_inscription_80_scroll.jpg"
 
     return <img
-    className={`${styles.user_report_icon} wow-border-artifact icon-l rounded`}
+    className="wow-border-artifact icon-l rounded"
     src={icon_path}
     alt="user report icon"
     />

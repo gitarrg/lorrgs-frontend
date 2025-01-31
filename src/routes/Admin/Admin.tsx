@@ -1,5 +1,5 @@
 
-import { useRouteMatch, Route } from 'react-router-dom';
+import { Route } from 'react-router-dom';
 import { AdminHeader } from './AdminHeader';
 import AdminNavbar from './AdminNavbar';
 import AdminSpells from './AdminSpells';
@@ -9,7 +9,7 @@ import AdminPing from './AdminPing';
 
 export default function Admin() {
 
-    const { path }  = useRouteMatch()
+    // const { path }  = useMatch()
 
     return (
         <div>
@@ -23,15 +23,15 @@ export default function Admin() {
 
             <div>
 
-                <Route path={`${path}/status`}>
+                <Route path="status">
                     <AdminStatus />
                 </Route>
 
-                <Route path={`${path}/spells`}>
+                <Route path="spells">
                     <AdminSpells />
                 </Route>
 
-                <Route path={`${path}/ping`}>
+                <Route path="ping">
                     <AdminPing />
                 </Route>
 

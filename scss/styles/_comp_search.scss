@@ -5,6 +5,8 @@
     TODO: remove unused classes
 */
 
+@use "../_mixins.scss" as mixins;
+
 
 // Wrapper to Position the Form Layout
 .comp-search-container {
@@ -187,7 +189,7 @@
     ////////////////////////
     // Operator Dropdown
     .op-dropdown {
-        @include select_no_dropdown_arrow;
+        @include mixins.select_no_dropdown_arrow;
 
         // width: 2ch;
         padding-left: 0.3rem;
@@ -213,7 +215,7 @@
     // Number Input
     .count-number {
 
-        @include input_no_spinner;
+        @include mixins.input_no_spinner;
 
         width: 24px;  // match the icon size
         border: none;

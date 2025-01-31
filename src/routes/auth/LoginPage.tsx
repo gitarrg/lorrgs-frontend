@@ -1,16 +1,16 @@
-import style from "./LoginPage.scss"
+import * as style from "./LoginPage.scss"
 import { FaCircleNotch } from "react-icons/fa"
 import { get_current_user, login } from "../../store/user"
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import { useEffect } from "react"
-import { useHistory, useLocation } from "react-router"
+import { useNavigate, useLocation } from "react-router"
 
 
 /** Page where users get redirected to, after login in. */
 export default function LoginPage() {
 
     const { search } = useLocation()
-    const history = useHistory()
+    const navigate = useNavigate()
 
     const dispatch = useAppDispatch()
     const user = useAppSelector(get_current_user)
@@ -27,7 +27,7 @@ export default function LoginPage() {
     /** once logged in, we go back to the start page */
     useEffect(() => {
         if (user.logged_in) {
-            history.push("/")
+            navigate("/")
         }
     }, [user.logged_in])
 

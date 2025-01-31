@@ -69,12 +69,7 @@ module.exports = {
             {
                 test: /\.[tj]sx?$/,  // jsx, tsx, js and ts
                 include: path.resolve(__dirname, "src"),
-                use: {
-                    loader: 'babel-loader',
-                    options: {
-                        presets: ["@babel/react", "@babel/preset-typescript"]
-                    }
-                }
+                use: 'babel-loader',
             },
 
             /********** global CSS/SCSS *********/
@@ -136,8 +131,9 @@ module.exports = {
             inject: 'body',
 
             templateParameters: {
-                ...variables.get_vars(process.env.NODE_ENV),
                 DEBUG: DEBUG,
+                mode: process.env.NODE_ENV || "development",
+                ...variables.get_vars(process.env.NODE_ENV),
             },
         }),
 
@@ -147,13 +143,13 @@ module.exports = {
         }),
 
         gitRevisionPlugin,
+
         new webpack.DefinePlugin({
             VERSION: JSON.stringify(gitRevisionPlugin.version()),
             COMMITHASH: JSON.stringify(gitRevisionPlugin.commithash()),
             BRANCH: JSON.stringify(gitRevisionPlugin.branch()),
             LASTCOMMITDATETIME: JSON.stringify(gitRevisionPlugin.lastcommitdatetime()),
         }),
-
     ],
 
     /***************************************************************************

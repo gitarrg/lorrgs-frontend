@@ -2,7 +2,7 @@ import { get_spec } from "../../store/specs";
 import { useAppSelector } from '../../store/store_hooks';
 import type Role from '../../types/role';
 import NavbarSpecsDropdown from './NavbarSpecsDropdown';
-import styles from "./Navbar.scss"
+import * as styles  from "./Navbar.scss"
 import WebpImg from "../WebpImg";
 
 /*
