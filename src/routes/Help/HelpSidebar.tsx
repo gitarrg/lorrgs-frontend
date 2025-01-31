@@ -1,4 +1,4 @@
-import styles from "./Help.scss"
+import * as styles  from "./Help.scss"
 
 export default function HelpSidebar() {
     return (

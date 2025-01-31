@@ -1,4 +1,4 @@
-import styles from "./DomainInfo.scss"
+import * as styles from "./DomainInfo.scss"
 
 
 /**

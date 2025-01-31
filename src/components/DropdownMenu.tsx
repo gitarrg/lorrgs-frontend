@@ -5,7 +5,7 @@ import { ReactNode, useRef } from 'react'
 export default function DropdownMenu({button, children} : {button: ReactNode, children: ReactNode}) {
 
     const ref = useRef(null);
-    const { toggleMenu, ...menuProps } = useMenuState();
+    const [menuState, toggleMenu] = useMenuState();
 
     const callbacks = {
         onMouseEnter: () => toggleMenu(true),
@@ -22,7 +22,7 @@ export default function DropdownMenu({button, children} : {button: ReactNode, ch
             </div>
 
             {/* Menu Content */}
-            <ControlledMenu {...callbacks} {...menuProps} anchorRef={ref}>
+            <ControlledMenu {...callbacks} {...menuState} anchorRef={ref}>
                 {children}
             </ControlledMenu>
         </div>

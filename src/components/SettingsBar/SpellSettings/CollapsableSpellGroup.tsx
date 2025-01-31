@@ -1,5 +1,5 @@
 import Icon from '../../shared/Icon'
-import style from "./CollapsableSpellGroup.scss"
+import * as style from "./CollapsableSpellGroup.scss"
 import type Boss from "../../../types/boss"
 import type Class from "../../../types/class"
 import type Spec from "../../../types/spec"

@@ -2,8 +2,8 @@ import { useState } from "react"
 import { useFormContext, useWatch } from "react-hook-form";
 import { build_url_search_string, get_user_report_fights, load_report } from "../../store/user_reports"
 import { useAppDispatch, useAppSelector } from '../../store/store_hooks'
-import { useHistory } from "react-router"
-import styles from "./UserReportIndex.scss";
+import { useNavigate } from "react-router"
+import * as styles  from "./UserReportIndex.scss";
 import useUser from "../auth/useUser";
 
 
@@ -27,7 +27,7 @@ export function SubmitButton() {
 
     const dispatch = useAppDispatch();
 
-    let history = useHistory();
+    let navigate = useNavigate();
     const user = useUser()
 
     // Form
@@ -67,13 +67,13 @@ export function SubmitButton() {
         // if we get a task id, we go via the loading page
         if (response.task_id) {
             const url = `/user_report/load?task=${response.task_id}&queue=${response.queue}&report_id=${report_id}&${search}`;
-            history.push(url);
+            navigate(url);
         }
 
         // otherwise we can go directly to the report page
         else {
             const url = `/user_report/${report_id}?${search}`;
-            history.push(url);
+            navigate(url);
         }
     }
 

@@ -1,5 +1,5 @@
 import { FaCopy, FaXmark } from "react-icons/fa6";
-import style from "./CopyNoteWindow.scss";
+import * as style from "./CopyNoteWindow.scss";
 import { MouseEvent, useEffect, useRef, useState, KeyboardEvent, ChangeEvent } from 'react'
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
 import * as ui_store from "../store/ui"

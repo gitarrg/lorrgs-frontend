@@ -1,13 +1,13 @@
 import { get_roles } from "../../store/roles"
 import { get_spec, load_spec_spells } from "../../store/specs"
 import { useAppSelector } from "../../store/store_hooks"
-import { NavLink, useRouteMatch, Route, useParams } from 'react-router-dom';
+import { NavLink, Route, useParams } from 'react-router-dom';
 import { get_spell } from "../../store/spells";
 import Spec from "../../types/spec";
 import { useDispatch } from 'react-redux'
 import { get_is_loading } from "../../store/ui";
 
-import styles from "./AdminSpells.scss"
+import * as styles  from "./AdminSpells.scss"
 
 ////////////////////////////////////////////////////////////////////////////////
 // SubNav
@@ -16,11 +16,10 @@ import styles from "./AdminSpells.scss"
 function SpecButton({spec_slug=""}) {
 
     const spec = useAppSelector(state => get_spec(state, spec_slug))
-    const {url } = useRouteMatch()
     if (!spec) { return null }
 
     return (
-        <NavLink to={`${url}/${spec_slug}`} className={styles.spec_button} activeClassName="active">
+        <NavLink to={spec_slug} className={styles.spec_button} activeClassName="active">
             <img className={`icon-m wow-border-${spec.class.name_slug}`} src={spec.icon_path} />
         </NavLink>
     )

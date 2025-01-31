@@ -1,5 +1,5 @@
 /** Slice to hold and request data about the currently logged in user. */
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 import type { RootState, AppDispatch } from './store'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { fetch_data } from '../api'
@@ -50,7 +50,7 @@ const SLICE = createSlice({
 
         /** Read the User Data from a token */
         token_loaded: (state, action: PayloadAction<string>) => {
-            const user_info: {} = jwt_decode(action.payload)
+            const user_info: {} = jwtDecode(action.payload)
             return {
                 ...state,
                 ...user_info,
@@ -120,7 +120,7 @@ export function load_user(refresh: boolean = false) {
         const token = localStorage.getItem(LOCAL_STORAGE_KEY) || ""
         if (!token) { return }
 
-        let user_info: UserSliceState = jwt_decode(token)
+        let user_info: UserSliceState = jwtDecode(token)
 
         // load additional info
         let url = `/api/auth/users/${user_info.id}`

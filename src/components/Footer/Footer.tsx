@@ -1,6 +1,6 @@
 
 
-import styles from "./Footer.scss"
+import * as styles from "./Footer.scss"
 
 
 function LegalText() {
