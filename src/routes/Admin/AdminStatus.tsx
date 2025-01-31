@@ -10,7 +10,7 @@ import type Boss from "../../types/boss"
 import type Role from "../../types/role"
 import type Spec from "../../types/spec"
 
-import styles from "./AdminStatus.scss"
+import * as styles  from "./AdminStatus.scss"
 
 import moment from "moment"
 

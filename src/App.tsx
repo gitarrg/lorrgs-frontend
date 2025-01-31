@@ -2,13 +2,14 @@ import Footer from "./components/Footer/Footer";
 import GlobalDataLoader from "./components/GlobalDataLoader";
 import UserProvider from "./routes/auth/UserProvider";
 import data_store from "./store/store"
-import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux'
 import { StrictMode, lazy, Suspense } from "react"
-import { render } from 'react-dom';
+import React from 'react';
+import { createRoot } from "react-dom/client";
 
 // Delayed Imports
-const Admin = lazy(() => import("./routes/Admin/Admin"));
+// const Admin = lazy(() => import("./routes/Admin/Admin"));
 const CompRankings = lazy(() => import("./routes/CompRankings/CompRankings"));
 const CompSearch = lazy(() => import("./routes/CompSearch"));
 const Help = lazy(() => import("./routes/Help/Help"))
@@ -25,7 +26,7 @@ const UserReportLoading = lazy(() => import("./routes/UserReportLoading/UserRepo
 // APP
 //
 
-export default function App() {
+function App() {
 
     ////////////////////////
     // Output
@@ -40,32 +41,30 @@ export default function App() {
 
             <Router>
                 <Suspense fallback={<div>Loading...</div>}>
-                <Switch>
+                <Routes>
 
                     {/* Spec Rankings */}
-                    <Route path="/spec_ranking/:spec_slug/:boss_slug" component={SpecRankings} />
+                    <Route path="/spec_ranking/:spec_slug/:boss_slug" element={<SpecRankings />} />
 
                     {/* Comp Rankings */}
-                    <Route exact path="/comp_ranking/search" component={CompSearch} />
-                    <Route exact path="/comp_ranking/:boss_slug" component={CompRankings} />
+                    <Route path="/comp_ranking/search" element={<CompSearch />} />
+                    <Route path="/comp_ranking/:boss_slug" element={<CompRankings />} />
 
                     {/* User Reports */}
-                    <Route exact path="/user_report/load" component={UserReportLoading} />
-                    <Route exact path="/user_report/:report_id" component={UserReport} />
-                    <Route exact path="/user_report" component={UserReportIndex} />
+                    <Route path="/user_report/load" element={<UserReportLoading />} />
+                    <Route path="/user_report/:report_id" element={<UserReport />} />
+                    <Route path="/user_report" element={<UserReportIndex />} />
 
-                    <Route exact path="/login" component={LoginPage} />
-                    <Route exact path="/user" component={UserPage} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/user" element={<UserPage />} />
 
                     {/* other routes */}
-                    <Route exact path="/help" component={Help} />
-                    <Route exact path="/lorgmin" component={Admin} />
+                    <Route path="/help" element={<Help />} />
+                    {/* <Route path="/lorgmin" element={<Admin />} /> */}
 
                     {/* fallback --> Home */}
-                    <Route exact path="/" component={Index} />
-                    <Redirect to="/" />
-
-                </Switch>
+                    <Route path="/" element={<Index />} />
+                </Routes>
                 </Suspense>
             </Router>
 
@@ -78,4 +77,5 @@ export default function App() {
     )
 }
 
-render(<App />, document.getElementById("app_root"));
+const root = createRoot(document.getElementById("app_root")!);
+root.render(<App />);

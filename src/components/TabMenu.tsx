@@ -7,7 +7,7 @@ import {
     useContext,
     useState,
 } from "react";
-import styles from "./TabMenu.scss"
+import * as styles from "./TabMenu.scss"
 
 
 type TabGroupContextType = {
@@ -92,7 +92,7 @@ export function TabGroup({children, initial_tab=0} : {children : ReactElement[],
 export function TabMenu({children} : {children : ReactNode}) {
 
     return (
-        <div className={styles.menu}>
+        <div>
             {children}
         </div>
     );

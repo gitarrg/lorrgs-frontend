@@ -3,7 +3,7 @@ import { set_filters } from '../../../store/ui'
 import ButtonGroup from '../shared/ButtonGroup'
 import DurationInputGroup from "../../shared/DurationInputGroup"
 
-import styles from "./FilterKilltime.scss"
+import * as styles  from "./FilterKilltime.scss"
 
 
 /**

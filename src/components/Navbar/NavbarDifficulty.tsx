@@ -1,9 +1,9 @@
 import DropdownMenu from "../DropdownMenu";
 import NavbarGroup from './NavbarGroup';
 import QueryNavLink from "../shared/QueryNavLink"
-import styles from "./NavbarDifficulty.scss"
-import { applyStatics, MenuItem } from '@szhsin/react-menu';
-import { get_difficulty, get_mode } from '../../store/ui';
+import * as styles from "./NavbarDifficulty.scss"
+import { MenuItem } from '@szhsin/react-menu';
+import { get_difficulty } from '../../store/ui';
 import { useAppSelector } from '../../store/store_hooks';
 
 
@@ -39,7 +39,6 @@ function NavbarDifficultyOption({ difficulty, ...props } : { difficulty: string 
         </QueryNavLink>
     )
 }
-applyStatics(MenuItem)(NavbarDifficultyOption)
 
 
 export default function NavbarDifficulty() {

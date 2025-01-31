@@ -3,7 +3,7 @@ import NavbarSpecGroup from "./NavbarSpecGroup";
 import NavbarDifficulty from "./NavbarDifficulty";
 import { MODES } from "../../store/ui";
 import { useAppSelector } from "../../store/store_hooks";
-import styles from "./Navbar.scss";
+import * as styles from "./Navbar.scss";
 
 ////////////////////////////////////////////////////////////////////////////////
 

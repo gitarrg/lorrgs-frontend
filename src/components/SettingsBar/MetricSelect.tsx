@@ -1,12 +1,12 @@
 import { ReactNode } from "react";
 import DropdownMenu from "../DropdownMenu";
 
-import styles from "./DisplaySettings.scss"
+import * as styles from "./DisplaySettings.scss"
 
 import { RiSwordFill } from 'react-icons/ri';
 import { BiPlusMedical } from 'react-icons/bi';
 import { IoSkullSharp } from 'react-icons/io5';
-import { applyStatics, MenuItem } from "@szhsin/react-menu";
+import { MenuItem } from "@szhsin/react-menu";
 import QueryNavLink from "../shared/QueryNavLink";
 import { useAppSelector } from "../../store/store_hooks";
 import { get_metric } from "../../store/ui";
@@ -53,22 +53,20 @@ function MetricIcon({metric_name} : {metric_name: string}) {
 }
 
 
-function MetricMenuOption({metric_name, ...props} : {metric_name: string}) {
+function MetricMenuOption({metric_name} : {metric_name: string}) {
 
     const metric = METRICS[metric_name]
     if (!metric) { return null}
 
     return (
         <QueryNavLink params={{"metric": metric_name}}>
-            <MenuItem {...props}>
+            <MenuItem>
                 <MetricIcon metric_name={metric_name} />
                 <span className={`ml-1`}>{metric.label}</span>
             </MenuItem>
         </QueryNavLink>
     )
 }
-applyStatics(MenuItem)(MetricMenuOption)
-
 
 
 export default function MetricSelect() {

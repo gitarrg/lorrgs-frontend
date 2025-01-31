@@ -8,7 +8,7 @@ import { useAppDispatch } from '../../../store/store_hooks'
 import ButtonGroup, { ButtonGroupContext } from './../shared/ButtonGroup'
 import React from 'react'
 
-import style from "./SpellPresetSettings.scss"
+import * as style from "./SpellPresetSettings.scss"
 
 
 

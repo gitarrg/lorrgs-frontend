@@ -2,6 +2,9 @@
 
 .icon {
 
+    // have to add some dummy as otherwise `.icon` wont be exported
+    dummy: 2;
+
     // causes issues with some z-index overlap in the player widget
     // cba fixing it now.
     // --hover-scale: 1.3;

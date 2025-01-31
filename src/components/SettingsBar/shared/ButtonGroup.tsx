@@ -1,5 +1,5 @@
 import { createContext, ReactNode, useState } from 'react'
-import styles from "./ButtonGroup.scss"
+import * as styles from "./ButtonGroup.scss"
 
 
 type ButtonGroupContextType = {

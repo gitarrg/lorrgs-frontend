@@ -22,16 +22,13 @@ export default function NavBarSpecButton({ spec_slug } : {spec_slug: string}) {
 
     // Render
     return (
-
-        <NavLink to={full_link} className={`wow-${class_name}`} activeClassName="active">
+        <NavLink to={full_link} className={({ isActive }) => (`wow-${class_name} ${isActive ? "active" : ""}`)}>
             <WebpImg
                 className={`mr-1 icon-spec icon-m rounded wow-border-${class_name}`}
                 src={spec.icon_path}
                 alt={spec.full_name}
                 title={spec.full_name} />
-            <span className={`wow-${class_name}`}>
-                {spec.full_name}
-            </span>
+            <span>{spec.full_name}</span>
         </NavLink>
     );
 }

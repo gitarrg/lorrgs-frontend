@@ -1,16 +1,16 @@
 import { logout } from '../../store/user'
 import { useAppDispatch } from '../../store/store_hooks'
-import { useHistory } from 'react-router'
+import { useNavigate  } from 'react-router'
 import { FaArrowRight } from 'react-icons/fa';
 
 export default function LogoutButton() {
 
     const dispatch = useAppDispatch()
-    const history = useHistory()
+    const navigate  = useNavigate()
 
     function handle_logout() {
         dispatch(logout())
-        history.push("/")
+        navigate("/")
     }
 
     return (

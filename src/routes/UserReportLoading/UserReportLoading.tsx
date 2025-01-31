@@ -1,9 +1,9 @@
-import styles from "./UserReportLoading.scss"
+import * as styles  from "./UserReportLoading.scss"
 import { FaCircleNotch } from "react-icons/fa";
 import { Fragment, useEffect, useState } from "react";
 import { PATREON_LINK } from "../../constants";
 import { fetch_data } from "../../api";
-import { useHistory, useLocation } from "react-router";
+import { useNavigate, useLocation } from "react-router";
 import { useInterval } from 'react-use';
 import { TaskItems, task_item_status } from "./TaskItems";
 
@@ -57,7 +57,7 @@ function InfoBlock({ params } : { params: object }) {
 export default function UserReportLoading() {
 
     const { search } = useLocation();
-    let history = useHistory();
+    const navigate  = useNavigate()
 
     const params = new URLSearchParams(search)
     const report_id = params.get("report_id")
@@ -107,7 +107,7 @@ export default function UserReportLoading() {
         params.delete("queue")
         const rest_search = params.toString()
         const url = `/user_report/${report_id}?${rest_search}`
-        history.push(url)
+        navigate(url)
     }
     useInterval(update_status, delay);
 
