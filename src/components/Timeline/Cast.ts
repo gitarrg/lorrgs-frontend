@@ -181,6 +181,10 @@ export default class Cast extends Konva.Group {
         this.tooltip_content += cast_data.counter ? ` #${cast_data.counter}` : ""
         this.tooltip_content += "<br>"
         this.tooltip_content += `${toMMSS(this.timestamp)}`
+        if (this._duration > 0) {
+            let end_time = this.timestamp + this._duration;
+            this.tooltip_content += ` - ${toMMSS(end_time)}`
+        }
     }
 
     /**
