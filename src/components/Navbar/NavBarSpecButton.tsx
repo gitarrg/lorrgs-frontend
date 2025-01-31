@@ -28,7 +28,9 @@ export default function NavBarSpecButton({ spec_slug } : {spec_slug: string}) {
                 src={spec.icon_path}
                 alt={spec.full_name}
                 title={spec.full_name} />
-            <span>{spec.full_name}</span>
+            <span
+                className={`wow-${class_name}`} /* need to set this to overwrite visisted link color */
+            >{spec.full_name}</span>
         </NavLink>
     );
 }
