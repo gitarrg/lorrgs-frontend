@@ -15,9 +15,6 @@
     "server": "webpack serve",
     "format_app_yaml": "envsub --syntax handlebars template.app.yaml app.yaml"
   },
-  "engines": {
-    "node": "^23.7.0"
-  },
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.7",
     "@szhsin/react-menu": "^4.3.0",
