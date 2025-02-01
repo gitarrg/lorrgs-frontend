@@ -11,23 +11,16 @@ import { useLocation } from 'react-router';
 const PLACEHOLDER = "https://www.warcraftlogs.com/reports/<report code>"
 
 
-/** regex to match urls from warcraftlogs */
-const URL_REGEX = RegExp(
-    ""
-    + /warcraftlogs\.com/.source   //  domain
-    + /\/reports/.source           //  /reports
-    + /\/(?<code>\w{16})/.source   //  /report-code
-, "i")
-
+const URL_REGEX = /warcraftlogs\.com\/reports\/(\w{16})/i;
 
 /** Extract the report code from an url. */
 function report_id_from_url(url="") {
     if (!url) { return ""}
 
-    const match = url.match(URL_REGEX);
-    if (!match) { return "" }
+    const match = URL_REGEX.exec(url);
+    if (match) { return match[1] }
 
-    return match.groups?.code ?? ""
+    return  ""
 }
 
 
