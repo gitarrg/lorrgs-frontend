@@ -20,6 +20,9 @@ export default interface Spec {
     /** Complete name slugified. eg: "holy-paladin" */
     full_name_slug: string
 
+    /** Name of the Icon File. */
+    icon?: string
+
     /** URL to the icon */
     icon_path: string
 

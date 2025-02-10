@@ -44,12 +44,12 @@ export function get_boss(state: RootState, boss_slug?: string) {
 
 function _post_process_boss(zone: RaidZone, boss: Boss) {
     boss.loaded = false
-    boss.icon_path = `${ASSETS}/images/bosses/${zone.name_slug}/${boss.full_name_slug}.jpg`
+    boss.icon_path = `${ASSETS}/images/spells/${boss.icon}`
     boss.zone_id = zone.id
 
     // insert some static data
     boss.role = "boss"
-    boss.class = { name: "boss", name_slug: "boss"}
+    boss.class = { name: "boss", name_slug: "boss" }
 }
 
 
@@ -62,8 +62,8 @@ interface RaidZoneAPIResponse {
 
 
 const INITIAL_STATE = {
-    zones: {} as {[key: number] : RaidZone},
-    bosses: {} as {[key: string]: Boss},
+    zones: {} as { [key: number]: RaidZone },
+    bosses: {} as { [key: string]: Boss },
 }
 
 const SLICE = createSlice({
@@ -73,7 +73,7 @@ const SLICE = createSlice({
 
     reducers: {
 
-        set_zone: (state, action: PayloadAction<RaidZoneAPIResponse> ) => {
+        set_zone: (state, action: PayloadAction<RaidZoneAPIResponse>) => {
 
 
             const zone: RaidZone = {
@@ -96,11 +96,11 @@ const SLICE = createSlice({
         },
 
         set_boss_spells: (state, action) => {
-            const {boss_slug, spells} = action.payload
+            const { boss_slug, spells } = action.payload
             const boss = state.bosses[boss_slug]
             if (!boss) { return }
 
-            boss.spells_by_type =  group_spells_by_type(spells, boss)
+            boss.spells_by_type = group_spells_by_type(spells, boss)
             boss.loaded = true
             return state
         }
@@ -124,13 +124,13 @@ export function load_bosses(zone_id?: number) {
 
     return async (dispatch: AppDispatch) => {
 
-        dispatch({type: "ui/set_loading", payload: {key: "zone", value: true}})
+        dispatch({ type: "ui/set_loading", payload: { key: "zone", value: true } })
 
         // Request
         const zone_info = await fetch_data(`/api/zones/${zone_id}`);
 
         dispatch(SLICE.actions.set_zone(zone_info))
-        dispatch({type: "ui/set_loading", payload: {key: "zone", value: false}})
+        dispatch({ type: "ui/set_loading", payload: { key: "zone", value: false } })
     }
 }
 
@@ -144,12 +144,12 @@ export function load_boss_spells(boss_slug: string) {
     return async (dispatch: AppDispatch) => {
 
         const load_key = `boss/${boss_slug}`
-        dispatch({type: "ui/set_loading", payload: {key: load_key, value: true}})
+        dispatch({ type: "ui/set_loading", payload: { key: load_key, value: true } })
 
         // Request
         const spells: RaidZoneAPIResponse = await fetch_data(`/api/bosses/${boss_slug}/spells`);
 
-        dispatch(SLICE.actions.set_boss_spells({boss_slug, spells}))
-        dispatch({type: "ui/set_loading", payload: {key: load_key, value: false}})
+        dispatch(SLICE.actions.set_boss_spells({ boss_slug, spells }))
+        dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
     }
 }
