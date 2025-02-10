@@ -44,7 +44,13 @@ export function get_boss(state: RootState, boss_slug?: string) {
 
 function _post_process_boss(zone: RaidZone, boss: Boss) {
     boss.loaded = false
-    boss.icon_path = `${ASSETS}/images/spells/${boss.icon}`
+
+    if (boss.icon) {
+        boss.icon_path = `${ASSETS}/images/spells/${boss.icon}`
+    } else {
+        boss.icon_path = `${ASSETS}/images/bosses/${zone.name_slug}/${boss.full_name_slug}.jpg`
+    }
+
     boss.zone_id = zone.id
 
     // insert some static data
