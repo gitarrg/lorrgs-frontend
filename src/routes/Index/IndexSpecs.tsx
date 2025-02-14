@@ -1,21 +1,23 @@
-import { DEFAULT_BOSS } from "./../../constants"
 import { Fragment } from 'react'
+import { get_default_boss } from "../../store/bosses"
 import { get_player_roles } from '../../store/roles'
 import { get_spec } from '../../store/specs'
 import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../store/store_hooks'
-import Icon from '../../components/shared/Icon'
 import * as styles  from "./IndexSpecs.scss"
+import Icon from '../../components/shared/Icon'
 import type Role from '../../types/role'
 
 
 function SpecButton({spec_slug=""}) {
 
     const spec = useAppSelector(state => get_spec(state, spec_slug))
+    const boss = useAppSelector(get_default_boss);
     if (!spec) { return null }
+    if (!boss) { return null }
 
     return (
-        <Link to={`/spec_ranking/${spec_slug}/${DEFAULT_BOSS}`} data-tooltip={spec.full_name}>
+        <Link to={`/spec_ranking/${spec_slug}/${boss?.full_name_slug}`} data-tooltip={spec.full_name}>
             <Icon spec={spec} alt={spec.full_name} />
         </Link>
     )

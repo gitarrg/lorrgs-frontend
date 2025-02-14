@@ -14,13 +14,6 @@ export const DISCORD_LOGIN_URL = "https://discord.com/oauth2/authorize"
 
 
 ///////////////////////////////////
-// Default Settings
-export const ZONE_ID = 38
-export const DEFAULT_BOSS = "ulgrax-the-devourer"
-export const DEFAULT_BOSS_COMP = DEFAULT_BOSS
-
-
-///////////////////////////////////
 // UI: Timeline
 export const LINE_HEIGHT = 28
 export const DEFAULT_ZOOM = 4

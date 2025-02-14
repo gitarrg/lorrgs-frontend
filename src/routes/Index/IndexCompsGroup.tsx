@@ -1,5 +1,4 @@
-import { DEFAULT_BOSS_COMP } from "../../constants";
-import { get_boss } from "../../store/bosses";
+import { get_default_boss } from "../../store/bosses";
 import { get_player_roles } from "../../store/roles";
 import { useAppSelector } from "../../store/store_hooks";
 import Icon from "../../components/shared/Icon";
@@ -18,7 +17,7 @@ function RolesList() {
 }
 
 export default function IndexCompsGroup() {
-    const boss = useAppSelector((state) => get_boss(state, DEFAULT_BOSS_COMP));
+    const boss = useAppSelector(get_default_boss);
     if (!boss) {
         return null;
     }
