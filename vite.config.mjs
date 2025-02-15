@@ -35,6 +35,10 @@ export default defineConfig(({ mode }) => {
     //**************************************************************************
     return {
 
+        build: {
+            outDir: "build",
+        },
+
         plugins: [
             react(),
 
