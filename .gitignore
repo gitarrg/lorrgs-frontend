@@ -12,3 +12,9 @@ build
 node_modules
 package-lock.json
 tsconfig.tsbuildinfo
+
+# local vite variables
+.env.*.local
+
+# rollup-plugin-visualizer output
+stats.html

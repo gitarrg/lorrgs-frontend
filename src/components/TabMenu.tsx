@@ -7,7 +7,7 @@ import {
     useContext,
     useState,
 } from "react";
-import * as styles from "./TabMenu.scss"
+import styles from "./TabMenu.module.scss"
 
 
 type TabGroupContextType = {

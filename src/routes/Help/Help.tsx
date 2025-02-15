@@ -1,7 +1,7 @@
 import HelpContent from "./HelpContent";
 import HelpHeader from "./HelpHeader";
 import HelpSidebar from "./HelpSidebar";
-import * as styles  from "./Help.scss"
+import styles from "./Help.module.scss"
 
 export default function Help() {
     return (

@@ -8,6 +8,8 @@ import { StrictMode, lazy, Suspense } from "react"
 import React from 'react';
 import { createRoot } from "react-dom/client";
 
+import "../scss/main.scss"
+
 // Delayed Imports
 // const Admin = lazy(() => import("./routes/Admin/Admin"));
 const CompRankings = lazy(() => import("./routes/CompRankings/CompRankings"));

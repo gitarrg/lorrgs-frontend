@@ -1,6 +1,6 @@
 import ButtonGroup, { ButtonGroupContext } from './shared/ButtonGroup'
 import MetricSelect from "./MetricSelect"
-import * as styles  from "./DisplaySettings.scss";
+import styles from "./DisplaySettings.module.scss";
 import { FaClock, FaHourglass, FaImage, FaSkull, FaStream } from 'react-icons/fa';
 import { ReactNode, useContext, useEffect } from 'react'
 import { update_settings } from '../../store/ui'

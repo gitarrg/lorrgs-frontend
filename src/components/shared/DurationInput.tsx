@@ -1,6 +1,6 @@
 import {useRef, useState, useEffect, KeyboardEvent } from 'react'
 import { seconds_to_time, time_to_seconds } from '../../utils';
-import * as styles from "./DurationInput.scss"
+import styles from "./DurationInput.module.scss"
 
 
 const CHANGE_RATE = 5; // seconds to incr/decr per scroll event

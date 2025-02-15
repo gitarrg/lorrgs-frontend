@@ -1,6 +1,6 @@
 import Icon from '../../components/shared/Icon'
 import SelectGridItem from "./SelectGrid/SelectGridItem"
-import * as styles  from "./PlayerWidget.scss"
+import styles from "./PlayerWidget.module.scss"
 import type Actor from '../../types/actor'
 import { get_spec } from '../../store/specs'
 import { useAppSelector } from '../../store/store_hooks'

@@ -11,7 +11,7 @@ export default function TimelineCanvas() {
     // HOOKS
     //
     const ref = useRef<HTMLDivElement>(null); // container div for the canvas
-    const stage_ref = useRef<Stage>(); // canvas itself
+    const stage_ref = useRef<Stage>(null); // canvas itself
 
     // state vars
     const mode = useAppSelector((state) => state.ui.mode);

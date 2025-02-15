@@ -1,7 +1,7 @@
 import { ReactNode, useState } from "react"
 import { createContext } from "react"
 import useUser from "../../../routes/auth/useUser"
-import * as styles from "./SelectGrid.scss"
+import styles from "./SelectGrid.module.scss"
 
 
 export const SelectGroupContext = createContext<boolean>(false)

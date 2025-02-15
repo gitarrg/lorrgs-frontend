@@ -1,6 +1,6 @@
 
 import { NavLink } from 'react-router-dom';
-import * as styles  from  "./AdminNavbar.scss"
+import styles from  "./AdminNavbar.module.scss"
 
 export default function AdminNavbar() {
 

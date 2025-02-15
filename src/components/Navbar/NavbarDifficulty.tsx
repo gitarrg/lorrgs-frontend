@@ -1,7 +1,7 @@
 import DropdownMenu from "../DropdownMenu";
 import NavbarGroup from './NavbarGroup';
 import QueryNavLink from "../shared/QueryNavLink"
-import * as styles from "./NavbarDifficulty.scss"
+import styles from "./NavbarDifficulty.module.scss"
 import { MenuItem } from '@szhsin/react-menu';
 import { get_difficulty } from '../../store/ui';
 import { useAppSelector } from '../../store/store_hooks';
@@ -31,7 +31,7 @@ function NavbarDifficultyOption({ difficulty, ...props } : { difficulty: string 
     const class_name = DIFFICULTY_COLOR[difficulty] || ""
 
     return (
-        <QueryNavLink params={{"difficulty": difficulty}} className={`${class_name} ${styles.option}`} activeClassName="active">
+        <QueryNavLink params={{"difficulty": difficulty}} className={`${class_name} ${styles.option}`}>
             <MenuItem {...props}>
                 <DifficultyIcon difficulty={difficulty}/>
                 <span className={`${styles.label} ${class_name} ml-1`}>{difficulty}</span>

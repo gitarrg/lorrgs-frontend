@@ -1,5 +1,7 @@
 // Not the actual api... but all the connections to it and some post processing
 
+import { BACKEND_URL } from "./constants"
+
 
 const PRINT_REQUEST_TIMES = true
 
@@ -13,10 +15,7 @@ export async function fetch_data(url: string, params = {}) {
         }
     }
 
-    if ("LORRGS_BACKEND_URL" in window) {
-        // @ts-ignore
-        url = window.LORRGS_BACKEND_URL + url
-    }
+    url = BACKEND_URL + url
     const console_key = `request: ${url}`
 
     PRINT_REQUEST_TIMES && console.time(console_key)

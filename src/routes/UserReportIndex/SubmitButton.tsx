@@ -3,7 +3,7 @@ import { useFormContext, useWatch } from "react-hook-form";
 import { build_url_search_string, get_user_report_fights, load_report } from "../../store/user_reports"
 import { useAppDispatch, useAppSelector } from '../../store/store_hooks'
 import { useNavigate } from "react-router"
-import * as styles  from "./UserReportIndex.scss";
+import styles from "./UserReportIndex.module.scss";
 import useUser from "../auth/useUser";
 
 

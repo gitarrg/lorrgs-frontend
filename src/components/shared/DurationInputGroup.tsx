@@ -1,6 +1,6 @@
 import {useState, useEffect } from 'react'
 import DurationInput from "./DurationInput";
-import * as styles  from "./DurationInput.scss"
+import styles from "./DurationInput.module.scss"
 
 
 /**

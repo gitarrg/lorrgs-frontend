@@ -7,7 +7,7 @@ import Spec from "../../types/spec";
 import { useDispatch } from 'react-redux'
 import { get_is_loading } from "../../store/ui";
 
-import * as styles  from "./AdminSpells.scss"
+import styles from "./AdminSpells.module.scss"
 
 ////////////////////////////////////////////////////////////////////////////////
 // SubNav

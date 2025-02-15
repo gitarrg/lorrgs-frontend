@@ -2,10 +2,10 @@ import { NavLink, useLocation } from 'react-router-dom';
 
 import type Boss from "../../types/boss"
 import type Spec from "../../types/spec"
-import { get_difficulty, get_mode, MODES } from '../../store/ui';
+import { get_mode, MODES } from '../../store/ui';
 import { get_spec } from "../../store/specs"
 import { useAppSelector } from '../../store/store_hooks';
-import * as styles from "./Navbar.scss"
+import styles from "./Navbar.module.scss"
 import WebpImg from '../WebpImg';
 
 

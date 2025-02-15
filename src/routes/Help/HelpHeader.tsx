@@ -1,5 +1,5 @@
 import HeaderLogo from '../../components/HeaderLogo'
-import * as styles  from "./Help.scss"
+import styles from "./Help.module.scss"
 
 export default function HelpHeader() {
     return (

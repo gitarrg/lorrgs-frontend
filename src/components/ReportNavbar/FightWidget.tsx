@@ -1,7 +1,7 @@
 import { FaCheckCircle } from "react-icons/fa"
 import { toMMSS, get_pull_color, timetamp_to_time } from '../../utils'
 import SelectGridItem from "./SelectGrid/SelectGridItem"
-import * as styles from "./FightWidget.scss"
+import styles from "./FightWidget.module.scss"
 import type Fight from '../../types/fight'
 
 

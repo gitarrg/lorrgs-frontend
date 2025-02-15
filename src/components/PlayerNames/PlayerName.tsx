@@ -9,7 +9,7 @@ import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import { WCL_URL } from "../../constants";
 import * as ui_store from "../../store/ui"
 import FILTERS from "../../filter_logic";
-import * as styles from "./PlayerName.scss";
+import styles from "./PlayerName.module.scss";
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 import WebpImg from "../WebpImg";

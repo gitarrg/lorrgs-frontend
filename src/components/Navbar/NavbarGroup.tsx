@@ -1,4 +1,4 @@
-import * as styles from "./Navbar.scss"
+import styles from "./Navbar.module.scss"
 
 
 export default function NavbarGroup({children, className=""} : { children: JSX.Element | JSX.Element[], className?: string } ) {

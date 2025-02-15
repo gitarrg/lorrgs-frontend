@@ -6,10 +6,8 @@ import { RiSwordFill } from 'react-icons/ri';
 import { set_spell_tag_visible, set_spell_visible } from '../../../store/spells';
 import { useAppDispatch } from '../../../store/store_hooks'
 import ButtonGroup, { ButtonGroupContext } from './../shared/ButtonGroup'
-import React from 'react'
 
-import * as style from "./SpellPresetSettings.scss"
-
+import style from "./SpellPresetSettings.module.scss"
 
 
 interface SpellSelection {

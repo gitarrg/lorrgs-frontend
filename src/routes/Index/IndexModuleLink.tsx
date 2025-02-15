@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import * as styles  from "./IndexModuleLink.scss";
+import styles from "./IndexModuleLink.module.scss";
 
 export default function IndexModuleLink({ title = "", url = "", children = [] as JSX.Element[], className = "" }) {
     return (

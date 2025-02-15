@@ -4,8 +4,8 @@ import { get_player_roles } from '../../store/roles'
 import { get_spec } from '../../store/specs'
 import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../store/store_hooks'
-import * as styles  from "./IndexSpecs.scss"
 import Icon from '../../components/shared/Icon'
+import styles from "./IndexSpecs.module.scss"
 import type Role from '../../types/role'
 
 

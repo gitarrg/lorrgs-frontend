@@ -1,9 +1,9 @@
-import * as style from "./LoginPage.scss"
 import { FaCircleNotch } from "react-icons/fa"
 import { get_current_user, login } from "../../store/user"
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import { useEffect } from "react"
 import { useNavigate, useLocation } from "react-router"
+import style from "./LoginPage.module.scss"
 
 
 /** Page where users get redirected to, after login in. */

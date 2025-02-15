@@ -1,17 +1,18 @@
 {
     "compilerOptions": {
-        "target": "ES5", // Specify ECMAScript target version
+        "target": "esnext", // Specify ECMAScript target version
         "lib": [
             "dom",
             "DOM.Iterable",
             "esnext"
         ], // List of library files to be included in the compilation
-        "module": "commonjs",
+        "module": "esnext",
         "noEmit": true,
         "strict": true,
         "skipLibCheck": true,
         "jsx": "react-jsx", // Support JSX in .tsx files
-        "types": [],
+        "types": ["vite/client"],
+        "moduleResolution": "node"
     },
 
     "include": [

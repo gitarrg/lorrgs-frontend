@@ -1,4 +1,4 @@
-import * as styles from "./SelectGrid.scss"
+import styles from "./SelectGrid.module.scss"
 import { useFormContext, useWatch } from 'react-hook-form'
 import { useContext, useEffect } from "react";
 import { SelectGroupContext } from "./SelectGroup";

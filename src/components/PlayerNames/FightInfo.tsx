@@ -2,7 +2,7 @@ import Fight from "../../types/fight";
 import { useAppSelector } from '../../store/store_hooks';
 import { get_mode, MODES } from "../../store/ui";
 import { toMMSS, get_pull_color, timetamp_to_time } from "../../utils";
-import * as styles from "./FightInfo.scss"
+import styles from "./FightInfo.module.scss"
 import { WCL_URL } from "../../constants";
 
 

@@ -1,4 +1,4 @@
-import * as styles  from "./UserReportLoading.scss"
+import styles from "./UserReportLoading.module.scss"
 import { FaCircleNotch } from "react-icons/fa";
 import { Fragment, useEffect, useState } from "react";
 import { PATREON_LINK } from "../../constants";

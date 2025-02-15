@@ -4,6 +4,7 @@ Redux Data Store
 
 import { configureStore } from '@reduxjs/toolkit'
 
+import { DEBUG } from '../constants'
 import bosses_reducer from "./bosses"
 import classes_reducer from "./classes"
 import fights_reducer from "./fights"
@@ -20,9 +21,6 @@ import user_report_reducer from "./user_reports"
 ////////////////////////////////////////////////////////////////////////////////
 // REDCUER
 //
-const LORRGS_DEBUG = "LORRGS_DEBUG" in window
-
-
 const store = configureStore({
 
     // preloadedState: DEFAULT_STATE,
@@ -39,7 +37,7 @@ const store = configureStore({
         user: user_reducer,
         zones: bosses_reducer,
     },
-    devTools: LORRGS_DEBUG,
+    devTools: DEBUG,
 })
 
 export default store
