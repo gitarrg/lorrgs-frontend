@@ -1,5 +1,9 @@
 
 
+window.LORRGS_DEBUG = import.meta.env.VITE_DEBUG
+window.LORRGS_BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+
+
 export const LOGO_URL = "/static/logo.svg";
 export const ASSETS = "https://assets2.lorrgs.io"
 
