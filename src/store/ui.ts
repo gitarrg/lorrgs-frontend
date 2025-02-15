@@ -1,8 +1,7 @@
-import type { RootState } from './store'
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { ZONE_ID } from '../constants'
 import Actor from '../types/actor'
+import type { RootState } from './store'
 
 
 // modes to switch some page related features
@@ -132,7 +131,7 @@ const INITIAL_STATE: UiSliceState = {
 
     spec_slug: "", // currently selected spec
     boss_slug: "", // currently selected boss
-    zone_id: ZONE_ID,
+    zone_id: 0,
     difficulty: "mythic", // currently selected difficulty
 
     // Timeline Options

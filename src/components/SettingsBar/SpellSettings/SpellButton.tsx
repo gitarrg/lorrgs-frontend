@@ -99,7 +99,7 @@ export default function SpellButton({spec, spell_id, onClick} : { spec: Spec|Bos
     // Render
     return (
         <div className={styles.spell_button}>
-            <a href="" data-wowhead={spell.tooltip_info} onClick={toggle_spell}>
+            <a href="" data-wowhead={spell.wowhead_data || spell.tooltip_info} onClick={toggle_spell}>
                 <img
                     className={`button icon-s rounded wow-border-${wow_class} ${disabled}`}
                     src={spell.icon_path}

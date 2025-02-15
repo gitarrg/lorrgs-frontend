@@ -4,7 +4,7 @@ import type Boss from "../types/boss"
 import type { AppDispatch, RootState } from './store'
 import { fetch_data } from '../api'
 import { group_spells_by_type } from './store_utils'
-import { ASSETS, ZONE_ID } from '../constants'
+import { ASSETS } from '../constants'
 import type RaidZone from '../types/raid_zone'
 
 
@@ -36,6 +36,13 @@ export function get_boss(state: RootState, boss_slug?: string) {
     boss_slug = boss_slug ?? state.ui.boss_slug
     return state.zones.bosses[boss_slug] || null
 }
+
+export function get_default_boss(state: RootState): Boss | null {
+
+    // todo: if state.default_boss:
+    return Object.values(state.zones.bosses)[0]
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,9 +131,7 @@ export default SLICE.reducer
 // Extra Actions
 
 /* load all bosses */
-export function load_bosses(zone_id?: number) {
-
-    zone_id = zone_id || ZONE_ID
+export function load_bosses(zone_id: number) {
 
     return async (dispatch: AppDispatch) => {
 
