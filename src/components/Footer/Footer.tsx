@@ -19,8 +19,8 @@ function VersionInfo() {
 
     return (
         <small className={styles.version_info}>
-            v{"VERSION"}<br />
-            {"LASTCOMMITDATETIME"}
+            v{GIT_COMMIT_HASH}<br />
+            {GIT_COMMIT_DATE}
         </small>
     )
 }
