@@ -1,7 +1,7 @@
 import DropdownMenu from "../DropdownMenu";
 import NavbarGroup from './NavbarGroup';
 import QueryNavLink from "../shared/QueryNavLink"
-import * as styles from "./NavbarDifficulty.scss"
+import styles from "./NavbarDifficulty.module.scss"
 import { MenuItem } from '@szhsin/react-menu';
 import { get_difficulty } from '../../store/ui';
 import { useAppSelector } from '../../store/store_hooks';

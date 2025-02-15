@@ -1,5 +1,5 @@
 import FILTERS from "../../filter_logic";
-import * as styles from "./PlayerName.scss"
+import styles from "./PlayerName.module.scss"
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 import { FightInfo } from "./FightInfo";

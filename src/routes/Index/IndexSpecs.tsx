@@ -5,7 +5,7 @@ import { get_spec } from '../../store/specs'
 import { Link } from 'react-router-dom'
 import { useAppSelector } from '../../store/store_hooks'
 import Icon from '../../components/shared/Icon'
-import * as styles  from "./IndexSpecs.scss"
+import styles from "./IndexSpecs.module.scss"
 import type Role from '../../types/role'
 
 

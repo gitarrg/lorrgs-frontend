@@ -2,7 +2,7 @@ import FILTERS from "../../filter_logic";
 import PlayerNamesFight from "./PlayerNamesFight";
 import { get_fights } from "../../store/fights";
 import { useAppSelector } from "../../store/store_hooks";
-import * as styles  from "./PlayerNamesList.scss"
+import styles from "./PlayerNamesList.module.scss"
 
 
 export default function PlayerNamesList() {

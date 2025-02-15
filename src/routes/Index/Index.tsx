@@ -1,14 +1,10 @@
-
-import DomainInfo from "../../components/DomainInfo"
 import IndexCompsGroup from './IndexCompsGroup'
 import IndexLinks from './IndexLinks'
 import IndexSpecs from './IndexSpecs'
 import IndexUserReport from "./IndexUserReport"
 import LoginButton from "../auth/LoginButton"
-import * as styles  from "./Index.scss"
+import styles from "./Index.module.scss"
 import { useTitle } from 'react-use'
-
-
 
 
 const INFO_TEXT = <div>
@@ -51,8 +47,6 @@ export default function Index() {
     useTitle("Lorrgs: Index")
 
     return <>
-
-        <DomainInfo />
 
         <div className="mt-1 d-flex justify-content-end">
             <LoginButton />

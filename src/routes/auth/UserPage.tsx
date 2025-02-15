@@ -1,7 +1,7 @@
 import HeaderLogo from '../../components/HeaderLogo'
 import LogoutButton from "./LogoutButton"
 import RefreshButton from "./RefreshButton"
-import * as style from "./UserPage.scss"
+import style from "./UserPage.module.scss"
 import useUser from "./useUser"
 
 

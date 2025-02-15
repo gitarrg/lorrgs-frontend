@@ -1,9 +1,9 @@
+import { ReactNode, useState } from 'react'
 import Icon from '../../shared/Icon'
-import * as style from "./CollapsableSpellGroup.scss"
+import style from "./CollapsableSpellGroup.module.scss"
 import type Boss from "../../../types/boss"
 import type Class from "../../../types/class"
 import type Spec from "../../../types/spec"
-import { ReactNode, useState } from 'react'
 
 
 type CollapsableSpellGroupProps = {

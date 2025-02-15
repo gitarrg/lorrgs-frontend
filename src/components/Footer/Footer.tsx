@@ -1,6 +1,6 @@
 
 
-import * as styles from "./Footer.scss"
+import styles from "./Footer.module.scss"
 
 
 function LegalText() {
@@ -19,8 +19,8 @@ function VersionInfo() {
 
     return (
         <small className={styles.version_info}>
-            v{VERSION}<br />
-            {LASTCOMMITDATETIME}
+            v{"VERSION"}<br />
+            {"LASTCOMMITDATETIME"}
         </small>
     )
 }

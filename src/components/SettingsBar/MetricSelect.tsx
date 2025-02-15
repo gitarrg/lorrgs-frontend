@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import DropdownMenu from "../DropdownMenu";
 
-import * as styles from "./DisplaySettings.scss"
+import styles from "./DisplaySettings.module.scss"
 
 import { RiSwordFill } from 'react-icons/ri';
 import { BiPlusMedical } from 'react-icons/bi';

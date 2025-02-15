@@ -1,9 +1,9 @@
-import DiscordLogo from '../../assets/DiscordLogo'
-import PatreonLogo from '../../assets/PatreonLogo'
-import * as style from "./IndexLink.scss"
-import type { ReactNode } from 'react'
 import { DISCORD_LINK, PATREON_LINK, BUYMEACOFFEE_LINK } from '../../constants'
 import { FaInfoCircle } from 'react-icons/fa'
+import DiscordLogo from '../../assets/DiscordLogo'
+import PatreonLogo from '../../assets/PatreonLogo'
+import style from "./IndexLink.module.scss"
+import type { ReactNode } from 'react'
 
 
 function LinkButton({url, children} : {url: string, children: ReactNode }) {

@@ -17,7 +17,7 @@ import parse from 'html-react-parser';
 import { get_tooltip } from '../../store/ui'
 import { useAppSelector } from '../../store/store_hooks';
 
-import * as styles  from "./TimelineTooltip.scss"
+import styles from "./TimelineTooltip.module.scss"
 
 
 const TOOLTIP_DELAY = 500

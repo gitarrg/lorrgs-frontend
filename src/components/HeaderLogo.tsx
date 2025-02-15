@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 import LorrgsLogo from "../assets/LorrgsLogo"
-import * as styles from "./HeaderLogo.scss"
+import styles from "./HeaderLogo.module.scss"
 
 
 export default function HeaderLogo({wow_class="wow-boss", size="icon-l"}) {

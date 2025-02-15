@@ -1,12 +1,12 @@
-import { FaCopy, FaXmark } from "react-icons/fa6";
-import * as style from "./CopyNoteWindow.scss";
-import { MouseEvent, useEffect, useRef, useState, KeyboardEvent, ChangeEvent } from 'react'
-import { useAppDispatch, useAppSelector } from "../store/store_hooks";
-import * as ui_store from "../store/ui"
-import Actor from "../types/actor";
-import { toMMSS } from "../utils";
+import { FaXmark } from "react-icons/fa6";
 import { get_class_color } from "../store/classes";
 import { get_spell_display } from "../store/spells";
+import { toMMSS } from "../utils";
+import { useAppDispatch, useAppSelector } from "../store/store_hooks";
+import { useEffect, useRef, useState, KeyboardEvent, ChangeEvent } from 'react'
+import * as ui_store from "../store/ui"
+import Actor from "../types/actor";
+import style from "./CopyNoteWindow.module.scss";
 
 
 

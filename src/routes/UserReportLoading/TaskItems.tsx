@@ -1,4 +1,4 @@
-import * as styles  from "./UserReportLoading.scss";
+import styles from "./UserReportLoading.module.scss";
 
 
 function format_tooltip(data: object) {

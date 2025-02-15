@@ -1,5 +1,5 @@
 import IndexModuleLink from "./IndexModuleLink";
-import * as styles  from "./Index.scss"
+import styles from "./Index.module.scss"
 
 function UserReportIcon() {
 

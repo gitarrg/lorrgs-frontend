@@ -1,4 +1,4 @@
-import * as styles  from "./UserReportNavbar.scss"
+import styles from "./UserReportNavbar.module.scss"
 import { Link } from 'react-router-dom'
 import { get_report_id } from '../../store/user_reports'
 import { useAppSelector } from '../../store/store_hooks'

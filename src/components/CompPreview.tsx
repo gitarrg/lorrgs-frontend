@@ -6,7 +6,7 @@
 
 */
 import { ASSETS } from "../constants";
-import * as styles from "./CompPreview.module.scss";
+import styles from "./CompPreview.module.scss";
 import WebpImg from "./WebpImg";
 
 export interface CompCountType {

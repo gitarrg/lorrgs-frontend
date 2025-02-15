@@ -5,14 +5,13 @@ import { useForm, FormProvider } from "react-hook-form";
 
 import BossSelect from "./CompSearch/BossSelect";
 import BossSelection from "./CompSearch/BossSelection";
+import KilltimeGroup from "./CompSearch/KilltimeGroup";
 import PlayerRoleSearch from "./CompSearch/PlayerRoleSearch";
 import PlayerSelection from "./CompSearch/PlayerSelection";
 import PlayerSpecSearch from "./CompSearch/PlayerSpecSearch";
 import SearchSubmitButton from "./CompSearch/SearchSubmitButton";
-import KilltimeGroup from "./CompSearch/KilltimeGroup";
+import style from "./CompSearch/CompSearch.module.scss";
 import type { CompCountMap } from "../components/CompPreview";
-
-import * as style from "./CompSearch/CompSearch.scss";
 
 type FormValues = {
     /** Currently selected Boss */
