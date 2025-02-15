@@ -29,6 +29,7 @@ export default interface Spell {
     readonly tooltip?: string
 
     readonly tooltip_info?: string
+    readonly wowhead_data?: string
 
     readonly tags?: string[]
 
