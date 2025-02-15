@@ -2,8 +2,9 @@ import { defineConfig, loadEnv } from 'vite';
 import { execSync } from 'child_process';
 
 // Plugins
-import react from '@vitejs/plugin-react';
+import { visualizer } from "rollup-plugin-visualizer";
 import { VitePluginRadar } from 'vite-plugin-radar'
+import react from '@vitejs/plugin-react';
 
 
 /**
@@ -36,7 +37,33 @@ export default defineConfig(({ mode }) => {
     return {
 
         build: {
+            target: "es2015",
             outDir: "build",
+
+            rollupOptions: {
+                treeshake: true,
+                output: {
+
+                    manualChunks(id) {
+
+                        if (id.includes('/node_modules/konva')) {
+                            return "vendor__konva";
+                        }
+                        if (id.includes('/node_modules/react')) {
+                            return "vendor__react"
+                        }
+
+                        return null
+                    }
+                }
+
+                //...
+            }
+
+        },
+
+        esbuild: {
+            drop: ['console', 'debugger'],
         },
 
         plugins: [
@@ -49,6 +76,12 @@ export default defineConfig(({ mode }) => {
                 analytics: {
                     id: env.VITE_GOOGLE_ANALYTICS_ID,
                 },
+            }),
+
+            // rollup-plugin-visualizer
+            // needs to be the last plugin in the list
+            visualizer({
+                open: false,
             }),
 
         ], // end: plugins
