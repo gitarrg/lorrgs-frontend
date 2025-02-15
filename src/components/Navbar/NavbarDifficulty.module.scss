@@ -7,17 +7,11 @@
 
     text-decoration: none !important; // avoid underlining the icon
 
-    &:global.active {
-        font-weight: bold;
-    }
-
     &:hover {
         .label {
             text-decoration: underline;
         }
     }
-
-
 }
 
 

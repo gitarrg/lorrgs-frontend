@@ -1,7 +1,7 @@
 import type Fight from '../types/fight'
 import type { SpellDict } from '../types/spell'
 import { RootState } from './store'
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit'
 import { set_boss_spells } from './bosses'
 import { set_fights } from './fights'
 import { set_spec_spells } from './specs'
@@ -27,24 +27,38 @@ export interface SpellSliceState {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Actions
+// Selectors
 //
 
-export function get_spell(state: RootState, spell_id: number) {
-    return state.spells.all_spells[spell_id]
-}
-
-
-export function get_spells(state: RootState) {
+/**
+ * Selects all spells from the state.
+ */
+export const get_spells = function (state: RootState) {
     return state.spells.all_spells
-}
+};
+
+/**
+ * Returns a specific spell by its ID.
+ */
+export const get_spell = createSelector(
+    [
+        get_spells,
+        (_, spell_id: number) => spell_id
+    ],
+    (spells, spell_id) => spells[spell_id]
+);
 
 
-export function get_spell_types(state: RootState) {
-    return state.spells.spell_types
-}
+/**
+ * Returns all spell types.
+ */
+export const get_spell_types = (state: RootState) =>
+    state.spells.spell_types;
 
 
+/**
+ * Returns spells by a specific type.
+ */
 export function get_spells_for_type(state: RootState, spell_type: string) {
     return state.spells.spells_by_type[spell_type] || []
 }
@@ -82,9 +96,29 @@ export function get_used_spells(state: RootState): number[] {
 }
 
 
+// True if a given spell was used. False otherwise.
 export function get_spell_was_used(state: RootState, spell_id: number) {
     return state.spells.used_spell_ids.includes(spell_id)
 }
+
+
+/**
+ * Returns all used spells for a given type
+ */
+export const get_used_spells_for_type = createSelector(
+    [
+        get_spells_for_type,
+        get_used_spells,
+    ],
+    (spells, used_spells) => {
+        return spells.filter(spell_id => used_spells.includes(spell_id))
+    }
+)
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Actions
+//
 
 
 export function filter_used_spells(fights: Fight[]): number[] {

@@ -31,7 +31,7 @@ function NavbarDifficultyOption({ difficulty, ...props } : { difficulty: string 
     const class_name = DIFFICULTY_COLOR[difficulty] || ""
 
     return (
-        <QueryNavLink params={{"difficulty": difficulty}} className={`${class_name} ${styles.option}`} activeClassName="active">
+        <QueryNavLink params={{"difficulty": difficulty}} className={`${class_name} ${styles.option}`}>
             <MenuItem {...props}>
                 <DifficultyIcon difficulty={difficulty}/>
                 <span className={`${styles.label} ${class_name} ml-1`}>{difficulty}</span>

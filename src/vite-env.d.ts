@@ -1,5 +1,3 @@
-
-
 // short hash of the last git commit
 // generated in vite.config using `git rev-parse --short HEAD`
 declare const GIT_COMMIT_HASH: string;
