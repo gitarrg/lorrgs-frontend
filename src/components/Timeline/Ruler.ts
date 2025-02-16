@@ -14,7 +14,7 @@ export default class Ruler extends Konva.Group {
     private timestamp_distance = 30;
     private color = "white";
 
-     // time in seconds
+    // time in seconds
     duration: number
 
     private stage: Stage
@@ -25,7 +25,7 @@ export default class Ruler extends Konva.Group {
 
     // height = constants.LINE_HEIGHT;
 
-    constructor(stage: Stage, config: any = {} ) {
+    constructor(stage: Stage, config: any = {}) {
         // config.listening = false
         super(config)
         this.transformsEnabled("none")
@@ -49,9 +49,9 @@ export default class Ruler extends Konva.Group {
         //////////////////////////
         // MouseCrosshair
         this.mouse_crosshair = new MouseCrosshair()
-        this.bbox.on("mouseover", () => {this.mouse_crosshair.visible(true)})
-        this.bbox.on("mouseout", () => {this.mouse_crosshair.visible(false)})
-        this.bbox.on("mousemove", () => {this.handle_mousemove()})
+        this.bbox.on("mouseover", () => { this.mouse_crosshair.visible(true) })
+        this.bbox.on("mouseout", () => { this.mouse_crosshair.visible(false) })
+        this.bbox.on("mousemove", () => { this.handle_mousemove() })
         stage.overlay_layer.add(this.mouse_crosshair)
 
         //////////////////////////
@@ -64,7 +64,7 @@ export default class Ruler extends Konva.Group {
         // reset
         this.destroyChildren()
 
-        if (this.duration <= 0) {return;}
+        if (this.duration <= 0) { return; }
 
         this.bottom_line = new Konva.Line({
             name: "bottom_line",
@@ -78,14 +78,14 @@ export default class Ruler extends Konva.Group {
         /////////////////////////////////////
         // create ticks
         //
-        for (var t=0; t<this.duration; t+=this.tick_distance) {
+        for (var t = 0; t < this.duration; t += this.tick_distance) {
 
             let big = (t % this.timestamp_distance) == 0;
             let h = big ? 10 : 5
 
             let tick = new Konva.Line({
                 name: "tick",
-                points: [0.5, constants.LINE_HEIGHT-h, 0.5, constants.LINE_HEIGHT],
+                points: [0.5, constants.LINE_HEIGHT - h, 0.5, constants.LINE_HEIGHT],
                 stroke: this.color,
                 strokeWidth: 1,
                 transformsEnabled: "position",
@@ -107,7 +107,6 @@ export default class Ruler extends Konva.Group {
                 })
 
                 text.on("transform", () => {
-                    console.log("update text")
                     text.scaleX(1.0)
                 })
                 this.add(text)
@@ -136,17 +135,17 @@ export default class Ruler extends Konva.Group {
         // update timestamps
         this.find(".timestamp").forEach((timestamp, i) => {
             let x = this.timestamp_distance * i * scale_x
-            x += i==0 ? 0 : -18;
+            x += i == 0 ? 0 : -18;
             timestamp.x(x)
         })
 
-        this.bottom_line && this.bottom_line.points([0, constants.LINE_HEIGHT+0.5, this.duration * scale_x, constants.LINE_HEIGHT+0.5])
+        this.bottom_line && this.bottom_line.points([0, constants.LINE_HEIGHT + 0.5, this.duration * scale_x, constants.LINE_HEIGHT + 0.5])
         this.bbox.width(this.duration * scale_x)
         this.duration && this.cache()
     }
 
     handle_event(event_name: string, payload: any) {
-        if (event_name === constants.EVENT_ZOOM_CHANGE) { this.handle_zoom_change(payload)}
+        if (event_name === constants.EVENT_ZOOM_CHANGE) { this.handle_zoom_change(payload) }
 
         this.mouse_crosshair.handle_event(event_name, payload)
         this.markers.forEach(marker => marker.handle_event(event_name, payload))

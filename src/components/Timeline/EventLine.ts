@@ -1,12 +1,10 @@
-
+import { ASSETS } from "../../constants"
+import { toMMSS } from "../../utils"
 import * as constants from "./constants"
-import Actor from "../../types/actor"
 import Konva from "konva"
 import store from "./../../store/store"
 import type Event from "../../types/event"
 import type Stage from "./Stage"
-import { toMMSS } from "../../utils"
-import { ASSETS } from "../../constants"
 
 
 const ICON_ROOT = `${ASSETS}/images/spells`
@@ -14,7 +12,6 @@ const ICON_ROOT = `${ASSETS}/images/spells`
 
 export default class EventLine extends Konva.Group {
 
-    player_data: Actor
     event_data: Event
 
     timestamp: number
@@ -22,45 +19,94 @@ export default class EventLine extends Konva.Group {
 
     line: Konva.Line
     label: Konva.Text
+    handle: Konva.Rect
+
     mouse_event_bbox: Konva.Rect
 
-    constructor(player_data: Actor, event_data: Event) {
+    constructor(event_data: Event, config: Object) {
         super()
 
         // Kova Attrs
         this.listening(true)
         this.transformsEnabled("position")
 
+        ////////////////////////////////////////////////////////////////////////
         // Attributes
-        this.player_data = player_data
         this.event_data = event_data
-        this.timestamp = event_data.ts / 1000
+        this.timestamp = event_data.ts / 1000 || 0
 
+        ////////////////////////////////////////////////////////////////////////
         // Elements
+
+        // Element: Line
         this.line = new Konva.Line({
-            points: [0, 0, 0, constants.LINE_HEIGHT],
+            points: [
+                0,
+                config?.label?.y || 0,
+                0,
+                constants.LINE_HEIGHT,
+            ],
             stroke: this.color,
             strokeWidth: 2,
             transformsEnabled: "none",
         })
         this.add(this.line)
 
-        this.label = new Konva.Text({
-            name: "cast_text",
-            text: this._get_text_label(),
-            fontSize: 14,
 
-            x: 3, // gap between line and label
+        // Element: Label
+        {
+            const width = config?.label?.width || 50
+            const height = config?.label?.height || constants.LINE_HEIGHT
 
-            height: constants.LINE_HEIGHT,
-            verticalAlign: 'middle',
+            console.log("label", { width, height })
 
-            fontFamily: "Lato",
-            fill: this.color,
-            listening: false,
-            transformsEnabled: "position",
-        })
+            this.label = new Konva.Text({
+                // name: "cast_text",
+                text: this._get_text_label(),
+                fontSize: 14,
+
+                width: width,
+                height: height,
+
+                // x: config?.label?.x || 3, // gap between line and label
+                y: config?.label?.y || 0,
+
+                verticalAlign: 'middle',
+                align: "center", // config?.label?.align,
+
+                fontFamily: "Lato",
+                fill: config?.label?.color || this.color,
+                listening: false,
+                transformsEnabled: "position",
+            })
+        }
+
+        if (config?.label_background?.show) {
+
+            const width = config.label_background.width || this.label.width()
+            const height = config.label_background.height || this.label.height()
+
+            console.log("label_background", { width, height })
+
+            this.handle = new Konva.Rect({
+                // x: -width * 0.5,
+                y: config?.label_background?.y || config?.label?.y || 0,
+
+                width: width,
+                height: height,
+
+                fill: this.color,
+                cornerRadius: 3,
+
+                listening: false,
+                transformsEnabled: "position",
+            })
+            this.add(this.handle)
+        }
+
+
         this.add(this.label)
+
 
         this.tooltip_content = this._get_text_tooltip()
 
@@ -84,6 +130,13 @@ export default class EventLine extends Konva.Group {
         return "#ccc"
     }
 
+    set_height(height: number) {
+
+        let points = this.line.points()
+        points[3] = height
+        this.line.points(points)
+    }
+
     _get_text_label() {
         return toMMSS(this.timestamp)
     }
@@ -100,18 +153,12 @@ export default class EventLine extends Konva.Group {
         items["icon"] = ed.spell_icon ? `<img src="${ICON_ROOT}/${ed.spell_icon}" width="18px" height="auto">` : ""
         items["source"] = ed.source_name ? `<span class=wow-${ed.source_class}>${ed.source_name}</span>` : ""
         items["spell"] = ed.spell_name ? `<span class=wow-boss>${ed.spell_name}</span>` : ""
-        items["player"] = this.player_data ? `<span class="wow-${this.player_data.class}">${this.player_data.name}</span>` : ""
-
         return items
     }
 
     _get_tooltip_spell_name() {
         if (!this.event_data.spell_name) { return "" }
         return `<span class=wow-boss>${this.event_data.spell_name}</span>`
-    }
-
-    _get_text_player() {
-        return `<span class="wow-${this.player_data.class}">${this.player_data.name}</span>`
     }
 
     _get_text_tooltip() {

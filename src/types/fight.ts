@@ -1,4 +1,5 @@
 import type Actor from "./actor";
+import type Phase from "./phase";
 
 
 export default interface Fight {
@@ -12,6 +13,7 @@ export default interface Fight {
 
     boss?: Actor
     players: Actor[]
+    phases: Phase[]
 
     pinned?: boolean
 

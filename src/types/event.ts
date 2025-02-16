@@ -1,6 +1,5 @@
-
-/** Generic Event used for things like DeathEvents, Resurctions
- * and maybe other nieche features in the future */
+/** Generic Event used for things like DeathEvents, Resurrections
+ * and maybe other niche features in the future */
 export default interface Event {
 
     /** timestamp */

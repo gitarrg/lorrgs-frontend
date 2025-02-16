@@ -4,15 +4,16 @@ This basically just wraps a number of Boss/Player Rows.
 
 */
 
+import { FilterValues } from "../../store/ui";
+import { toMMSS } from "../../utils";
 import * as constants from "./constants";
-import Konva from "konva";
-import PlayerRow from "./PlayerRow";
 import filter_logic from "../../filter_logic";
+import Konva from "konva";
+import PhaseMarker from "./PhaseMarker";
+import PlayerRow from "./PlayerRow";
 import type Actor from "../../types/actor";
 import type Boss from "../../types/boss";
 import type Fight from "../../types/fight";
-import { FilterValues } from "../../store/ui";
-import { toMMSS } from "../../utils";
 
 
 export default class FightRow {
@@ -27,6 +28,7 @@ export default class FightRow {
     foreground: Konva.Group
     background: Konva.Group
     rows: PlayerRow[]
+    phases: PhaseMarker[]
     killtime_text: Konva.Text
 
 
@@ -47,6 +49,12 @@ export default class FightRow {
         // create child rows
         fight_data.boss && this.add_row(fight_data, fight_data.boss)
         fight_data.players.forEach(player => this.add_row(fight_data, player))
+
+        this.phases = (fight_data.phases || []).map(
+            phase => new PhaseMarker(phase)
+        )
+        this.phases.forEach(phase => this.foreground.add(phase))
+
 
         this.killtime_text = this.create_killtime_text()
         this.foreground.add(this.killtime_text)
@@ -89,6 +97,8 @@ export default class FightRow {
             row.y(y)
             y += row.height()
         })
+
+        this.phases.forEach(phase => phase.set_height(y))
     }
 
     //////////////////////////////
@@ -146,6 +156,7 @@ export default class FightRow {
 
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         this.rows.forEach(row => row.handle_event(event_name, payload))
+        this.phases.forEach(row => row.handle_event(event_name, payload))
 
         // postprocess after filters applied (in case height change due to child rows updating)
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_post() }
