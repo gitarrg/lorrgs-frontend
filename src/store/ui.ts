@@ -2,6 +2,7 @@ import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import Actor from '../types/actor'
 import type { RootState } from './store'
+import type Fight from '../types/fight'
 
 
 // modes to switch some page related features
@@ -49,12 +50,16 @@ export function get_tooltip(state: RootState) {
 }
 
 
-export function get_show_copynote(state: RootState) {
+export function get_show_copynote(state: RootState): boolean {
     return state.ui.show_copynote
 }
 
-export function get_copynote_player(state: RootState) {
+export function get_copynote_player(state: RootState): Actor | null {
     return state.ui.copynote_player
+}
+
+export function get_copynote_fight(state: RootState): Fight | null {
+    return state.ui.copynote_fight
 }
 
 
@@ -118,8 +123,10 @@ export interface UiSliceState {
         position: { x: number, y: number }
     }
 
+    // CopyNote Options
     show_copynote: boolean
     copynote_player: Actor | null
+    copynote_fight: Fight | null
 }
 
 
@@ -241,6 +248,11 @@ const SLICE = createSlice({
             return state
         },
 
+        set_copynote_fight: (state, action: PayloadAction<Fight>) => {
+            state.copynote_fight = action.payload
+            return state
+        },
+
 
     }, // reducers
 }) // slice
@@ -258,6 +270,7 @@ export const {
     update_settings,
     set_show_copynote,
     set_copynote_player,
+    set_copynote_fight,
 } = SLICE.actions
 
 
