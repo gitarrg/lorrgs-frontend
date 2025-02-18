@@ -225,8 +225,20 @@ export default class EventLine extends Konva.Group {
         this.x(scale_x * this.timestamp)
     }
 
+    _handle_phase_hover(payload: { state: boolean, label: string }) {
+
+        if (payload.label != this.event_data.label) { return }
+
+        const state = payload.state
+        if (this.color_hover) {
+            this.line?.stroke(state ? this.color_hover : this.color)
+            this.handle?.fill(state ? this.color_hover : this.color)
+        }
+    }
+
     handle_event(event_name: string, payload: any) {
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
+        if (event_name === constants.EVENT_PHASE_HOVER) { this._handle_phase_hover(payload) }
     }
 
     hover(hovering: boolean) {
@@ -234,29 +246,21 @@ export default class EventLine extends Konva.Group {
         const stage = this.getStage() as Stage | null
         if (!stage) { return }
 
-        // Update Hover state
-        if (this.color_hover) {
-            this.line?.stroke(hovering ? this.color_hover : this.color)
-            this.handle?.fill(hovering ? this.color_hover : this.color)
-            stage.overlay_layer2.batchDraw()
-        }
-
         // no tooltip
         if (!this.tooltip_content) { return }
 
 
-        const position = this.absolutePosition()
+        // anchor to group or label (if available)
+        let position = this.absolutePosition()
+        if (this.label) {
+            position = this.label.absolutePosition()
+        }
+
         // add stage global position
         const container = stage.container()
         const container_position = container.getBoundingClientRect()
         position.x += container_position.x
         position.y += container_position.y
-
-        if (this.label) {
-            position.x + this.label.x()
-            position.y + this.label.y()
-        }
-
 
         store.dispatch({
             type: constants.EVENT_SHOW_TOOLTIP,

@@ -14,4 +14,7 @@ export default interface Event {
     source_id?: number
     source_name?: number
     source_class?: number
+
+    label?: string
+
 }

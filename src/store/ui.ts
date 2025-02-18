@@ -148,6 +148,7 @@ const INITIAL_STATE: UiSliceState = {
         show_duration: true,
         show_cooldown: true,
         show_deaths: false,
+        show_phases: true,
     },
 
     // fight/player filter settings

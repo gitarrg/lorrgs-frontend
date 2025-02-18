@@ -1,22 +1,22 @@
-import EventLine, { EventLineConfig } from "./EventLine"
-import * as constants from "./constants"
-import type Phase from "../../types/phase"
 import { deepMerge } from "../../utils"
+import * as constants from "./constants"
+import Event from "../../types/event"
+import EventLine, { EventLineConfig } from "./EventLine"
+import Stage from "./Stage"
 
 
 export default class PhaseMarker extends EventLine {
 
-    event_data: Phase = { ts: 0 }
+    phase_label: string = ""
 
-
-    constructor(phase_data: Phase, config: EventLineConfig) {
+    constructor(phase_data: Event, config: EventLineConfig) {
 
         const height = 12
 
         config = deepMerge({
 
             color: "#36b336",
-            color_hover: "#17e617",
+            color_hover: "#17e67f",
             // color_hover: "#e6b217",
 
             label: {
@@ -40,6 +40,10 @@ export default class PhaseMarker extends EventLine {
         }, config)
 
         super(phase_data, config)
+
+        this.on('mouseover', () => { this.hover_same_phase(true) });
+        this.on('mouseout', () => { this.hover_same_phase(false) });
+
     }
 
     _get_text_label() {
@@ -53,9 +57,21 @@ export default class PhaseMarker extends EventLine {
 
     /***** Events */
 
-    hover(state: boolean) {
-        this.line.strokeWidth(state ? 4 : 2)
-        super.hover(state)
+    hover_same_phase(state: boolean) {
+
+        const stage = this.getStage() as Stage;
+        const label = this.event_data
+        if (stage && label) {
+            stage.handle_event(constants.EVENT_PHASE_HOVER, { state, label: this.event_data.label })
+        }
+    }
+
+    _handle_phase_hover(payload: { state: boolean, label: string }) {
+
+        if (payload.label != this.event_data.label) { return }
+
+        this.line.strokeWidth(payload.state ? 4 : 2)
+        super._handle_phase_hover(payload)
     }
 
     _handle_display_settings(settings: { [key: string]: boolean }) {
@@ -64,6 +80,7 @@ export default class PhaseMarker extends EventLine {
 
     handle_event(event_name: string, payload: any) {
         if (event_name === constants.EVENT_DISPLAY_SETTINGS) { this._handle_display_settings(payload) }
+        if (event_name === constants.EVENT_PHASE_HOVER) { this._handle_phase_hover(payload) }
         super.handle_event(event_name, payload)
     }
 }
