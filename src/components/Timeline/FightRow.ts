@@ -57,9 +57,7 @@ export default class FightRow {
 
         // Phases
         fight_data.phases?.forEach(phase_data => {
-            const phase = new PhaseMarker(phase_data, {
-                label: { show: fight_data.pinned ?? false },
-            })
+            const phase = new PhaseMarker(phase_data)
             this.phases.push(phase)
             this.overlay.add(phase)
         })
@@ -113,6 +111,7 @@ export default class FightRow {
         if (value !== undefined) {
             this._visible = value
             this.rows.forEach(row => row.visible(value))
+            this.phases.forEach(item => item.visible(value))
             this.killtime_text.visible(value)
         }
         return this._visible

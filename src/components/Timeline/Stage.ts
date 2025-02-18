@@ -211,6 +211,42 @@ export default class Stage extends Konva.Stage {
     }
 
     ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Updates phase marker headers for each fight.
+     * Ensures that each phase is only shown once per boss.
+     * Subsequent occurrences of the same phase label are hidden.
+     * 
+     * Note:
+     *   for now, this is really only relevant for spec_rankings,
+     *   as these use a single boss row + many player rows.
+     *   and even then only for cases where top logs skip phases
+     *   while other logs still play them
+     */
+    private _update_phase_marker_headers() {
+
+        // for user reports we can show the phases on each fight,
+        // since each one will have its own boss-row
+        if (this.MODE == MODES.USER_REPORT) { return; }
+
+        // let seen: Record<string, Record<string, boolean>> = {}
+        let seen: { [phase: string]: boolean } = {};
+
+        this.rows.forEach(row => {
+            row.phases.forEach(phase => {
+                const phase_label = phase._get_text_label()
+
+                if (seen[phase_label]) {
+                    phase.show_label(false)
+                } else {
+                    phase.show_label(true)
+                    seen[phase_label] = true
+                }
+            })
+        })
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
     // LOAD
     //
 
@@ -240,5 +276,7 @@ export default class Stage extends Konva.Stage {
         this.ruler.update_duration(this.longest_fight)
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
         this.handle_event(constants.EVENT_CHECK_IMAGES_LOADED)
+
+        this._update_phase_marker_headers()
     }
 }

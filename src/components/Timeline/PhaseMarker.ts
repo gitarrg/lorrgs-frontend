@@ -9,7 +9,7 @@ export default class PhaseMarker extends EventLine {
 
     phase_label: string = ""
 
-    constructor(phase_data: Event, config: EventLineConfig) {
+    constructor(phase_data: Event, config: EventLineConfig = {}) {
 
         const height = 12
 
@@ -20,7 +20,7 @@ export default class PhaseMarker extends EventLine {
             // color_hover: "#e6b217",
 
             label: {
-                // show: true,
+                show: true,
                 fontSize: 10,
                 align: "center",
                 color: "black",
@@ -33,7 +33,7 @@ export default class PhaseMarker extends EventLine {
             },
 
             label_background: {
-                // show: true,
+                show: true,
                 cornerRadius: [0, height / 2, height / 2, 0],
                 // x: -10,
             }
@@ -47,12 +47,12 @@ export default class PhaseMarker extends EventLine {
     }
 
     _get_text_label() {
-        return this.event_data.label || ""
+        return this.event_data.name || this.event_data.label || ""
     }
 
     _get_text_tooltip() {
         const t = this._get_tooltip_elements()
-        return `${this.event_data.label}: ${t.time}`
+        return `${this.event_data.name}: ${t.time}`
     }
 
     /***** Events */
@@ -62,13 +62,13 @@ export default class PhaseMarker extends EventLine {
         const stage = this.getStage() as Stage;
         const label = this.event_data
         if (stage && label) {
-            stage.handle_event(constants.EVENT_PHASE_HOVER, { state, label: this.event_data.label })
+            stage.handle_event(constants.EVENT_PHASE_HOVER, { state, name: this.event_data.name })
         }
     }
 
-    _handle_phase_hover(payload: { state: boolean, label: string }) {
+    _handle_phase_hover(payload: { state: boolean, name: string }) {
 
-        if (payload.label != this.event_data.label) { return }
+        if (payload.name != this.event_data.name) { return }
 
         this.line.strokeWidth(payload.state ? 4 : 2)
         super._handle_phase_hover(payload)

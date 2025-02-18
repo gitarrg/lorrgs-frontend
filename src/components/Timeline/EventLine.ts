@@ -107,8 +107,6 @@ export default class EventLine extends Konva.Group {
             const width = config?.label?.width || 50
             const height = config?.label?.height || constants.LINE_HEIGHT
 
-            console.log("label", { width, height })
-
             this.label = new Konva.Text({
                 // name: "cast_text",
                 text: this._get_text_label(),
@@ -186,16 +184,43 @@ export default class EventLine extends Konva.Group {
         }
     }
 
+
+    set_line_start(y: number) {
+        let points = this.line.points()
+        points[1] = y
+        this.line.points(points)
+    }
+
+    set_line_end(y: number) {
+        let points = this.line.points()
+        points[3] = y
+        this.line.points(points)
+    }
+
+
     set_height(height: number) {
         let points = this.line.points()
         points[3] = height
         this.line.points(points)
-        this.mouse_event_bbox.height(height)
+        this.mouse_event_bbox.height(height - 1)   // 1px border
     }
 
     _get_text_label() {
         return toMMSS(this.timestamp)
     }
+
+    show_label(visible: boolean) {
+
+        this.label?.visible(visible)
+        this.handle?.visible(visible)
+
+        // extend the line if the labels is visible
+        if (visible) {
+            this.set_line_start(this.config?.label?.y ?? 0)
+        } else
+            this.set_line_start(1)  // 1px border
+    }
+
 
     /** Tooltip Text Helpers */
     _get_tooltip_elements() {
@@ -225,9 +250,9 @@ export default class EventLine extends Konva.Group {
         this.x(scale_x * this.timestamp)
     }
 
-    _handle_phase_hover(payload: { state: boolean, label: string }) {
+    _handle_phase_hover(payload: { state: boolean, name: string }) {
 
-        if (payload.label != this.event_data.label) { return }
+        if (payload.name != this.event_data.name) { return }
 
         const state = payload.state
         if (this.color_hover) {
