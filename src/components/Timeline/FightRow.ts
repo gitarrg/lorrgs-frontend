@@ -27,8 +27,9 @@ export default class FightRow {
 
     foreground: Konva.Group
     background: Konva.Group
-    rows: PlayerRow[]
-    phases: PhaseMarker[]
+    overlay: Konva.Group
+    rows: PlayerRow[] = []
+    phases: PhaseMarker[] = []
     killtime_text: Konva.Text
 
 
@@ -43,6 +44,7 @@ export default class FightRow {
         // Groups
         this.foreground = new Konva.Group()
         this.background = new Konva.Group()
+        this.overlay = new Konva.Group()
 
         this.rows = [] // child rows
 
@@ -50,17 +52,19 @@ export default class FightRow {
         fight_data.boss && this.add_row(fight_data, fight_data.boss)
         fight_data.players.forEach(player => this.add_row(fight_data, player))
 
-        this.phases = (fight_data.phases || []).map(
-            phase => new PhaseMarker(phase)
-        )
-        this.phases.forEach(phase => this.foreground.add(phase))
-
-
         this.killtime_text = this.create_killtime_text()
         this.foreground.add(this.killtime_text)
 
-        this.layout_children()
+        // Phases
+        fight_data.phases?.forEach(phase_data => {
+            const phase = new PhaseMarker(phase_data, {
+                label: { show: fight_data.pinned ?? false },
+            })
+            this.phases.push(phase)
+            this.overlay.add(phase)
+        })
 
+        this.layout_children()
     }
 
     add_row(fight: Fight, player: Actor | Boss) {
@@ -123,11 +127,13 @@ export default class FightRow {
         // forward changes y-coord changes to both children
         this.background.y(y)
         this.foreground.y(y)
+        this.overlay.y(y)
     }
 
     destroy() {
         this.background.destroy()
         this.foreground.destroy()
+        this.overlay.destroy()
     }
 
     //////////////////////////////
@@ -155,8 +161,8 @@ export default class FightRow {
         if (!this.visible()) { return }
 
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
-        this.rows.forEach(row => row.handle_event(event_name, payload))
-        this.phases.forEach(row => row.handle_event(event_name, payload))
+        this.rows.forEach(child => child.handle_event(event_name, payload))
+        this.phases.forEach(child => child.handle_event(event_name, payload))
 
         // postprocess after filters applied (in case height change due to child rows updating)
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_post() }

@@ -111,3 +111,20 @@ export function get_unique_values(items: any[], getter: Function) {
 export async function sleep(duration = 2000) {
     return new Promise(r => setTimeout(r, duration));
 }
+
+
+export function deepMerge(obj1: object, obj2: object): object {
+    const result = { ...obj1 };
+
+    for (let key in obj2) {
+        if (obj2.hasOwnProperty(key)) {
+            if (obj2[key] instanceof Object && obj1[key] instanceof Object) {
+                result[key] = deepMerge(obj1[key], obj2[key]);
+            } else {
+                result[key] = obj2[key];
+            }
+        }
+    }
+
+    return result;
+}

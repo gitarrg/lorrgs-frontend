@@ -31,7 +31,8 @@ export default class Stage extends Konva.Stage {
 
     back_layer: Konva.Layer
     main_layer: Konva.Layer
-    overlay_layer: Konva.Layer
+    overlay_layer: Konva.Layer  // general overlays (MouseCrossHair / Timeline Markers)
+    overlay_layer2: Konva.Layer  // additional overlays
     ruler: Ruler
 
     /** Duration of the longest fight. Used to set things such as the the Length of the Ruler and overall width. */
@@ -61,6 +62,9 @@ export default class Stage extends Konva.Stage {
 
         this.overlay_layer = new Konva.Layer()
         this.add(this.overlay_layer);
+
+        this.overlay_layer2 = new Konva.Layer()
+        this.add(this.overlay_layer2);
 
         this.ruler = new Ruler(this);
         this.back_layer.add(this.ruler)
@@ -225,6 +229,7 @@ export default class Stage extends Konva.Stage {
             const row = new FightRow(fight)
             this.back_layer.add(row.background)
             this.main_layer.add(row.foreground)
+            this.overlay_layer2.add(row.overlay)
             this.longest_fight = Math.max(this.longest_fight, row.duration)
 
             this.rows.push(row)

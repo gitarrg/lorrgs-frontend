@@ -10,39 +10,88 @@ import type Stage from "./Stage"
 const ICON_ROOT = `${ASSETS}/images/spells`
 
 
+export interface EventLineConfig {
+
+    // General
+    color?: string
+    color_hover?: string
+
+    // Label
+    label?: {
+        show?: boolean
+        fontSize?: number
+        align?: string
+        x?: number
+        y?: number
+        color?: string
+        width?: number
+        height?: number
+    }
+
+    // Label Background
+    label_background?: {
+        show?: boolean
+
+        fill?: string
+        width?: number
+        height?: number
+        cornerRadius?: number | number[]
+
+        // offset, falls back to label.x/y and 0/0
+        x?: number
+        y?: number
+
+    }
+}
+
+
 export default class EventLine extends Konva.Group {
 
-    event_data: Event
+    color: string
+    color_hover?: string
 
+    // Attributes
+    event_data: Event
     timestamp: number
     tooltip_content: string
 
-    line: Konva.Line
-    label: Konva.Text
-    handle: Konva.Rect
+    config: EventLineConfig = {}
 
+
+    // Child objects
+    line: Konva.Line
+    label?: Konva.Text
+    handle?: Konva.Rect
     mouse_event_bbox: Konva.Rect
 
-    constructor(event_data: Event, config: Object) {
+    constructor(event_data: Event, config: EventLineConfig = {}) {
         super()
 
+        this.config = config
+
         // Kova Attrs
-        this.listening(true)
+        this.listening(true)  // TODO: only if required
         this.transformsEnabled("position")
 
         ////////////////////////////////////////////////////////////////////////
         // Attributes
         this.event_data = event_data
         this.timestamp = event_data.ts / 1000 || 0
+        this.tooltip_content = this._get_text_tooltip()
+
+        this.color = config?.color || "#ccc"
+        this.color_hover = config?.color_hover || this.color
 
         ////////////////////////////////////////////////////////////////////////
         // Elements
+
+        const show_label = config.label?.show ?? true
 
         // Element: Line
         this.line = new Konva.Line({
             points: [
                 0,
-                config?.label?.y || 0,
+                show_label ? (config?.label?.y ?? 0) : 0,
                 0,
                 constants.LINE_HEIGHT,
             ],
@@ -54,7 +103,7 @@ export default class EventLine extends Konva.Group {
 
 
         // Element: Label
-        {
+        if (show_label) {
             const width = config?.label?.width || 50
             const height = config?.label?.height || constants.LINE_HEIGHT
 
@@ -63,16 +112,17 @@ export default class EventLine extends Konva.Group {
             this.label = new Konva.Text({
                 // name: "cast_text",
                 text: this._get_text_label(),
-                fontSize: 14,
+                fontSize: config?.label?.fontSize || 14,
+
+
+                x: config?.label?.x ?? 3, // gap between line and label
+                y: config?.label?.y ?? 0,
 
                 width: width,
                 height: height,
 
-                // x: config?.label?.x || 3, // gap between line and label
-                y: config?.label?.y || 0,
-
                 verticalAlign: 'middle',
-                align: "center", // config?.label?.align,
+                align: config?.label?.align ?? "center",
 
                 fontFamily: "Lato",
                 fill: config?.label?.color || this.color,
@@ -81,60 +131,66 @@ export default class EventLine extends Konva.Group {
             })
         }
 
-        if (config?.label_background?.show) {
+        if (config?.label_background?.show ?? config.label?.show ?? false) {
 
-            const width = config.label_background.width || this.label.width()
-            const height = config.label_background.height || this.label.height()
-
-            console.log("label_background", { width, height })
+            const width = config.label_background?.width ?? this.label?.width() ?? 50
+            const height = config.label_background?.height ?? this.label?.height() ?? 20
 
             this.handle = new Konva.Rect({
-                // x: -width * 0.5,
+                x: config?.label_background?.x || config?.label?.x || 0,
                 y: config?.label_background?.y || config?.label?.y || 0,
 
                 width: width,
                 height: height,
 
                 fill: this.color,
-                cornerRadius: 3,
+                cornerRadius: config?.label_background?.cornerRadius || 3,
 
-                listening: false,
+                // listening: true,
                 transformsEnabled: "position",
             })
             this.add(this.handle)
         }
 
+        this.label && this.add(this.label)
+        // this.label.visible(show_label)
 
-        this.add(this.label)
-
-
-        this.tooltip_content = this._get_text_tooltip()
 
         // invisible box for mouse events
-        this.mouse_event_bbox = new Konva.Rect({
-            width: this.label.width() + 3,
-            height: constants.LINE_HEIGHT - 1,
-            listening: true,
-        });
-        this.add(this.mouse_event_bbox)
+        {
+            const w = this.line.width() + 4
+            const h = this.line.height() + (this.label?.height() || 0)
 
+            this.mouse_event_bbox = new Konva.Rect({
+                width: w,
+                height: h,
+
+                x: -w / 2,
+                y: 0,
+
+                listening: true,
+                transformsEnabled: "none",
+                // fill: "red",
+            });
+            this.add(this.mouse_event_bbox)
+        }
 
         if (this.tooltip_content) {
             this.listening(true)
             this.mouse_event_bbox.on('mouseover', () => { this.hover(true) });
             this.mouse_event_bbox.on('mouseout', () => { this.hover(false) });
+
+            this.handle?.listening(true)
+            this.handle?.on('mouseover', () => { this.hover(true) });
+            this.handle?.on('mouseout', () => { this.hover(false) });
         }
     }
 
-    get color() {
-        return "#ccc"
-    }
-
     set_height(height: number) {
-
         let points = this.line.points()
         points[3] = height
         this.line.points(points)
+        this.mouse_event_bbox.height(height)
     }
 
     _get_text_label() {
@@ -175,11 +231,19 @@ export default class EventLine extends Konva.Group {
 
     hover(hovering: boolean) {
 
+        const stage = this.getStage() as Stage | null
+        if (!stage) { return }
+
+        // Update Hover state
+        if (this.color_hover) {
+            this.line?.stroke(hovering ? this.color_hover : this.color)
+            this.handle?.fill(hovering ? this.color_hover : this.color)
+            stage.overlay_layer2.batchDraw()
+        }
+
         // no tooltip
         if (!this.tooltip_content) { return }
 
-        const stage = this.getStage() as Stage | null
-        if (!stage) { return }
 
         const position = this.absolutePosition()
         // add stage global position
@@ -187,6 +251,12 @@ export default class EventLine extends Konva.Group {
         const container_position = container.getBoundingClientRect()
         position.x += container_position.x
         position.y += container_position.y
+
+        if (this.label) {
+            position.x + this.label.x()
+            position.y + this.label.y()
+        }
+
 
         store.dispatch({
             type: constants.EVENT_SHOW_TOOLTIP,

@@ -1,39 +1,45 @@
-import EventLine from "./EventLine"
+import EventLine, { EventLineConfig } from "./EventLine"
 import * as constants from "./constants"
 import type Phase from "../../types/phase"
+import { deepMerge } from "../../utils"
 
 
 export default class PhaseMarker extends EventLine {
 
-    event_data: Phase //  = { ts: 0 }
+    event_data: Phase = { ts: 0 }
 
-    constructor(phase_data: Phase) {
-        super(phase_data, {
+
+    constructor(phase_data: Phase, config: EventLineConfig) {
+
+        const height = 12
+
+        config = deepMerge({
+
+            color: "#36b336",
+            color_hover: "#17e617",
+            // color_hover: "#e6b217",
 
             label: {
+                // show: true,
+                fontSize: 10,
                 align: "center",
-                // x: 0,
+                color: "black",
 
-                y: -25,
-                color: "white",
+                x: 0,
+                y: -height,
 
-                width: 30,
-                height: 20,
-
-                // background: true,
-                // background_width: 40,
-                // background_height: 20,
+                width: 20,
+                height: height,
             },
 
             label_background: {
-                show: true,
+                // show: true,
+                cornerRadius: [0, height / 2, height / 2, 0],
+                // x: -10,
             }
-        })
-    }
+        }, config)
 
-    get color() {
-        return "#e6b217"
-        return "#36b336"
+        super(phase_data, config)
     }
 
     _get_text_label() {
@@ -45,8 +51,15 @@ export default class PhaseMarker extends EventLine {
         return `${this.event_data.label}: ${t.time}`
     }
 
+    /***** Events */
+
+    hover(state: boolean) {
+        this.line.strokeWidth(state ? 4 : 2)
+        super.hover(state)
+    }
+
     _handle_display_settings(settings: { [key: string]: boolean }) {
-        this.visible(settings.show_deaths)
+        this.visible(settings.show_phases)
     }
 
     handle_event(event_name: string, payload: any) {
