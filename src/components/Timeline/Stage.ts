@@ -24,11 +24,14 @@ export default class Stage extends Konva.Stage {
     MODE = ""
 
     scale_x: number
-    private rows: FightRow[] = []
 
     // bool: true if any spell is selected
     has_selection: boolean
 
+    anchor_ts: number = 0
+    anchor_name: string = "pull"
+
+    private rows: FightRow[] = []
     back_layer: Konva.Layer
     main_layer: Konva.Layer
     overlay_layer: Konva.Layer  // general overlays (MouseCrossHair / Timeline Markers)
@@ -279,4 +282,20 @@ export default class Stage extends Konva.Stage {
 
         this._update_phase_marker_headers()
     }
+
+    set_anchor(ts: number, name: string = "") {
+        console.log("set_anchor", ts, name)
+        this.anchor_ts = ts
+        this.anchor_name = name
+
+        this.handle_event(constants.EVENT_ANCHOR_CHANGED, this.get_anchor())
+    }
+
+    get_anchor(): { ts: number, name: string } {
+        return {
+            ts: this.anchor_ts,
+            name: this.anchor_name,
+        }
+    }
+
 }

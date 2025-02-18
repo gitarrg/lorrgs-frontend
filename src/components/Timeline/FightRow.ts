@@ -25,6 +25,10 @@ export default class FightRow {
     _visible: boolean
     _fight_data: Fight
 
+    // Timestamp of the current anchor (in milliseconds)
+    anchor_offset: number = 0
+    anchor_ts: number = 0
+
     foreground: Konva.Group
     background: Konva.Group
     overlay: Konva.Group
@@ -129,6 +133,12 @@ export default class FightRow {
         this.overlay.y(y)
     }
 
+    x(x: number) {
+        this.background.x(x)
+        this.foreground.x(x)
+        this.overlay.x(x)
+    }
+
     destroy() {
         this.background.destroy()
         this.foreground.destroy()
@@ -141,11 +151,35 @@ export default class FightRow {
 
     _handle_zoom_change(scale_x: number) {
         this.killtime_text.x(this.KILLTIME_MARGIN + (this.duration * scale_x))
+        this.x(this.anchor_offset * scale_x)
     }
 
     _handle_apply_filters_pre(filters: FilterValues) {
         const visible = filter_logic.is_fight_visible(this._fight_data, filters)
         this.visible(visible)
+    }
+
+    private handle_anchor_changed({ ts, name }: { ts: number, name: string }) {
+
+        let stage = this.background.getStage() as Stage || null
+        if (!stage) { return }
+
+        // reset to pull
+        if (ts == 0) {
+            this.anchor_offset = 0
+            this.anchor_ts = 0
+            this.x(0)
+        }
+
+        // find the same phase in this fight
+        const phase_in_fight = this._fight_data.phases?.find(phase => phase.name === name)
+        if (!phase_in_fight) { return }
+
+        // TODO: see if we can keep the relative screen position
+        // of the object clicked on.
+        let new_offset = ts - (phase_in_fight.ts / 1000);
+        this.anchor_offset = new_offset;
+        this.x(this.anchor_offset * stage.scale_x);
     }
 
 
@@ -160,6 +194,7 @@ export default class FightRow {
         if (!this.visible()) { return }
 
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
+        if (event_name === constants.EVENT_ANCHOR_CHANGED) { this.handle_anchor_changed(payload) }
         this.rows.forEach(child => child.handle_event(event_name, payload))
         this.phases.forEach(child => child.handle_event(event_name, payload))
 

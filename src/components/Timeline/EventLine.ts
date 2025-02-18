@@ -15,6 +15,7 @@ export interface EventLineConfig {
     // General
     color?: string
     color_hover?: string
+    color_active?: string
 
     // Label
     label?: {
@@ -49,6 +50,9 @@ export default class EventLine extends Konva.Group {
 
     color: string
     color_hover?: string
+    color_active?: string
+
+    active: boolean = false
 
     // Attributes
     event_data: Event
@@ -81,6 +85,7 @@ export default class EventLine extends Konva.Group {
 
         this.color = config?.color || "#ccc"
         this.color_hover = config?.color_hover || this.color
+        this.color_active = config?.color_active
 
         ////////////////////////////////////////////////////////////////////////
         // Elements
@@ -205,6 +210,18 @@ export default class EventLine extends Konva.Group {
         this.mouse_event_bbox.height(height - 1)   // 1px border
     }
 
+    fill(color: string | undefined) {
+        color = color || this.color
+        this.line.stroke(color)
+        // this.label?.fill(color)
+        this.handle?.fill(color)
+    }
+
+    set_active(state: boolean) {
+        this.active = state
+        this.fill(state ? this.color_active : this.color)
+    }
+
     _get_text_label() {
         return toMMSS(this.timestamp)
     }
@@ -256,8 +273,8 @@ export default class EventLine extends Konva.Group {
 
         const state = payload.state
         if (this.color_hover) {
-            this.line?.stroke(state ? this.color_hover : this.color)
-            this.handle?.fill(state ? this.color_hover : this.color)
+            const color = this.active ? this.color_active : this.color
+            this.fill(state ? this.color_hover : color)
         }
     }
 
