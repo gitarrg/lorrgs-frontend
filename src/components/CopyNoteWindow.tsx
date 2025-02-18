@@ -7,6 +7,7 @@ import * as ui_store from "../store/ui"
 import style from "./CopyNoteWindow.module.scss";
 import type Fight from "../types/fight";
 import type Phase from "../types/phase";
+import useUser from "../routes/auth/useUser";
 
 
 
@@ -95,10 +96,12 @@ export default function CopyNoteWindow() {
     const show_window = useAppSelector(ui_store.get_show_copynote)
     const fight = useAppSelector(ui_store.get_copynote_fight)
     const dispatch = useAppDispatch()
+    const user = useUser()
 
+    const permission_dyn_timer = user.permissions.includes("dynamic_timers")
 
     const phasesAvailable = Boolean(fight?.phases.length)
-    const note = get_formatted_note(name, phasesAvailable && useDynamicTimer)
+    const note = get_formatted_note(name, permission_dyn_timer && phasesAvailable && useDynamicTimer)
 
     function closeWindow() {
         dispatch(ui_store.set_show_copynote(false));
@@ -132,9 +135,13 @@ export default function CopyNoteWindow() {
         return null;
     }
 
-    const dynTimerTooltip = phasesAvailable ?
-        "Use Dynamic Timers relative to combat events." :
-        "Dynamic Timers are not (yet) available for this Fight/Log."
+    let dynTimerTooltip = "Use Dynamic Timers relative to combat events."
+    if (!permission_dyn_timer) {
+        dynTimerTooltip = "Dynamic Timers only available for Legendary Patreon Members"
+    }
+    if (!phasesAvailable) {
+        dynTimerTooltip = "Dynamic Timers are not (yet) available for this Fight/Log."
+    }
 
     return (
         <div className={style.modal}>
@@ -149,14 +156,14 @@ export default function CopyNoteWindow() {
                 {/* Settings */}
                 <div className="d-grid grid-cols-2 mb-1">
                     <label>Player Name:</label>
-                    <input onChange={nameInputChanged} value={name}></input>
+                    <input onChange={nameInputChanged} autoFocus value={name}></input>
 
-                    <label className={phasesAvailable ? "" : "text-muted"}>use dynamic timer:</label>
+                    <label className={phasesAvailable && permission_dyn_timer ? "" : "text-muted"}>use dynamic timer:</label>
                     <input
                         type="checkbox"
                         onChange={() => setUseDynamicTimer(!useDynamicTimer)}
-                        checked={phasesAvailable && useDynamicTimer}
-                        disabled={!phasesAvailable}
+                        checked={phasesAvailable && permission_dyn_timer && useDynamicTimer}
+                        disabled={!phasesAvailable || !permission_dyn_timer}
                         data-tooltip={dynTimerTooltip}
                         data-tooltip-size="small"
                     />
