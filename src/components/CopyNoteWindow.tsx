@@ -2,7 +2,7 @@ import { FaXmark } from "react-icons/fa6";
 import { get_spell_display } from "../store/spells";
 import { toMMSS } from "../utils";
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
-import { useEffect, useRef, useState, ChangeEvent } from 'react'
+import { useRef, useState, ChangeEvent } from 'react'
 import * as ui_store from "../store/ui"
 import style from "./CopyNoteWindow.module.scss";
 import type Fight from "../types/fight";
@@ -87,10 +87,9 @@ export default function CopyNoteWindow() {
 
     // React
     const [name, setName] = useState("");
-    const [text, setText] = useState("");
     const [isCopied, setIsCopied] = useState(false);
     const [useDynamicTimer, setUseDynamicTimer] = useState(false);
-    const textareaRef = useRef(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Redux
     const show_window = useAppSelector(ui_store.get_show_copynote)
@@ -98,19 +97,47 @@ export default function CopyNoteWindow() {
     const dispatch = useAppDispatch()
     const user = useUser()
 
-    const permission_dyn_timer = user.permissions.includes("dynamic_timers")
+    
+    let permission_dyn_timer = user.permissions.includes("dynamic_timers2")
+    const phasesAvailable = Boolean(fight?.phases?.length)
 
-    const phasesAvailable = Boolean(fight?.phases.length)
-    const note = get_formatted_note(name, permission_dyn_timer && phasesAvailable && useDynamicTimer)
+    if (!phasesAvailable) {
+        permission_dyn_timer = true;
+    }
+    if (!useDynamicTimer) {
+        permission_dyn_timer = true;
+    }
+
+    
+
+    let note = get_formatted_note(name, phasesAvailable && permission_dyn_timer && useDynamicTimer)
+
+    if (!permission_dyn_timer) {
+        note += "\n".repeat(10)
+        note += `
+    "Dear Visitor,"
+    
+    I'm sorry but dynamic Timers are not yet ready for free users.
+    Please visit https://www.patreon.com/c/lorrgs or the discord server if you want to support the development.
+    
+    Thank you!"`
+    }
 
     function closeWindow() {
         dispatch(ui_store.set_show_copynote(false));
     }
 
     async function textAreaClicked() {
+        console.log("textAreaClicked")
+
+        if (!permission_dyn_timer) { 
+            // hehe cat
+            await navigator.clipboard.writeText("https://www.patreon.com/c/lorrgs");
+            return
+        }
 
         // copy to clipboard
-        await navigator.clipboard.writeText(text);
+        await navigator.clipboard.writeText(note);
 
         // update UI elements
         setIsCopied(true)
@@ -121,14 +148,16 @@ export default function CopyNoteWindow() {
         }, 1500);
     }
 
+    const preventSelection = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+        if (useDynamicTimer && !permission_dyn_timer) {
+            e.preventDefault();
+        }
+    };
+
+
     function nameInputChanged(event: ChangeEvent<HTMLInputElement>) {
         setName(event.target.value)
     }
-
-    // Update the Text Area Content
-    useEffect(() => {
-        setText(note)
-    }, [note])
 
 
     if (!show_window) {
@@ -136,11 +165,8 @@ export default function CopyNoteWindow() {
     }
 
     let dynTimerTooltip = "Use Dynamic Timers relative to combat events."
-    if (!permission_dyn_timer) {
-        dynTimerTooltip = "Dynamic Timers only available for Legendary Patreon Members"
-    }
     if (!phasesAvailable) {
-        dynTimerTooltip = "Dynamic Timers are not (yet) available for this Fight/Log."
+        dynTimerTooltip = "Dynamic Timers not available for this Fight."
     }
 
     return (
@@ -158,26 +184,36 @@ export default function CopyNoteWindow() {
                     <label>Player Name:</label>
                     <input onChange={nameInputChanged} autoFocus value={name}></input>
 
-                    <label className={phasesAvailable && permission_dyn_timer ? "" : "text-muted"}>use dynamic timer:</label>
+                    <label className={phasesAvailable ? "" : "text-muted"}>use dynamic timer:</label>
                     <input
                         type="checkbox"
                         onChange={() => setUseDynamicTimer(!useDynamicTimer)}
-                        checked={phasesAvailable && permission_dyn_timer && useDynamicTimer}
-                        disabled={!phasesAvailable || !permission_dyn_timer}
+                        checked={phasesAvailable && useDynamicTimer}
+                        disabled={!phasesAvailable}
                         data-tooltip={dynTimerTooltip}
                         data-tooltip-size="small"
                     />
                 </div>
 
-                {/* Note */}
-                <div className={style.textarea}>
+                    {/* Note */}
+                    <div className={`${style.textarea} ${!permission_dyn_timer ? `${style.textarea_disabled} no-select` : "" }`}>
                     <textarea
                         ref={textareaRef}
                         readOnly
                         className="border rounded"
                         onClick={textAreaClicked}
-                        value={text}
-                    />
+                        onFocus={() => {
+                            if (permission_dyn_timer) {
+                                textareaRef.current?.select();
+                            }
+                        }}
+                        value={note}
+                        onSelect={!permission_dyn_timer ? preventSelection : undefined}
+                    >
+                    </textarea>
+                    {!permission_dyn_timer && useDynamicTimer && <div className={style.notification_patreon}>
+                        Dynamic Timers only available for Legendary Patreon Members.<br></br>
+                    </div>}
                     {isCopied && <div className={style.notification}>note copied to clipboard.</div>}
                 </div>
 
