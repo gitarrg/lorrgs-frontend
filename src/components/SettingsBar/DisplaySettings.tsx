@@ -1,11 +1,12 @@
-import ButtonGroup, { ButtonGroupContext } from './shared/ButtonGroup'
-import MetricSelect from "./MetricSelect"
-import styles from "./DisplaySettings.module.scss";
 import { FaClock, FaHourglass, FaImage, FaSkull, FaStream } from 'react-icons/fa';
+import { IoFlagSharp } from 'react-icons/io5';
 import { ReactNode, useContext, useEffect } from 'react'
 import { update_settings } from '../../store/ui'
 import { useAppSelector } from '../../store/store_hooks'
 import { useDispatch } from 'react-redux'
+import ButtonGroup, { ButtonGroupContext } from './shared/ButtonGroup'
+import MetricSelect from "./MetricSelect"
+import styles from "./DisplaySettings.module.scss";
 
 
 
@@ -64,6 +65,7 @@ export default function DisplaySettings() {
             <Button attr_name="show_duration" tooltip="Duration"><FaStream /></Button>
             <Button attr_name="show_cooldown" tooltip="Cooldown" ><FaHourglass /></Button>
             <Button attr_name="show_deaths" tooltip="Deaths" ><FaSkull /></Button>
+            <Button attr_name="show_phases" tooltip="Phases" ><IoFlagSharp /></Button>
 
             <MetricSelect />
 

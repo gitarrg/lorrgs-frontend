@@ -25,3 +25,8 @@ export const EVENT_APPLY_FILTERS = "apply_filters"
 // - content (string)
 // - position (vector)
 export const EVENT_SHOW_TOOLTIP = "ui/set_tooltip"
+
+// Event when hovering over a phase marker
+export const EVENT_PHASE_HOVER = "phase/hover"
+
+export const EVENT_ANCHOR_CHANGED = "stage/anchor_changed"

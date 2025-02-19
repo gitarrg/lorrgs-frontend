@@ -92,21 +92,21 @@ export const {
 export default SLICE.reducer
 
 
-/** log the user into Lorrgs via a auth-code recieved from a third party Auth Provider */
+/** log the user into Lorrgs via a auth-code received from a third party Auth Provider */
 export function login(code: string) {
 
     return async (dispatch: AppDispatch) => {
 
         // Request
-        const repsonse = await fetch_data("/api/auth/token", { code });
+        const response = await fetch_data("/api/auth/token", { code });
 
-        const token = repsonse.token
+        const token = response.token
         if (token) {
             dispatch(SLICE.actions.token_received(token))
             dispatch(SLICE.actions.token_loaded(token))
             dispatch(load_user(true))
         } else {
-            dispatch(SLICE.actions.token_failed(repsonse))
+            dispatch(SLICE.actions.token_failed(response))
         }
     }
 }
@@ -127,10 +127,10 @@ export function load_user(refresh: boolean = false) {
         if (refresh) {
             url = `${url}/refresh`
         }
-        const repsonse = await fetch_data(url);
+        const response = await fetch_data(url);
 
-        if (repsonse) {
-            dispatch(SLICE.actions.user_loaded(repsonse))
+        if (response) {
+            dispatch(SLICE.actions.user_loaded(response))
         }
     }
 }

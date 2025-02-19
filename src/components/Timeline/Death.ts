@@ -1,8 +1,8 @@
-import EventLine from "./EventLine"
 import * as constants from "./constants"
+import PlayerEventLine from "./PlayerEventLine"
 
 
-export default class Death extends EventLine {
+export default class Death extends PlayerEventLine {
 
     get color() {
         return "#ff4d4d"
@@ -20,12 +20,12 @@ export default class Death extends EventLine {
         return `${t.icon} ${t.time} ${t.player} dies${s}.`
     }
 
-    _handle_display_settings(settings: { [key: string]: boolean}) {
+    _handle_display_settings(settings: { [key: string]: boolean }) {
         this.visible(settings.show_deaths)
     }
 
     handle_event(event_name: string, payload: any) {
-        if (event_name === constants.EVENT_DISPLAY_SETTINGS) { this._handle_display_settings(payload)}
+        if (event_name === constants.EVENT_DISPLAY_SETTINGS) { this._handle_display_settings(payload) }
         super.handle_event(event_name, payload)
     }
 }

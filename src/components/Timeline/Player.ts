@@ -43,7 +43,7 @@ export default class Player extends Konva.Group {
 
         this.casts.forEach(cast => {
 
-             if (cast.spell && cast.visible()) {
+            if (cast.spell && cast.visible()) {
 
                 // add cast if its not added yet
                 if (cast.getParent() == undefined) {

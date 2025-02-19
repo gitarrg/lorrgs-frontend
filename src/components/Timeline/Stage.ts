@@ -24,14 +24,18 @@ export default class Stage extends Konva.Stage {
     MODE = ""
 
     scale_x: number
-    private rows: FightRow[] = []
 
     // bool: true if any spell is selected
     has_selection: boolean
 
+    anchor_ts: number = 0
+    anchor_name: string = "pull"
+
+    private rows: FightRow[] = []
     back_layer: Konva.Layer
     main_layer: Konva.Layer
-    overlay_layer: Konva.Layer
+    overlay_layer: Konva.Layer  // general overlays (MouseCrossHair / Timeline Markers)
+    overlay_layer2: Konva.Layer  // additional overlays
     ruler: Ruler
 
     /** Duration of the longest fight. Used to set things such as the the Length of the Ruler and overall width. */
@@ -61,6 +65,9 @@ export default class Stage extends Konva.Stage {
 
         this.overlay_layer = new Konva.Layer()
         this.add(this.overlay_layer);
+
+        this.overlay_layer2 = new Konva.Layer()
+        this.add(this.overlay_layer2);
 
         this.ruler = new Ruler(this);
         this.back_layer.add(this.ruler)
@@ -207,6 +214,42 @@ export default class Stage extends Konva.Stage {
     }
 
     ////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Updates phase marker headers for each fight.
+     * Ensures that each phase is only shown once per boss.
+     * Subsequent occurrences of the same phase label are hidden.
+     * 
+     * Note:
+     *   for now, this is really only relevant for spec_rankings,
+     *   as these use a single boss row + many player rows.
+     *   and even then only for cases where top logs skip phases
+     *   while other logs still play them
+     */
+    private _update_phase_marker_headers() {
+
+        // for user reports we can show the phases on each fight,
+        // since each one will have its own boss-row
+        if (this.MODE == MODES.USER_REPORT) { return; }
+
+        // let seen: Record<string, Record<string, boolean>> = {}
+        let seen: { [phase: string]: boolean } = {};
+
+        this.rows.forEach(row => {
+            row.phases.forEach(phase => {
+                const phase_label = phase._get_text_label()
+
+                if (seen[phase_label]) {
+                    phase.show_label(false)
+                } else {
+                    phase.show_label(true)
+                    seen[phase_label] = true
+                }
+            })
+        })
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
     // LOAD
     //
 
@@ -225,6 +268,7 @@ export default class Stage extends Konva.Stage {
             const row = new FightRow(fight)
             this.back_layer.add(row.background)
             this.main_layer.add(row.foreground)
+            this.overlay_layer2.add(row.overlay)
             this.longest_fight = Math.max(this.longest_fight, row.duration)
 
             this.rows.push(row)
@@ -235,5 +279,23 @@ export default class Stage extends Konva.Stage {
         this.ruler.update_duration(this.longest_fight)
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
         this.handle_event(constants.EVENT_CHECK_IMAGES_LOADED)
+
+        this._update_phase_marker_headers()
     }
+
+    set_anchor(ts: number, name: string = "") {
+        console.log("set_anchor", ts, name)
+        this.anchor_ts = ts
+        this.anchor_name = name
+
+        this.handle_event(constants.EVENT_ANCHOR_CHANGED, this.get_anchor())
+    }
+
+    get_anchor(): { ts: number, name: string } {
+        return {
+            ts: this.anchor_ts,
+            name: this.anchor_name,
+        }
+    }
+
 }

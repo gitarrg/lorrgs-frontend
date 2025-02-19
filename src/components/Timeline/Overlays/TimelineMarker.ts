@@ -117,7 +117,6 @@ export default class TimelineMarker extends Konva.Group {
     // EVENTS
 
     private hover(state: boolean) {
-        this.line.strokeWidth(state ? 5 : 2)
         const stage = this.getStage();
         if (!stage) { return }
         stage.container().style.cursor = state ? "w-resize" : "default";
