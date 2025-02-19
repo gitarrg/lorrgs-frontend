@@ -98,7 +98,7 @@ export default function CopyNoteWindow() {
     const user = useUser()
 
     
-    let permission_dyn_timer = user.permissions.includes("dynamic_timers2")
+    let permission_dyn_timer = user.permissions.includes("dynamic_timers")
     const phasesAvailable = Boolean(fight?.phases?.length)
 
     if (!phasesAvailable) {
