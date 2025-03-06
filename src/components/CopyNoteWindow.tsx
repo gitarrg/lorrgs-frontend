@@ -66,7 +66,7 @@ function get_formatted_note(name: string, dynamic: boolean = false): string {
 
         if (phase) {
             ts = cast.ts - phase.ts
-            trigger = phase.mrt ? ":" + phase.mrt : ""
+            trigger = phase.mrt ? "," + phase.mrt : ""
         } else {
             ts = cast.ts
             trigger = ""
