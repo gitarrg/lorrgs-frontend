@@ -19,7 +19,7 @@ export async function fetch_data(url: string, params = {}) {
     const console_key = `request: ${url}`
 
     PRINT_REQUEST_TIMES && console.time(console_key)
-    const response = await fetch(url)
+    const response = await fetch(url, { mode: 'no-cors' })
     PRINT_REQUEST_TIMES && console.timeEnd(console_key)
 
     if (!response.ok) {
