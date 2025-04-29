@@ -17,8 +17,8 @@ query Operations {
     worldData {
         regions {
             id
-            name
             slug
+            name
         }
     }
 }
