@@ -228,6 +228,11 @@ const SLICE = createSlice({
             const { region, value } = action.payload
             state.filters.region = state.filters.region || {}
             state.filters.region[region] = value
+
+            // if we're filtering by region, we also need to hide reports without a region
+            const has_filter = Object.values(state.filters.region).some(value => value === false);
+            state.filters.region[""] = !has_filter
+
             return state
         },
 
