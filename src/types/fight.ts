@@ -9,6 +9,7 @@ export default interface Fight {
     report_id: string
     report_url: string
 
+
     duration: number
 
     boss?: Actor
@@ -16,6 +17,9 @@ export default interface Fight {
     phases: Phase[]
 
     pinned?: boolean
+
+    /** the zone id of the fight: EU, US, TW, CN, KR */
+    region?: string
 
     /** boss percent at the end of the fight */
     percent?: number
