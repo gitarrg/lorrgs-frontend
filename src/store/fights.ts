@@ -190,6 +190,7 @@ async function _load_spec_rankings(
     spec_ranking.reports?.forEach((report, i) => {
         report.fights?.forEach(fight => {
             fight.report_id = report.report_id
+            fight.region = report.region
             fights.push(fight)
             // insert ranking data
             fight.players.forEach(player => {

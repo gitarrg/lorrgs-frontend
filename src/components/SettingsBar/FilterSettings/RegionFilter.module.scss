@@ -1,0 +1,20 @@
+
+.button {
+
+    font-size: 12px;
+    align-content: center;
+    text-align: center;
+
+    font-weight: 700;
+
+    background-color: #5a5a5a;
+
+    &:hover {
+        background-color: hsl(0, 0%, 50%);
+    }
+
+    &:global.disabled {
+        background-color: #3a3a3a;
+    }
+
+}

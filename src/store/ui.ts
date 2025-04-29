@@ -84,6 +84,9 @@ export interface FilterValues {
     spec: { [key: string]: boolean }
     class: { [key: string]: boolean }
 
+    /** Filter by Region */
+    region: { [key: string]: boolean }
+
     // Hide Player Rows if all spells are hiden.
     hide_empty_rows: boolean
 
@@ -221,6 +224,13 @@ const SLICE = createSlice({
             return state
         },
 
+        set_region_filter: (state, action: PayloadAction<{ region: string, value: boolean }>) => {
+            const { region, value } = action.payload
+            state.filters.region = state.filters.region || {}
+            state.filters.region[region] = value
+            return state
+        },
+
         // loading
         set_loading: (state, action: PayloadAction<{ key: string, value: boolean }>) => {
             state._loading[action.payload.key] = action.payload.value
@@ -264,6 +274,7 @@ export const {
     set_difficulty,
     set_filter,
     set_filters,
+    set_region_filter,
     set_metric,
     set_mode,
     set_spec_slug,
