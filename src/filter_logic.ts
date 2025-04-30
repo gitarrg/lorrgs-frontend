@@ -13,8 +13,9 @@ function is_fight_visible(fight: Fight, filters: FilterValues) {
     if (filters.killtime.min && filters.killtime.min > fight_duration) { return false }
     if (filters.killtime.max && filters.killtime.max < fight_duration) { return false }
 
-    const region = fight.region || ""
-    if (filters.region[region] === false) { return false }
+    if (fight.region && filters.region && filters.region[fight.region] === false) {
+        return false
+    }
 
     const has_boss = fight.boss && is_player_visible(fight.boss, filters)
     return has_boss || fight.players.some(player => is_player_visible(player, filters))
