@@ -59,6 +59,7 @@ export default function CompRankings() {
             dispatch(load_spec_spells("demonhunter-havoc"));
             dispatch(load_spec_spells("shaman-elemental"));
             dispatch(load_spec_spells("shaman-enhancement"));
+            dispatch(load_spec_spells("priest-shadow"));
         }); // batch
     }, []);
 
