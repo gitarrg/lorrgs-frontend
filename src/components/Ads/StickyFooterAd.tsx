@@ -8,9 +8,7 @@ export default function StickyFooterAd() {
 
 
     const user = useUser()
-    const is_admin = user?.permissions.includes("admin")
     const is_subbbed = user.permissions.includes("dynamic_timers") || user.permissions.includes("user_reports") || user.permissions.includes("no_ads")
-
 
 
     useEffect(() => {
@@ -23,7 +21,7 @@ export default function StickyFooterAd() {
     }, []);
 
 
-    if (is_subbbed && !is_admin) {
+    if (is_subbbed) {
         // If the user is subscribed, do not show the ad
         return null
     }
@@ -41,7 +39,7 @@ export default function StickyFooterAd() {
                     height: "90px"
                 }}
                 data-ad-slot="1185664510"
-                data-ad-format="auto"
+                // data-ad-format="auto"
                 data-full-width-responsive="true">
             </ins>
         </div>
