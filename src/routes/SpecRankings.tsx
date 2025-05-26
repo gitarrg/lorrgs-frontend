@@ -38,8 +38,8 @@ export default function SpecRankings() {
     const is_loading = useAppSelector(state => ui_store.get_is_loading(state))
     const boss = useAppSelector(state => get_boss(state, boss_slug))
     const spec = useAppSelector(state => get_spec(state, spec_slug))
-    if (!boss_slug || !spec_slug) { return null }
-    if (!spec || !boss) { return null }
+    // if (!boss_slug || !spec_slug) { return null }
+    // if (!spec || !boss) { return null }
 
     const difficulty = query.get("difficulty") || "mythic"
     const metric = query.get("metric") || spec_metric(spec)
