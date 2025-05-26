@@ -35,6 +35,16 @@ export default function UserPage() {
                         <div className={`${style.user_info} bg-dark border rounded p-2 mb-2`}>
                             <div>Name:</div><div>{user.name}</div>
                             <div>ID:</div><div><pre>{user.id}</pre></div>
+
+                            <div>Permissions:</div>
+                            <div>
+                                <ul>
+                                    {user.permissions.map((perm, i) => (
+                                        <li key={i}>{perm}</li>
+                                    ))}
+
+                                </ul>
+                            </div>
                         </div>
 
                         <div className="d-flex gap-2">
