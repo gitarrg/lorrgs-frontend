@@ -1,37 +1,49 @@
 
-import { Adsense } from "@ctrl/react-adsense"
 import styles from "./Ads.module.scss"
 import useUser from "../../routes/auth/useUser"
+import { useEffect } from "react"
 
 
 export default function StickyFooterAd() {
 
 
     const user = useUser()
+    const is_admin = user?.permissions.includes("admin")
     const is_subbbed = user.permissions.includes("dynamic_timers") || user.permissions.includes("user_reports") || user.permissions.includes("no_ads")
 
 
-    if (is_subbbed) {
+
+    useEffect(() => {
+        try {
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+        }
+        catch (e) {
+            console.error("Error pushing adsbygoogle:", e);
+        }
+    }, []);
+
+
+    if (is_subbbed && !is_admin) {
         // If the user is subscribed, do not show the ad
         return null
     }
 
     return (
+
         // responsive and native ads
         <div className={styles.sticky_footer}>
-            <Adsense
-                client="ca-pub-4043710965953712"
-                slot="1185664510"
+            <ins
+                className="adsbygoogle"
+                data-ad-client="ca-pub-4043710965953712"
                 style={{
-                    display: 'inline-block',
-                    // width: '728px',
-                    // height: '90px'
+                    display: "inline-block",
+                    width: "728px",
+                    height: "90px"
                 }}
-                format="auto"
-                responsive="true"
-            /* layout="in-article" */
-            /* format="fluid" */
-            />
+                data-ad-slot="1185664510"
+                data-ad-format="auto"
+                data-full-width-responsive="true">
+            </ins>
         </div>
     )
 }
