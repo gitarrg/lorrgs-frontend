@@ -5,8 +5,35 @@
     width: 100%;
 
     // background-color: antiquewhite;
-
-    box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.1);
     text-align: center;
     z-index: 1000;
 }
+
+
+.ad_with_close_button {
+    // background-color: lime;
+    margin-top: 1.4em; // close button margin
+    position: relative;
+}
+
+
+.close_button {
+    color: white;
+    opacity: 0.4;
+    position: absolute;
+    right: 0;
+    top: -1.1em;  // 1em size + 0.1em margin
+    // top: 0;
+    // width: 20px;
+    // height: 20px;
+    cursor: pointer;
+    
+    &:hover {
+        opacity: 1;
+        // color: white;
+    }
+}
+
+
+
+

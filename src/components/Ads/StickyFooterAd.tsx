@@ -3,6 +3,8 @@ import styles from "./Ads.module.scss"
 import useUser from "../../routes/auth/useUser"
 import { useEffect } from "react"
 
+import AdWithCloseButton from "./AdWithCloseButton"
+
 
 export default function StickyFooterAd() {
 
@@ -30,8 +32,8 @@ export default function StickyFooterAd() {
 
         // responsive and native ads
         <div className={styles.sticky_footer}>
-            <ins
-                className="adsbygoogle"
+
+            <AdWithCloseButton
                 data-ad-client="ca-pub-4043710965953712"
                 style={{
                     display: "inline-block",
@@ -39,9 +41,8 @@ export default function StickyFooterAd() {
                     height: "90px"
                 }}
                 data-ad-slot="1185664510"
-                // data-ad-format="auto"
-                data-full-width-responsive="true">
-            </ins>
-        </div>
+                data-full-width-responsive="true"
+            />
+        </ div>
     )
 }
