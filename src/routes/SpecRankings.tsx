@@ -102,7 +102,7 @@ export default function SpecRankings() {
                 <TimelineCanvas />
             </div>
 
-            <StickyFooterAd />
+            {/* <StickyFooterAd /> */}
         </div>
     );
 }

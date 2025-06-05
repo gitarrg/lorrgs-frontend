@@ -1,12 +1,13 @@
-import Footer from "./components/Footer/Footer";
-import GlobalDataLoader from "./components/GlobalDataLoader";
-import UserProvider from "./routes/auth/UserProvider";
-import data_store from "./store/store"
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { createRoot } from "react-dom/client";
 import { Provider } from 'react-redux'
 import { StrictMode, lazy, Suspense } from "react"
+import AdSenseScriptTag from "./components/Ads/AdSenseScriptTag";
+import data_store from "./store/store"
+import Footer from "./components/Footer/Footer";
+import GlobalDataLoader from "./components/GlobalDataLoader";
 import React from 'react';
-import { createRoot } from "react-dom/client";
+import UserProvider from "./routes/auth/UserProvider";
 
 import "../scss/main.scss"
 
@@ -34,47 +35,48 @@ function App() {
     // Output
     return (
         <Provider store={data_store}>
-        <StrictMode>
+            <StrictMode>
 
-            <GlobalDataLoader />
-            <UserProvider />
+                <GlobalDataLoader />
+                <UserProvider />
+                <AdSenseScriptTag />
 
-            <main className="flex-grow-1">
+                <main className="flex-grow-1">
 
-            <Router>
-                <Suspense fallback={<div>Loading...</div>}>
-                <Routes>
+                    <Router>
+                        <Suspense fallback={<div>Loading...</div>}>
+                            <Routes>
 
-                    {/* Spec Rankings */}
-                    <Route path="/spec_ranking/:spec_slug/:boss_slug" element={<SpecRankings />} />
+                                {/* Spec Rankings */}
+                                <Route path="/spec_ranking/:spec_slug/:boss_slug" element={<SpecRankings />} />
 
-                    {/* Comp Rankings */}
-                    <Route path="/comp_ranking/search" element={<CompSearch />} />
-                    <Route path="/comp_ranking/:boss_slug" element={<CompRankings />} />
+                                {/* Comp Rankings */}
+                                <Route path="/comp_ranking/search" element={<CompSearch />} />
+                                <Route path="/comp_ranking/:boss_slug" element={<CompRankings />} />
 
-                    {/* User Reports */}
-                    <Route path="/user_report/load" element={<UserReportLoading />} />
-                    <Route path="/user_report/:report_id" element={<UserReport />} />
-                    <Route path="/user_report" element={<UserReportIndex />} />
+                                {/* User Reports */}
+                                <Route path="/user_report/load" element={<UserReportLoading />} />
+                                <Route path="/user_report/:report_id" element={<UserReport />} />
+                                <Route path="/user_report" element={<UserReportIndex />} />
 
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/user" element={<UserPage />} />
+                                <Route path="/login" element={<LoginPage />} />
+                                <Route path="/user" element={<UserPage />} />
 
-                    {/* other routes */}
-                    <Route path="/help" element={<Help />} />
-                    {/* <Route path="/lorgmin" element={<Admin />} /> */}
+                                {/* other routes */}
+                                <Route path="/help" element={<Help />} />
+                                {/* <Route path="/lorgmin" element={<Admin />} /> */}
 
-                    {/* fallback --> Home */}
-                    <Route path="/" element={<Index />} />
-                </Routes>
-                </Suspense>
-            </Router>
+                                {/* fallback --> Home */}
+                                <Route path="/" element={<Index />} />
+                            </Routes>
+                        </Suspense>
+                    </Router>
 
-            </main>
+                </main>
 
-            <Footer />
+                <Footer />
 
-        </StrictMode>
+            </StrictMode>
         </Provider>
     )
 }
