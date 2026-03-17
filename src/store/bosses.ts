@@ -58,7 +58,7 @@ function _post_process_boss(zone: RaidZone, boss: Boss) {
         boss.icon_path = `${ASSETS}/images/bosses/${zone.name_slug}/${boss.full_name_slug}.jpg`
     }
 
-    boss.zone_id = zone.id
+    boss.zone_id = Math.floor(zone.id)
 
     // insert some static data
     boss.role = "boss"
