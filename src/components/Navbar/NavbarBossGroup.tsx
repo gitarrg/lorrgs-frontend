@@ -8,7 +8,7 @@ import type RaidZone from "../../types/raid_zone";
 ////////////////////////////////////////////////////////////////////////////////
 
 
-function BossButton({boss_name}: {boss_name : string}) {
+function BossButton({ boss_name }: { boss_name: string }) {
     const boss = useAppSelector(state => get_boss(state, boss_name));
     return (
         <NavbarBossButton key={boss.full_name_slug} boss={boss} />
@@ -16,7 +16,7 @@ function BossButton({boss_name}: {boss_name : string}) {
 }
 
 
-function RaidTierGroup({zone} : {zone: RaidZone}) {
+function RaidTierGroup({ zone }: { zone: RaidZone }) {
 
     const boss_names = zone.bosses
     return (
@@ -34,9 +34,9 @@ export default function NavbarBossGroup() {
     const zones = useAppSelector(state => get_zones(state))
     return (
         <>
-        {Object.values(zones).map(zone => 
-            <RaidTierGroup key={zone.id} zone={zone} />
-        )}
+            {zones.map(zone =>
+                <RaidTierGroup key={zone.id} zone={zone} />
+            )}
         </>
     )
 }

@@ -17,7 +17,8 @@ import type RaidZone from '../types/raid_zone'
 //
 
 export function get_zones(state: RootState) {
-    return state.zones.zones
+    // Always return zones sorted by numeric `id` so UI ordering is stable.
+    return Object.values(state.zones.zones).sort((a, b) => a.id - b.id)
 }
 
 export function get_zone(state: RootState, zone_id: number) {

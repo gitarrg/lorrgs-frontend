@@ -60,9 +60,9 @@ export default function BossSelect() {
 
     return (
         <>
-        {Object.values(zones).map(zone => 
-            <RaidZoneGroup key={zone.id} zone={zone} />
-        )}
+            {zones.map(zone =>
+                <RaidZoneGroup key={zone.id} zone={zone} />
+            )}
         </>
     )
 }
