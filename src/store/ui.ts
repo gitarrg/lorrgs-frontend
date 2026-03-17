@@ -1,5 +1,6 @@
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { DEFAULT_DIFFICULTY } from '../constants'
 import Actor from '../types/actor'
 import type { RootState } from './store'
 import type Fight from '../types/fight'
@@ -24,7 +25,7 @@ export function get_mode(state: RootState) {
 
 
 export function get_difficulty(state: RootState) {
-    return state.ui.difficulty || "mythic"
+    return state.ui.difficulty || DEFAULT_DIFFICULTY
 }
 
 
@@ -142,7 +143,7 @@ const INITIAL_STATE: UiSliceState = {
     spec_slug: "", // currently selected spec
     boss_slug: "", // currently selected boss
     zone_id: 0,
-    difficulty: "mythic", // currently selected difficulty
+    difficulty: DEFAULT_DIFFICULTY, // currently selected difficulty
 
     // Timeline Options
     settings: {

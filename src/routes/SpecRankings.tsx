@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { useTitle } from 'react-use'
 
 /* local imports */
+import { DEFAULT_DIFFICULTY } from '../constants'
 import { get_boss, load_boss_spells } from '../store/bosses'
 import { get_spec, load_spec_spells } from '../store/specs'
 import { load_fights } from "../store/fights"
@@ -14,7 +15,6 @@ import Navbar from "./../components/Navbar/Navbar"
 import PlayerNamesList from "./../components/PlayerNames/PlayerNamesList"
 import SpecRankingsHeader from './SpecRankings/SpecRankingsHeader'
 import SpecSettingsBar from './SpecRankings/SpecSettingsBar'
-import StickyFooterAd from '../components/Ads/StickyFooterAd'
 import TimelineCanvas from "./../components/Timeline/TimelineCanvas"
 import type Spec from '../types/spec'
 import useQuery from "../hooks/useQuery"
@@ -41,7 +41,7 @@ export default function SpecRankings() {
     // if (!boss_slug || !spec_slug) { return null }
     // if (!spec || !boss) { return null }
 
-    const difficulty = query.get("difficulty") || "mythic"
+    const difficulty = query.get("difficulty") || DEFAULT_DIFFICULTY
     const metric = query.get("metric") || spec_metric(spec)
 
     // const

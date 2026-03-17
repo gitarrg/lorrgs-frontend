@@ -27,9 +27,10 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 ```bash
 
-# 1) Install Node.js (v23.7.0)
-sudo apt update
-sudo apt install nodejs npm
+# 1) Install Node.js (v24.4.1)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+\. "$HOME/.nvm/nvm.sh"
+nvm install 24
 
 
 # 2) Clone the repository

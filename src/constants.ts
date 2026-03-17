@@ -16,6 +16,15 @@ export const DISCORD_CLIENT_ID = "903080290925293628"
 export const DISCORD_LOGIN_URL = "https://discord.com/oauth2/authorize"
 
 
+
+export const DIFFICULTIES = {
+    HEROIC: "heroic",
+    MYTHIC: "mythic",
+}
+
+export const DEFAULT_DIFFICULTY = DIFFICULTIES.HEROIC
+
+
 ///////////////////////////////////
 // UI: Timeline
 export const LINE_HEIGHT = 28
