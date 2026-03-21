@@ -1,7 +1,10 @@
 
 
 .modal {
-    
+
+    --copynote-format-mrt-active-color: orange;
+    --copynote-format-nsrt-active-color: aqua;
+
     z-index: 99;
     
     display: flex;
@@ -18,11 +21,67 @@
     label, input {
         margin-bottom: 0.5em;
     }
-    
+
     input {
         margin-left: 0.5em;
     }
 
+}
+
+.noteFormatToggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+    margin-left: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+/* Segmented control; extends global `.button` + `.border` + `.rounded`. Selected = aria-pressed="true". */
+.noteFormatBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.75rem;
+    padding: 0.2rem 0.55rem;
+    background: hsl(0 0% 14%);
+    color: hsl(0 0% 75%);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.2;
+
+    &:focus-visible {
+        outline: 2px solid hsl(200 55% 45%);
+        outline-offset: 2px;
+    }
+
+    /* Softer than global `.button:hover { border-color: white }` */
+    &:global(.button):hover {
+        border-color: hsl(0 0% 50%);
+        color: hsl(0 0% 92%);
+    }
+}
+
+.noteFormatBtn[data-note-format="mrt"][aria-pressed="true"] {
+    border-color: hsl(32 55% 38%);
+    background: hsl(32 28% 16%);
+    color: var(--copynote-format-mrt-active-color);
+
+    &:global(.button):hover {
+        border-color: hsl(32 55% 48%);
+        color: var(--copynote-format-mrt-active-color);
+    }
+}
+
+.noteFormatBtn[data-note-format="nsrt"][aria-pressed="true"] {
+    border-color: hsl(180 45% 32%);
+    background: hsl(180 28% 14%);
+    color: var(--copynote-format-nsrt-active-color);
+
+    &:global(.button):hover {
+        border-color: hsl(180 45% 42%);
+        color: var(--copynote-format-nsrt-active-color);
+    }
 }
 
 

@@ -16,7 +16,7 @@ import type Phase from "../types/phase";
 import useUser from "../routes/auth/useUser";
 
 /** Output format for the copy-note modal. */
-export enum NoteStyle {
+export enum NoteFormat {
     MRT = "MRT",
     NSRT = "NSRT",
 }
@@ -56,7 +56,7 @@ function format_nsrt_row(entries: readonly [string, string | number][]): string 
 
 
 /**
- * MRT-style ERT note lines.
+ * MRT-format ERT note lines.
  */
 function get_note_mrt(
     name: string,
@@ -167,13 +167,13 @@ function get_note_nsrt(
  * 
  * @param name - The name of the player
  * @param dynamic - Whether to use dynamic timers
- * @param noteStyle - The style of the note
+ * @param noteFormat - The format of the note
  * @returns The formatted note text
  */
 function get_formatted_note(
     name: string,
     dynamic: boolean,
-    noteStyle: NoteStyle,
+    noteFormat: NoteFormat,
 ): string {
 
     const player = useAppSelector(ui_store.get_copynote_player);
@@ -192,10 +192,10 @@ function get_formatted_note(
         return "no fight selected";
     }
 
-    switch (noteStyle) {
-        case NoteStyle.MRT:
+    switch (noteFormat) {
+        case NoteFormat.MRT:
             return get_note_mrt(name, dynamic, player, fight, spell_display);
-        case NoteStyle.NSRT:
+        case NoteFormat.NSRT:
             return get_note_nsrt(
                 dynamic,
                 name,
@@ -216,7 +216,7 @@ export default function CopyNoteWindow() {
     const [name, setName] = useState("");
     const [isCopied, setIsCopied] = useState(false);
     const [useDynamicTimer, setUseDynamicTimer] = useState(false);
-    const [noteStyle, setNoteStyle] = useState<NoteStyle>(NoteStyle.MRT);
+    const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.MRT);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Redux
@@ -252,7 +252,7 @@ export default function CopyNoteWindow() {
     let note = get_formatted_note(
         name,
         phasesAvailable && permission_dyn_timer && useDynamicTimer,
-        noteStyle
+        noteFormat
     )
 
     if (!permission_dyn_timer) {
@@ -337,16 +337,37 @@ export default function CopyNoteWindow() {
                         data-tooltip-size="small"
                     />
 
-                    <label>Note Style:</label>
-                    <select
-                        value={noteStyle}
-                        onChange={(e) =>
-                            setNoteStyle(e.target.value as NoteStyle)
-                        }
+                    <label>Note Format:</label>
+                    <div
+                        className={style.noteFormatToggle}
+                        role="group"
+                        aria-label="Note format"
                     >
-                        <option value={NoteStyle.MRT}>MRT</option>
-                        <option value={NoteStyle.NSRT}>NSRT (beta)</option>
-                    </select>
+                        <button
+                            type="button"
+                            className={["button border rounded", style.noteFormatBtn].join(" ")}
+                            data-note-format="mrt"
+                            aria-pressed={noteFormat === NoteFormat.MRT}
+                            aria-label="use Method Raid Tools Note format"
+                            data-tooltip="use Method Raid Tools Note format"
+                            data-tooltip-size="small"
+                            onClick={() => setNoteFormat(NoteFormat.MRT)}
+                        >
+                            MRT
+                        </button>
+                        <button
+                            type="button"
+                            className={["button border rounded", style.noteFormatBtn].join(" ")}
+                            data-note-format="nsrt"
+                            aria-pressed={noteFormat === NoteFormat.NSRT}
+                            aria-label="use Northern Sky Note Format"
+                            data-tooltip="use Northern Sky Note Format"
+                            data-tooltip-size="small"
+                            onClick={() => setNoteFormat(NoteFormat.NSRT)}
+                        >
+                            NSRT
+                        </button>
+                    </div>
                 </div>
 
                 {/* Note */}
