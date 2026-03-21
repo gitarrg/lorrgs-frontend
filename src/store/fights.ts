@@ -106,6 +106,16 @@ function _process_fight(fight: Fight) {
         fight.boss.class_slug = "boss"
         fight.boss.spec_slug = fight.boss.name
     }
+
+    if (fight.phases) {
+        let phase_id = 0;
+        fight.phases.forEach(phase => {
+            phase.id = phase_id;
+            phase_id++;
+        })
+    }
+
+
     fight.players.forEach(actor => _process_actor(actor))
     return fight
 }

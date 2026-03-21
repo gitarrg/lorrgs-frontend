@@ -5,6 +5,9 @@ import Event from "./event"
  */
 export default interface Phase extends Event {
 
+    /** Phase ID */
+    id: number
+
     /** timestamp */
     ts: number
 
@@ -14,5 +17,6 @@ export default interface Phase extends Event {
      * eg.: SPELL_CAST_SUCCESS:442432:1
      */
     mrt?: string
+
 
 }

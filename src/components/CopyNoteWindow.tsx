@@ -1,14 +1,26 @@
 import { FaXmark } from "react-icons/fa6";
+import { get_boss } from "../store/bosses";
 import { get_spell_display } from "../store/spells";
 import { toMMSS } from "../utils";
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
 import { useRef, useState, ChangeEvent } from 'react'
 import * as ui_store from "../store/ui"
 import style from "./CopyNoteWindow.module.scss";
+import type Actor from "../types/actor";
+import type Boss from "../types/boss";
 import type Fight from "../types/fight";
 import type Phase from "../types/phase";
 import useUser from "../routes/auth/useUser";
+import { get_spec } from "../store/specs";
+import Spec from "../types/spec";
 
+/** Output format for the copy-note modal. */
+export enum NoteStyle {
+    MRT = "MRT",
+    NSRT = "NSRT",
+}
+
+type SpellDisplayMap = Record<number, boolean | undefined>;
 
 
 /**
@@ -34,52 +46,167 @@ function get_phase_at_time(fight: Fight, timestamp: number): Phase | null {
     return result;
 }
 
-
 /**
- * Generates a formatted note string with player casts and timings.
- * 
- * @param name - The player's name to include in the note.
- * @param dynamic - Whether to use dynamic timers
- * @returns Formatted string with cast timings and spell information.
+ * MRT-style ERT note lines.
  */
-function get_formatted_note(name: string, dynamic: boolean = false): string {
-
-    // for the Note
-    const player = useAppSelector(ui_store.get_copynote_player)
-    const fight = useAppSelector(ui_store.get_copynote_fight)
-    const spell_display = useAppSelector(get_spell_display)
-
-    if (!player) { return "no player selected" }
-    if (!fight) { return "no fight selected" }
+function get_note_mrt(
+    name: string,
+    dynamic: boolean,
+    player: Actor,
+    fight: Fight,
+    spell_display: SpellDisplayMap,
+): string {
 
     const rows: string[] = [];
-    player.casts.forEach(cast => {
+
+    player.casts.forEach((cast) => {
 
         if (!spell_display[cast.id]) {
             return;
         }
 
-        const phase = dynamic && get_phase_at_time(fight, cast.ts)
+        const phase = dynamic && get_phase_at_time(fight, cast.ts);
 
-        let ts = 0
-        let trigger = ""
+        let ts = 0;
+        let trigger = "";
 
         if (phase) {
-            ts = cast.ts - phase.ts
-            trigger = phase.mrt ? "," + phase.mrt : ""
+            ts = cast.ts - phase.ts;
+            trigger = phase.mrt ? "," + phase.mrt : "";
         } else {
-            ts = cast.ts
-            trigger = ""
+            ts = cast.ts;
+            trigger = "";
         }
 
-        const ts_string = toMMSS(ts / 1000)
-        rows.push(`{time:${ts_string}${trigger}} - ${name} {spell:${cast.id}}`)
+        const ts_string = toMMSS(ts / 1000);
+        rows.push(`{time:${ts_string}${trigger}} - ${name} {spell:${cast.id}}`);
+    });
+    return rows.join("\n");
+}
 
-    })
-    const note = rows.join("\n")
+/**
+ * "Northern Sky Raid Tools" style note.
+ */
+function get_note_nsrt(
+    dynamic: boolean,
+    name: string,
+    player: Actor,
+    spec: Spec,
+    fight: Fight,
+    boss: Boss,
+    spell_display: SpellDisplayMap,
+    difficulty: string,
+): string {
+
+    const rows: string[] = [];
+
+    // Header
+    // const boss = useAppSelector(state => get_boss(state, fight.boss?.boss_slug));
+    const header = (
+        + `EncounterID:${boss.id};`
+        + `Difficulty:${difficulty};`
+        + `Name:${boss.full_name};`
+    )
+
+    rows.push(header);
+
+    // Casts
+    player.casts.forEach((cast) => {
+
+        if (!spell_display[cast.id]) {
+            return;
+        }
+
+        let row = "";
+
+        let phase: Phase | null = null;
+        if (dynamic) {
+            phase = get_phase_at_time(fight, cast.ts);
+        }
+
+        // +2 because
+        // ph1 = from pull
+        // ph2 = first real phase --> phase.id = 0 + 2 = 2
+        const phase_id = phase ? (phase.id + 2) : 1;
+        row += `;ph:${phase_id}`;
+
+        let ts = cast.ts;
+        if (phase) {
+            ts = cast.ts - phase.ts;
+        }
+        const seconds = Math.floor(ts / 1000);
+        row += `;time:${seconds}`;
+
+        if (name) {
+            row += `;tag:${name}`;
+        } else {
+            // use tag based on spec id
+            // TODO: ids need to be implemented on backend first
+            // row += `;tag:${spec.id}`;
+        }
+
+        row += `;spellid:${cast.id}`;
+
+        // const tsMs = phase ? cast.ts - phase.ts : cast.ts;
+        // const phaseNumber = get_phase_number(fight, phase);
+        // const bossSpell = get_boss_spell_from_mrt_trigger(phase?.mrt);
+        // `time:${tsSeconds};ph:${phaseNumber};bossSpell:${bossSpell};tag:${name};spellid:${cast.id};`,
+
+        // Remove leading/trailing semicolons from the row
+        row = row.replace(/^;+|;+$/g, "");
+
+        rows.push(row);
+    });
+
+    return rows.join("\n");
+}
 
 
-    return note
+/**
+ * Get formatted note text based on current selection
+ * 
+ * @param name - The name of the player
+ * @param dynamic - Whether to use dynamic timers
+ * @param noteStyle - The style of the note
+ * @returns The formatted note text
+ */
+function get_formatted_note(
+    name: string,
+    dynamic: boolean,
+    noteStyle: NoteStyle,
+): string {
+
+    const player = useAppSelector(ui_store.get_copynote_player);
+    const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
+    const spell_display = useAppSelector(get_spell_display) as SpellDisplayMap;
+
+    const fight = useAppSelector(ui_store.get_copynote_fight);
+    const difficulty = useAppSelector(ui_store.get_difficulty);
+
+    const boss = useAppSelector(state => get_boss(state, fight?.boss?.boss_slug));
+
+    if (!player) {
+        return "no player selected";
+    }
+    if (!fight) {
+        return "no fight selected";
+    }
+
+    switch (noteStyle) {
+        case NoteStyle.MRT:
+            return get_note_mrt(name, dynamic, player, fight, spell_display);
+        case NoteStyle.NSRT:
+            return get_note_nsrt(
+                dynamic,
+                name,
+                player,
+                spec,
+                fight,
+                boss,
+                spell_display,
+                difficulty,
+            );
+    }
 }
 
 
@@ -89,6 +216,7 @@ export default function CopyNoteWindow() {
     const [name, setName] = useState("");
     const [isCopied, setIsCopied] = useState(false);
     const [useDynamicTimer, setUseDynamicTimer] = useState(false);
+    const [noteStyle, setNoteStyle] = useState<NoteStyle>(NoteStyle.MRT);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
     // Redux
@@ -97,7 +225,7 @@ export default function CopyNoteWindow() {
     const dispatch = useAppDispatch()
     const user = useUser()
 
-    
+
     let permission_dyn_timer = user.permissions.includes("dynamic_timers")
     const phasesAvailable = Boolean(fight?.phases?.length)
 
@@ -108,9 +236,11 @@ export default function CopyNoteWindow() {
         permission_dyn_timer = true;
     }
 
-    
-
-    let note = get_formatted_note(name, phasesAvailable && permission_dyn_timer && useDynamicTimer)
+    let note = get_formatted_note(
+        name,
+        phasesAvailable && permission_dyn_timer && useDynamicTimer,
+        noteStyle
+    )
 
     if (!permission_dyn_timer) {
         note += "\n".repeat(10)
@@ -130,7 +260,7 @@ export default function CopyNoteWindow() {
     async function textAreaClicked() {
         console.log("textAreaClicked")
 
-        if (!permission_dyn_timer) { 
+        if (!permission_dyn_timer) {
             // hehe cat
             await navigator.clipboard.writeText("https://www.patreon.com/c/lorrgs");
             return
@@ -176,7 +306,7 @@ export default function CopyNoteWindow() {
                 {/* Header */}
                 <div className={`${style.header} mb-2`}>
                     <h3>Copy ERT Note (beta v2)</h3>
-                    <FaXmark onClick={closeWindow}/>
+                    <FaXmark onClick={closeWindow} />
                 </div>
 
                 {/* Settings */}
@@ -193,10 +323,21 @@ export default function CopyNoteWindow() {
                         data-tooltip={dynTimerTooltip}
                         data-tooltip-size="small"
                     />
+
+                    <label>Note Style:</label>
+                    <select
+                        value={noteStyle}
+                        onChange={(e) =>
+                            setNoteStyle(e.target.value as NoteStyle)
+                        }
+                    >
+                        <option value={NoteStyle.MRT}>MRT</option>
+                        <option value={NoteStyle.NSRT}>NSRT (beta)</option>
+                    </select>
                 </div>
 
-                    {/* Note */}
-                    <div className={`${style.textarea} ${!permission_dyn_timer ? `${style.textarea_disabled} no-select` : "" }`}>
+                {/* Note */}
+                <div className={`${style.textarea} ${!permission_dyn_timer ? `${style.textarea_disabled} no-select` : ""}`}>
                     <textarea
                         ref={textareaRef}
                         readOnly
