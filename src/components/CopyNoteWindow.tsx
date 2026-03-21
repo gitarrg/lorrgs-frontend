@@ -1,18 +1,19 @@
+import { FaCopy } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { get_boss } from "../store/bosses";
+import { get_spec } from "../store/specs";
 import { get_spell_display } from "../store/spells";
 import { toMMSS } from "../utils";
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
-import { useRef, useState, ChangeEvent } from 'react'
+import { useEffect, useRef, useState, ChangeEvent } from 'react'
 import * as ui_store from "../store/ui"
+import Spec from "../types/spec";
 import style from "./CopyNoteWindow.module.scss";
 import type Actor from "../types/actor";
 import type Boss from "../types/boss";
 import type Fight from "../types/fight";
 import type Phase from "../types/phase";
 import useUser from "../routes/auth/useUser";
-import { get_spec } from "../store/specs";
-import Spec from "../types/spec";
 
 /** Output format for the copy-note modal. */
 export enum NoteStyle {
@@ -224,6 +225,19 @@ export default function CopyNoteWindow() {
     const dispatch = useAppDispatch()
     const user = useUser()
 
+    // Close window when Escape key is pressed
+    useEffect(() => {
+        if (!show_window) {
+            return;
+        }
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                dispatch(ui_store.set_show_copynote(false));
+            }
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [show_window, dispatch]);
 
     let permission_dyn_timer = user.permissions.includes("dynamic_timers")
     const phasesAvailable = Boolean(fight?.phases?.length)
@@ -304,7 +318,7 @@ export default function CopyNoteWindow() {
 
                 {/* Header */}
                 <div className={`${style.header} mb-2`}>
-                    <h3>Copy ERT Note (beta v2)</h3>
+                    <h3><FaCopy /> Copy Note</h3>
                     <FaXmark onClick={closeWindow} />
                 </div>
 

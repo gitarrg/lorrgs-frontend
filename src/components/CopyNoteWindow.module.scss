@@ -15,8 +15,6 @@
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
 
-
-
     label, input {
         margin-bottom: 0.5em;
     }
@@ -123,7 +121,11 @@
     justify-content: space-between;
     // gap: 1rem;
 
-    svg {
+    h3 > svg {
+        margin-right: 0.25 rem;
+    }
+
+    & > svg {
         font-size: 1.5em;
         opacity: 0.5;
 
