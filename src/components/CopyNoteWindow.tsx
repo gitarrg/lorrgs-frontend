@@ -47,6 +47,14 @@ function get_phase_at_time(fight: Fight, timestamp: number): Phase | null {
 }
 
 /**
+ * One NSRT line: ordered `key:value` segments separated by `;`, trailing `;`.
+ */
+function format_nsrt_row(entries: readonly [string, string | number][]): string {
+    return entries.map(([key, value]) => `${key}:${value}`).join(";") + ";";
+}
+
+
+/**
  * MRT-style ERT note lines.
  */
 function get_note_mrt(
@@ -100,62 +108,53 @@ function get_note_nsrt(
 
     const rows: string[] = [];
 
-    // Header
-    // const boss = useAppSelector(state => get_boss(state, fight.boss?.boss_slug));
-    const header = (
-        + `EncounterID:${boss.id};`
-        + `Difficulty:${difficulty};`
-        + `Name:${boss.full_name};`
-    )
+    const encounterId = boss.id;
+    const encounterName = boss.full_name;
 
-    rows.push(header);
+    rows.push(
+        format_nsrt_row([
+            ["EncounterID", encounterId],
+            ["Difficulty", difficulty],
+            ["Name", encounterName],
+        ]),
+    );
 
-    // Casts
     player.casts.forEach((cast) => {
 
         if (!spell_display[cast.id]) {
             return;
         }
 
-        let row = "";
+        // key-value pairs for the row
+        const pairs: [string, string | number][] = [];
 
         let phase: Phase | null = null;
         if (dynamic) {
             phase = get_phase_at_time(fight, cast.ts);
         }
 
-        // +2 because
-        // ph1 = from pull
-        // ph2 = first real phase --> phase.id = 0 + 2 = 2
-        const phase_id = phase ? (phase.id + 2) : 1;
-        row += `;ph:${phase_id}`;
+        // +2 because ph1 = from pull; ph2 = first real phase (phase.id = 0 -> 2)
+        const phase_id = phase ? phase.id + 2 : 1;
+        pairs.push(["ph", phase_id]);
 
         let ts = cast.ts;
         if (phase) {
             ts = cast.ts - phase.ts;
         }
         const seconds = Math.floor(ts / 1000);
-        row += `;time:${seconds}`;
+        pairs.push(["time", seconds]);
 
         if (name) {
-            row += `;tag:${name}`;
+            pairs.push(["tag", name]);
         } else {
             // use tag based on spec id
             // TODO: ids need to be implemented on backend first
-            // row += `;tag:${spec.id}`;
+            // pairs.push(["tag", spec.id]);
         }
 
-        row += `;spellid:${cast.id}`;
+        pairs.push(["spellid", cast.id]);
 
-        // const tsMs = phase ? cast.ts - phase.ts : cast.ts;
-        // const phaseNumber = get_phase_number(fight, phase);
-        // const bossSpell = get_boss_spell_from_mrt_trigger(phase?.mrt);
-        // `time:${tsSeconds};ph:${phaseNumber};bossSpell:${bossSpell};tag:${name};spellid:${cast.id};`,
-
-        // Remove leading/trailing semicolons from the row
-        row = row.replace(/^;+|;+$/g, "");
-
-        rows.push(row);
+        rows.push(format_nsrt_row(pairs));
     });
 
     return rows.join("\n");
