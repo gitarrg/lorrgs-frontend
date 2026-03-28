@@ -10,6 +10,9 @@ export default interface Class {
     /** full_name_slug for each spec */
     specs: string[]
 
+    /** Maps full_name_slug → Blizzard spec id (null for synthetic specs). */
+    spec_ids?: number[]
+
     // just to silence some TS errors
     class?: any
 

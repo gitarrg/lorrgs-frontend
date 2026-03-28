@@ -17,7 +17,7 @@ export function get_roles(state: RootState) {
 
 export const get_player_roles = createSelector(
     get_roles,
-    (roles_map ) => {
+    (roles_map) => {
         const roles = Object.values(roles_map)
         return roles.filter(role => role.id < 1000)
     }
@@ -35,13 +35,15 @@ export function get_role(state: RootState, role_name: string) {
 
 function create_placeholder_role(name: string, num_specs: number) {
 
-    const specs = Array.from({length: num_specs}, (x, i) => `placeholder:${i}`)
+    const specs = Array.from({ length: num_specs }, (x, i) => `placeholder:${i}`)
 
     return {
         id: 0,
         code: name.toLowerCase(),
         name: name,
         specs: specs,
+        spec_ids: [],
+        metrics: [],
         icon_path: LOGO_URL,
     }
 }
@@ -83,14 +85,14 @@ export default SLICE.reducer
 export function load_roles() {
 
     return async (dispatch: AppDispatch) => {
-        dispatch({type: "ui/set_loading", payload: {key: "roles", value: true}})
+        dispatch({ type: "ui/set_loading", payload: { key: "roles", value: true } })
 
         // request
         let roles_map: { roles: Role[] } = await fetch_data("/api/roles")
         let roles = roles_map.roles // take array from dict
-        roles.sort((a, b) => (a.id > b.id) ? 1 : -1  )
+        roles.sort((a, b) => (a.id > b.id) ? 1 : -1)
 
         dispatch(SLICE.actions.set_roles(roles))
-        dispatch({type: "ui/set_loading", payload: {key: "roles", value: false}})
+        dispatch({ type: "ui/set_loading", payload: { key: "roles", value: false } })
     }
 }

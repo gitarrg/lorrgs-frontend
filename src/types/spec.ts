@@ -2,6 +2,9 @@
 
 export default interface Spec {
 
+    /** Blizzard specialization id. Null for synthetic specs (e.g. Other). */
+    id: number | null
+
     class: {
         /** Nice Full Name: eg.: Death Knight */
         name: string
