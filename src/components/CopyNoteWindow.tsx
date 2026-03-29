@@ -258,7 +258,7 @@ export default function CopyNoteWindow() {
             setName(`${spec.id}`);
         } else if (noteFormat === NoteFormat.MRT) {
             const class_name = spec.class.name.toUpperCase();
-            setName(`${class_name}:${spec?.index}`);
+            setName(`spec:${class_name}:${spec?.index}`);
         }
 
     }, [nameInputMode, noteFormat, spec?.id]);
