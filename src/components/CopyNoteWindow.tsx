@@ -21,6 +21,11 @@ export enum NoteFormat {
     NSRT = "NSRT",
 }
 
+export enum NameInputMode {
+    PLAYER_NAME = "player_name",
+    PLAYER_SPEC = "player_spec",
+}
+
 type SpellDisplayMap = Record<number, boolean | undefined>;
 
 
@@ -214,6 +219,8 @@ export default function CopyNoteWindow() {
 
     // React
     const [name, setName] = useState("");
+    const [nameInputMode, setNameInputMode] = useState<NameInputMode>(NameInputMode.PLAYER_NAME);
+    const lastManualNameRef = useRef("");
     const [isCopied, setIsCopied] = useState(false);
     const [useDynamicTimer, setUseDynamicTimer] = useState(false);
     const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.MRT);
@@ -224,6 +231,9 @@ export default function CopyNoteWindow() {
     const fight = useAppSelector(ui_store.get_copynote_fight)
     const dispatch = useAppDispatch()
     const user = useUser()
+
+    const player = useAppSelector(ui_store.get_copynote_player);
+    const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
 
     // Close window when Escape key is pressed
     useEffect(() => {
@@ -238,6 +248,20 @@ export default function CopyNoteWindow() {
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [show_window, dispatch]);
+
+    useEffect(() => {
+        if (nameInputMode !== "player_spec") {
+            return;
+        }
+
+        if (noteFormat === NoteFormat.NSRT) {
+            setName(`${spec.id}`);
+        } else if (noteFormat === NoteFormat.MRT) {
+            const class_name = spec.class.name.toUpperCase();
+            setName(`${class_name}:${spec?.index}`);
+        }
+
+    }, [nameInputMode, noteFormat, spec?.id]);
 
     let permission_dyn_timer = user.permissions.includes("dynamic_timers")
     const phasesAvailable = Boolean(fight?.phases?.length)
@@ -299,7 +323,17 @@ export default function CopyNoteWindow() {
 
 
     function nameInputChanged(event: ChangeEvent<HTMLInputElement>) {
-        setName(event.target.value)
+        const value = event.target.value;
+        lastManualNameRef.current = value;
+        setName(value);
+    }
+
+    function nameInputModeChanged(event: ChangeEvent<HTMLSelectElement>) {
+        const mode = event.target.value as NameInputMode;
+        setNameInputMode(mode);
+        if (mode === "player_name") {
+            setName(lastManualNameRef.current);
+        }
     }
 
 
@@ -324,8 +358,21 @@ export default function CopyNoteWindow() {
 
                 {/* Settings */}
                 <div className="d-grid grid-cols-2 mb-1">
-                    <label>Player Name:</label>
-                    <input onChange={nameInputChanged} autoFocus value={name}></input>
+                    <select
+                        className={`${style.name_dropdown} mb-0`}
+                        value={nameInputMode}
+                        onChange={nameInputModeChanged}
+                    >
+                        <option value="player_name">Player Name</option>
+                        <option value="player_spec">Player Spec</option>
+                    </select>
+                    <input
+                        onChange={nameInputChanged}
+                        disabled={nameInputMode === "player_spec"}
+                        autoFocus={nameInputMode === "player_name"}
+                        value={name}
+                        placeholder="Name or Nickname"
+                    ></input>
 
                     <label className={phasesAvailable ? "" : "text-muted"}>use dynamic timer:</label>
                     <input
@@ -402,7 +449,6 @@ export default function CopyNoteWindow() {
                 </div>
 
             </div>
-
-        </div>
+        </div >
     )
 }
