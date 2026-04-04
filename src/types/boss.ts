@@ -19,4 +19,6 @@ export default interface Boss extends Spec {
     id: number
 
     zone_id: number
+
+    phase_type: "static" | "dynamic"
 }

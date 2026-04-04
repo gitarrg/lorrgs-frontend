@@ -1,17 +1,14 @@
 import { deepMerge } from "../../utils"
 import * as constants from "./constants"
-import Event from "../../types/event"
 import EventLine, { EventLineConfig } from "./EventLine"
 import Stage from "./Stage"
 
 
 export default class PhaseMarker extends EventLine {
 
-    phase_label: string = ""
-
     active: boolean = false
 
-    constructor(phase_data: Event, config: EventLineConfig = {}) {
+    constructor(phase_data: Phase, config: EventLineConfig = {}) {
 
         const height = 12
 
@@ -47,11 +44,10 @@ export default class PhaseMarker extends EventLine {
         this.on('mouseover', () => { this.hover_same_phase(true) });
         this.on('mouseout', () => { this.hover_same_phase(false) });
         this.on('mousedown', (e) => this.handle_mousedown(e));
-
     }
 
     _get_text_label() {
-        return this.event_data.name || this.event_data.label || ""
+        return this.event_data.name
     }
 
     _get_text_tooltip() {
@@ -67,7 +63,6 @@ export default class PhaseMarker extends EventLine {
 
 
         let { name: current_anchor } = stage.get_anchor()
-
         if (this.event_data.name == current_anchor) {
             stage.set_anchor(0, "pull")
         } else {

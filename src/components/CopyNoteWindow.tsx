@@ -81,15 +81,12 @@ function get_note_mrt(
 
         const phase = dynamic && get_phase_at_time(fight, cast.ts);
 
-        let ts = 0;
+        let ts = cast.ts;
         let trigger = "";
 
         if (phase) {
-            ts = cast.ts - phase.ts;
-            trigger = phase.mrt ? "," + phase.mrt : "";
-        } else {
-            ts = cast.ts;
-            trigger = "";
+            ts -= phase.ts;
+            trigger = `,p${phase.id}`;
         }
 
         const ts_string = toMMSS(ts / 1000);
@@ -231,6 +228,7 @@ export default function CopyNoteWindow() {
     const fight = useAppSelector(ui_store.get_copynote_fight)
     const dispatch = useAppDispatch()
     const user = useUser()
+    const boss = useAppSelector(state => get_boss(state, fight?.boss?.boss_slug));
 
     const player = useAppSelector(ui_store.get_copynote_player);
     const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
@@ -264,7 +262,7 @@ export default function CopyNoteWindow() {
     }, [nameInputMode, noteFormat, spec?.id]);
 
     let permission_dyn_timer = user.permissions.includes("dynamic_timers")
-    const phasesAvailable = Boolean(fight?.phases?.length)
+    const phasesAvailable = boss?.phase_type === "dynamic" && Boolean(fight?.phases?.length)
 
     if (!phasesAvailable) {
         permission_dyn_timer = true;

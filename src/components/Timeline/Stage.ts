@@ -284,7 +284,6 @@ export default class Stage extends Konva.Stage {
     }
 
     set_anchor(ts: number, name: string = "") {
-        console.log("set_anchor", ts, name)
         this.anchor_ts = ts
         this.anchor_name = name
 
