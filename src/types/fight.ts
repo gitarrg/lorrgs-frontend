@@ -28,5 +28,8 @@ export default interface Fight {
 
     /** isoformat of the time the fight began. */
     start_time?: string
+
+    /** WCL id: 0 unknown, 1 LFR, 3 normal, 4 heroic, 5 mythic */
+    difficulty: number;
 }
 

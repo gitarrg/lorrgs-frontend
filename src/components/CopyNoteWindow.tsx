@@ -1,6 +1,7 @@
 import { FaCopy } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { get_boss } from "../store/bosses";
+import { get_difficulty_name } from "../store/fights";
 import { get_spec } from "../store/specs";
 import { get_spell_display } from "../store/spells";
 import { toMMSS } from "../utils";
@@ -37,11 +38,12 @@ type SpellDisplayMap = Record<number, boolean | undefined>;
  * @returns The latest phase that started before or at the given timestamp, or null if no phase exists.
  */
 function get_phase_at_time(fight: Fight, timestamp: number): Phase | null {
-    if (fight.phases.length === 0) return null;
+    const phases = fight.phases;
+    if (!phases?.length) return null;
 
     let result: Phase | null = null;
 
-    for (const phase of fight.phases) {
+    for (const phase of phases) {
         if (phase.ts <= timestamp) {
             result = phase; // Keep updating until we find the latest valid phase
         } else {
@@ -102,11 +104,9 @@ function get_note_nsrt(
     dynamic: boolean,
     name: string,
     player: Actor,
-    spec: Spec,
     fight: Fight,
     boss: Boss,
     spell_display: SpellDisplayMap,
-    difficulty: string,
 ): string {
 
     const rows: string[] = [];
@@ -117,7 +117,7 @@ function get_note_nsrt(
     rows.push(
         format_nsrt_row([
             ["EncounterID", encounterId],
-            ["Difficulty", difficulty],
+            ["Difficulty", get_difficulty_name(fight.difficulty)],
             ["Name", encounterName],
         ]),
     );
@@ -137,14 +137,14 @@ function get_note_nsrt(
         }
 
         // +2 because ph1 = from pull; ph2 = first real phase (phase.id = 0 -> 2)
-        const phase_id = phase ? phase.id + 2 : 1;
+        const phase_id = phase ? phase.id : 1;
         pairs.push(["ph", phase_id]);
 
         let ts = cast.ts;
         if (phase) {
             ts = cast.ts - phase.ts;
         }
-        const seconds = Math.floor(ts / 1000);
+        const seconds = (ts / 1000).toFixed(1);
         pairs.push(["time", seconds]);
 
         if (name) {
@@ -179,12 +179,8 @@ function get_formatted_note(
 ): string {
 
     const player = useAppSelector(ui_store.get_copynote_player);
-    const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
     const spell_display = useAppSelector(get_spell_display) as SpellDisplayMap;
-
     const fight = useAppSelector(ui_store.get_copynote_fight);
-    const difficulty = useAppSelector(ui_store.get_difficulty);
-
     const boss = useAppSelector(state => get_boss(state, fight?.boss?.boss_slug));
 
     if (!player) {
@@ -202,11 +198,9 @@ function get_formatted_note(
                 dynamic,
                 name,
                 player,
-                spec,
                 fight,
                 boss,
                 spell_display,
-                difficulty,
             );
     }
 }

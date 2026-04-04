@@ -1,12 +1,12 @@
-import type Actor from '../types/actor';
-import type Fight from '../types/fight';
-import type SpecRanking from "../types/spec_ranking";
-import type CompRanking from "../types/spec_ranking";
-import type { AppDispatch, RootState } from './store'
-import { MODES } from './ui'
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { fetch_data } from '../api'
+import { MODES } from './ui'
+import type { AppDispatch, RootState } from './store'
+import type Actor from '../types/actor';
+import type CompRanking from "../types/spec_ranking";
+import type Fight from '../types/fight';
+import type SpecRanking from "../types/spec_ranking";
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -72,10 +72,33 @@ export const get_occuring_bosses = createSelector(
 )
 
 
+const DIFFICULTY_ID_TO_NAME: Record<number, string> = {
+    0: "Unknown",
+    1: "LFR",
+    3: "Normal",
+    4: "Heroic",
+    5: "Mythic",
+};
+
+export function get_difficulty_name(difficulty_id: number): string {
+    return DIFFICULTY_ID_TO_NAME[difficulty_id] ?? "Unknown";
+}
+
+
+const DIFFICULTY_NAME_TO_ID: Record<string, number> = Object.fromEntries(
+    Object.entries(DIFFICULTY_ID_TO_NAME).map(([id, name]) => [name.toLowerCase(), Number(id)])
+);
+
+
+export function get_difficulty_id(difficulty: string): number {
+    return DIFFICULTY_NAME_TO_ID[difficulty.toLowerCase()] ?? 0;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // Slice
 //
-function _process_actor(actor: Actor) {
+function _process_actor(actor: Actor): Actor {
 
     const spell_counter: { [key: number]: number } = {}
     actor.casts = actor.casts || []
@@ -201,6 +224,7 @@ async function _load_spec_rankings(
     spec_ranking.reports?.forEach((report, i) => {
         report.fights?.forEach(fight => {
             fight.report_id = report.report_id
+            fight.difficulty = fight.difficulty ?? get_difficulty_id(difficulty);
             fight.region = report.region
             fights.push(fight)
             // insert ranking data
@@ -275,7 +299,7 @@ export function load_report_fights(report_id: string, search: string = "") {
         const report_data = await fetch_data(url, search)
 
         // insert report id (for urls)
-        report_data.fights?.forEach(fight => {
+        report_data.fights?.forEach((fight: Fight) => {
             fight.report_id = report_id
         })
 

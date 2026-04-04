@@ -28,3 +28,13 @@ export default interface Actor {
     pinned?: boolean
     rank?: number
 }
+
+/** Assign per-spell cast counters on the actor (mutates and returns the same object). */
+export function normalize_actor(actor: Actor): Actor {
+    const spell_counter: { [key: number]: number } = {};
+    actor.casts = actor.casts || [];
+    actor.casts.forEach((cast) => {
+        cast.counter = spell_counter[cast.id] = (spell_counter[cast.id] || 0) + 1;
+    });
+    return actor;
+}
