@@ -1,18 +1,34 @@
 
+/**
+ * Formats a number of seconds into a time string with minutes and seconds.
+ * eg.: `toMMSS(123.456, 2)` returns `"02:03.46"`
+ * @param seconds time in seconds
+ * @param decimals number of decimal places to include in the seconds part
+ * @returns string in the format "MM:SS.ss"
+ */
+export function toMMSS(seconds: number, decimals = 0) {
+    const sign = seconds < 0 ? "-" : ""
+    const t = Math.abs(seconds)
 
-// FIXME: why does this take ms?
-export function toMMSS(seconds: number) {
+    const factor = Math.pow(10, decimals)
+    const rounded = Math.round(t * factor) / factor
 
-    // @ts-ignore: changing type from number to string
-    seconds = seconds.toFixed(0)
+    let m = Math.floor(rounded / 60)
+    let s = rounded - m * 60
 
-    let sign = ""
-    if (seconds < 0) { // events that occur prepull
-        seconds *= -1.0;
-        sign = "-"
+    // Handle edge case where rounding pushes seconds to 60
+    if (s >= 60) {
+        m += 1
+        s = 0
     }
-    const str = new Date(seconds * 1000).toISOString().substr(14, 5);
-    return `${sign}${str}`
+
+    // convert to padded strings
+    const mm = String(m).padStart(2, "0")
+    const ss = decimals > 0
+        ? s.toFixed(decimals).padStart(2 + 1 + decimals, "0")
+        : String(Math.floor(s)).padStart(2, "0")
+
+    return `${sign}${mm}:${ss}`
 }
 
 

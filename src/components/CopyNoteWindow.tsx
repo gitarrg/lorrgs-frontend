@@ -91,7 +91,7 @@ function get_note_mrt(
             trigger = `,p${phase.id}`;
         }
 
-        const ts_string = toMMSS(ts / 1000);
+        const ts_string = toMMSS(ts / 1000, 1);
         rows.push(`{time:${ts_string}${trigger}} - ${name} {spell:${cast.id}}`);
     });
     return rows.join("\n");
