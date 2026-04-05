@@ -1,7 +1,7 @@
 import { get_roles } from "../../store/roles"
 import { get_spec, load_spec_spells } from "../../store/specs"
 import { useAppSelector } from "../../store/store_hooks"
-import { NavLink, Route, useParams } from 'react-router-dom';
+import { NavLink, Route, Routes, useParams } from "react-router-dom"
 import { get_spell } from "../../store/spells";
 import Spec from "../../types/spec";
 import { useDispatch } from 'react-redux'
@@ -13,13 +13,16 @@ import styles from "./AdminSpells.module.scss"
 // SubNav
 //
 
-function SpecButton({spec_slug=""}) {
+function SpecButton({ spec_slug = "" }) {
 
     const spec = useAppSelector(state => get_spec(state, spec_slug))
     if (!spec) { return null }
 
     return (
-        <NavLink to={spec_slug} className={styles.spec_button} activeClassName="active">
+        <NavLink
+            to={`/lorgmin/spells/${spec_slug}`}
+            className={({ isActive }) => `${styles.spec_button}${isActive ? " active" : ""}`}
+        >
             <img className={`icon-m wow-border-${spec.class.name_slug}`} src={spec.icon_path} />
         </NavLink>
     )
@@ -46,7 +49,7 @@ function AdminSpellsSubNav() {
 ////////////////////////////////////////////////////////////////////////////////
 // Spell Display
 //
-function SpellRow({spell_id, spec} : {spell_id: number, spec: Spec } ) {
+function SpellRow({ spell_id, spec }: { spell_id: number, spec: Spec }) {
 
     const spell = useAppSelector(state => get_spell(state, spell_id))
     if (!spell) { return null }
@@ -58,7 +61,7 @@ function SpellRow({spell_id, spec} : {spell_id: number, spec: Spec } ) {
         <tr>
             <td>
                 <a data-wowhead={spell.tooltip_info}>
-                    <img src={spell.icon_path} className={`icon-s button rounded`}/>
+                    <img src={spell.icon_path} className={`icon-s button rounded`} />
                 </a>
             </td>
             <td className="text-monospace">{spell_id}</td>
@@ -70,36 +73,36 @@ function SpellRow({spell_id, spec} : {spell_id: number, spec: Spec } ) {
     )
 }
 
-function SpellTypeRows({spec, spell_type} : { spec: Spec, spell_type: string}) {
+function SpellTypeRows({ spec, spell_type }: { spec: Spec, spell_type: string }) {
 
     const spell_ids = spec.spells_by_type[spell_type]
 
     return (
         <>
-        <tr>
-            <th colSpan={99} className={`wow-${spec.class.name_slug}`}>
-                { spell_type }
-            </th>
-        </tr>
-        {spell_ids.map(spell_id =>
-            <SpellRow key={spell_id} spec={spec} spell_id={spell_id} />
-        )}
+            <tr>
+                <th colSpan={99} className={`wow-${spec.class.name_slug}`}>
+                    {spell_type}
+                </th>
+            </tr>
+            {spell_ids.map(spell_id =>
+                <SpellRow key={spell_id} spec={spec} spell_id={spell_id} />
+            )}
         </>
     )
 }
 
 function SpellDisplay() {
 
-    const { spec_slug } : { spec_slug: string } = useParams()
-    const spec = useAppSelector(state => get_spec(state, spec_slug))
+    const { spec_slug } = useParams<{ spec_slug: string }>()
+    const spec = useAppSelector((state) => get_spec(state, spec_slug ?? ""))
     const dispatch = useDispatch()
     const is_loading = useAppSelector(state => get_is_loading(state))
 
-    if (!spec) { return null }
+    if (!spec_slug || !spec) {
+        return null
+    }
 
     if (!spec.loaded && !is_loading) {
-
-        console.log("loading spec:", spec.full_name_slug)
         dispatch(load_spec_spells(spec.full_name_slug))
     }
 
@@ -119,7 +122,7 @@ function SpellDisplay() {
 
             <tbody>
                 {spell_types.map(spell_type =>
-                    <SpellTypeRows key={spell_type} spec={spec} spell_type={spell_type}/>
+                    <SpellTypeRows key={spell_type} spec={spec} spell_type={spell_type} />
                 )}
             </tbody>
         </table>
@@ -135,19 +138,16 @@ function SpellDisplay() {
 
 export default function AdminSpells() {
 
-    // const spec_slug = "not set"
-    const { path } = useRouteMatch()
-
     return (
         <div>
             <div className="p-2 bg-dark rounded border d-flex">
-            <AdminSpellsSubNav />
+                <AdminSpellsSubNav />
             </div>
 
             <div className="p-2 bg-dark rounded border d-flex mt-3">
-                <Route path={`${path}/:spec_slug`}>
-                    <SpellDisplay />
-                </Route>
+                <Routes>
+                    <Route path=":spec_slug" element={<SpellDisplay />} />
+                </Routes>
             </div>
         </div>
     )

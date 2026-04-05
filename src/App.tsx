@@ -12,7 +12,7 @@ import UserProvider from "./routes/auth/UserProvider";
 import "../scss/main.scss"
 
 // Delayed Imports
-// const Admin = lazy(() => import("./routes/Admin/Admin"));
+const Admin = lazy(() => import("./routes/Admin/Admin"));
 const CompRankings = lazy(() => import("./routes/CompRankings/CompRankings"));
 const CompSearch = lazy(() => import("./routes/CompSearch"));
 const Help = lazy(() => import("./routes/Help/Help"))
@@ -64,7 +64,7 @@ function App() {
 
                                 {/* other routes */}
                                 <Route path="/help" element={<Help />} />
-                                {/* <Route path="/lorgmin" element={<Admin />} /> */}
+                                <Route path="/lorgmin/*" element={<Admin />} />
 
                                 {/* fallback --> Home */}
                                 <Route path="/" element={<Index />} />

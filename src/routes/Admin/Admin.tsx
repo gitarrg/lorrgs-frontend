@@ -1,41 +1,24 @@
-
-import { Route } from 'react-router-dom';
-import { AdminHeader } from './AdminHeader';
-import AdminNavbar from './AdminNavbar';
-import AdminSpells from './AdminSpells';
-import AdminStatus from './AdminStatus';
-import AdminPing from './AdminPing';
-
+import { Navigate, Route, Routes } from "react-router-dom"
+import { AdminHeader } from "./AdminHeader"
+import AdminNavbar from "./AdminNavbar"
+import AdminPing from "./AdminPing"
+import AdminSpecRankingStatus from "./AdminSpecRankingStatus"
+import AdminSpells from "./AdminSpells"
 
 export default function Admin() {
 
-    // const { path }  = useMatch()
-
     return (
         <div>
-
             <div className="mt-3 p-2">
                 <AdminHeader />
             </div>
-            <div>
-                <AdminNavbar />
-            </div>
-
-            <div>
-
-                <Route path="status">
-                    <AdminStatus />
-                </Route>
-
-                <Route path="spells">
-                    <AdminSpells />
-                </Route>
-
-                <Route path="ping">
-                    <AdminPing />
-                </Route>
-
-            </div>
+            <AdminNavbar />
+            <Routes>
+                <Route index element={<Navigate to="spec_ranking_status" replace />} />
+                <Route path="spec_ranking_status" element={<AdminSpecRankingStatus />} />
+                <Route path="spells/*" element={<AdminSpells />} />
+                <Route path="ping" element={<AdminPing />} />
+            </Routes>
         </div>
     )
 }
