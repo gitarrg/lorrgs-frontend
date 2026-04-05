@@ -388,7 +388,7 @@ export default function CopyNoteWindow() {
                             data-note-format="mrt"
                             aria-pressed={noteFormat === NoteFormat.MRT}
                             aria-label="use Method Raid Tools Note format"
-                            data-tooltip="use Method Raid Tools Note format"
+                            data-tooltip="use Method Raid Tools / Smart CD Reminder format"
                             data-tooltip-size="small"
                             onClick={() => setNoteFormat(NoteFormat.MRT)}
                         >
