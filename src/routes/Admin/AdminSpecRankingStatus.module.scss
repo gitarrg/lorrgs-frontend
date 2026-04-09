@@ -21,8 +21,14 @@
         background: hsl(0, 0%, 15%);
         text-align: center;
         vertical-align: middle;
+    
+        &[data-selected="true"]  {
+            background: hsl(200 40% 50%);
+        }
+    
     }
 }
+
 
 .specHead {
     display: inline-flex;

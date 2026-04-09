@@ -1,16 +1,33 @@
 import Icon from "../../components/shared/Icon"
 import { get_bosses } from "../../store/bosses"
 import { get_player_roles, get_role, get_specs_for_role } from "../../store/roles"
-import { useAppSelector } from "../../store/store_hooks"
+import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import type Boss from "../../types/boss"
 import type Role from "../../types/role"
 import type Spec from "../../types/spec"
 import styles from "./AdminSpecRankingStatus.module.scss"
+import { get_selected_specs_ranking, set_selected_spec_ranking } from "../../store/admin"
 
 
 function Cell({ spec, boss }: { spec: Spec, boss: Boss }) {
+
+    const key = `${spec.full_name_slug}-${boss.full_name_slug}`
+    const selected = useAppSelector((state) => get_selected_specs_ranking(state, key))
+    const dispatch = useAppDispatch()
+
+    function setSelected(selected: boolean) {
+        console.log("setSelected", key, selected)
+        dispatch(set_selected_spec_ranking({
+            key,
+            selected
+        }))
+    }
+
     return (
-        <td className={styles.dataCell}>
+        <td
+            data-selected={selected}
+            onClick={() => setSelected(!selected)}
+        >
             yes
         </td>
     )
@@ -56,8 +73,25 @@ export default function AdminSpecRankingStatus() {
     const roles = useAppSelector((state) => get_player_roles(state))
     const bosses = useAppSelector((state) => get_bosses(state))
 
+    const selected_specs_rankings = useAppSelector((state) => state.admin.selected_spec_rankings)
+
+
+    function flagDirty() {
+        for (const [key, value] of Object.entries(selected_specs_rankings)) {
+            if (value) {
+                console.log("key", key, "value", value)
+            }
+        }
+    }
+
+
     return (
         <div className="p-2 bg-dark border rounded">
+
+            <div className={styles.buttonGroup}>
+                <input type="Button" onClick={flagDirty} value="flag dirty" />
+            </div>
+
             <table className={styles.table}>
                 <thead>
                     <tr>

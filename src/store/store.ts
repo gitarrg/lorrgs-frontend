@@ -5,6 +5,7 @@ Redux Data Store
 import { configureStore } from '@reduxjs/toolkit'
 
 import { DEBUG } from '../constants'
+import admin_reducer from "./admin"
 import bosses_reducer from "./bosses"
 import classes_reducer from "./classes"
 import fights_reducer from "./fights"
@@ -16,7 +17,6 @@ import ui_reducer from "./ui"
 import user_reducer from "./user"
 import user_report_reducer from "./user_reports"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // REDCUER
 //
@@ -24,6 +24,7 @@ const store = configureStore({
 
     // preloadedState: DEFAULT_STATE,
     reducer: {
+        admin: admin_reducer,
         classes: classes_reducer,
         fights: fights_reducer,
         roles: roles_reducer,
