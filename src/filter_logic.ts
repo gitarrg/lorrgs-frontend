@@ -5,6 +5,16 @@ import type Actor from "./types/actor"
 import type Fight from "./types/fight"
 
 
+function get_date_floor_ms(date_str: string): number {
+    return Date.parse(`${date_str}T00:00:00.000Z`)
+}
+
+
+function get_date_ceil_ms(date_str: string): number {
+    return Date.parse(`${date_str}T23:59:59.999Z`)
+}
+
+
 function is_fight_visible(fight: Fight, filters: FilterValues) {
 
     if (fight.pinned) { return true }
@@ -15,6 +25,18 @@ function is_fight_visible(fight: Fight, filters: FilterValues) {
 
     if (fight.region && filters.region && filters.region[fight.region] === false) {
         return false
+    }
+
+    const from = filters.log_date?.from
+    const to = filters.log_date?.to
+    if (from || to) {
+        if (!fight.start_time) { return false }
+
+        const fight_ms = Date.parse(fight.start_time)
+        if (Number.isNaN(fight_ms)) { return false }
+
+        if (from && fight_ms < get_date_floor_ms(from)) { return false }
+        if (to && fight_ms > get_date_ceil_ms(to)) { return false }
     }
 
     const has_boss = fight.boss && is_player_visible(fight.boss, filters)
