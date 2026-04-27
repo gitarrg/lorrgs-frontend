@@ -1,0 +1,19 @@
+.date_range_group {
+    max-height: 1.5rem;
+}
+
+.date_input {
+    height: initial;
+    padding: 12px 4px;
+    border-radius: 0.25rem;
+    line-height: initial;
+}
+
+.is_empty:not(:focus) {
+    color: #6c757d;
+}
+
+.is_filled:not(:focus) {
+    font-weight: bold;
+    border: var(--success) solid 2px;
+}

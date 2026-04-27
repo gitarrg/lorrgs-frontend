@@ -76,6 +76,7 @@ type FilterGroup =
 export interface FilterValues {
 
     killtime: { min: number | null, max: number | null }
+    log_date: { from: string | null, to: string | null }
 
     /** Filter Groups like:
      * role: { tank: false, heal: true}
@@ -165,6 +166,7 @@ const INITIAL_STATE: UiSliceState = {
 
         // fight filters
         killtime: { min: null, max: null },
+        log_date: { from: null, to: null },
 
         hide_empty_rows: false,
         spells: {},
