@@ -5,7 +5,7 @@ import style from "./SimpleCaptcha.module.css";
 import { toMMSS } from "../../utils";
 
 
-const TOTAL_SECONDS = 5;
+const TOTAL_SECONDS = 15;
 const MAX_SECONDS = 60;
 
 
@@ -14,7 +14,11 @@ export default function SimpleCaptcha(
 
 ) {
 
-    const time = Math.min(MAX_SECONDS, TOTAL_SECONDS * attempt_counter);
+    // exp incr time
+    // doubles each attempt, up to 60sec max
+    let time = TOTAL_SECONDS * Math.pow(2, attempt_counter);
+    time = Math.min(time, MAX_SECONDS);
+
     const [secondsRemaining, setSecondsRemaining] = useState(time)
 
     useEffect(() => {
