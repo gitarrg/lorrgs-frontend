@@ -172,6 +172,14 @@
             opacity: 1.0;
         }
     }
+
+    &[data-blur="true"] {
+        textarea {
+            opacity: 0.5;
+            filter: blur(1px);
+            background: hsl(0 0% 1%);
+        }
+    }
 }
 
 
@@ -190,8 +198,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.75);
-    border-radius: 4px;
+    // background-color: rgba(0, 0, 0, 0.5);
+    // border-radius: 4px;
     z-index: 2;
 }
 

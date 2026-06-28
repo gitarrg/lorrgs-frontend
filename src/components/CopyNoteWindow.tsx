@@ -236,7 +236,7 @@ export default function CopyNoteWindow() {
 
     const nextExpiryRemainingMs = nextExpiryAtMs ? Math.max(0, nextExpiryAtMs - nowMs) : null;
     const next_expiry_remaining_time = nextExpiryRemainingMs !== null ? toMMSS(nextExpiryRemainingMs / 1000) : null;
-    const next_expiry_remaining_tooltip = next_expiry_remaining_time ? `next copy charge in ${next_expiry_remaining_time}.` : null;
+    const next_expiry_remaining_tooltip = next_expiry_remaining_time ? `next charge available in ${next_expiry_remaining_time}.` : null;
 
 
     // Close window when Escape key is pressed
@@ -410,7 +410,7 @@ export default function CopyNoteWindow() {
                 </div>
 
                 {/* Note */}
-                <div className={style.textarea}>
+                <div className={style.textarea} data-blur={showCaptcha}>
                     <textarea
                         ref={textareaRef}
                         readOnly
