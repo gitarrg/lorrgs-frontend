@@ -4,10 +4,12 @@ const STORAGE_KEY = "copynote_usage";
 const MAX_FREE_COPIES = 3;
 const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
+
 interface UsageEntry {
     key: string;
     ts: number;
 }
+
 
 function getEntries(): UsageEntry[] {
     try {
@@ -19,14 +21,26 @@ function getEntries(): UsageEntry[] {
     }
 }
 
-function pruneOld(entries: UsageEntry[]): UsageEntry[] {
-    const cutoff = Date.now() - WINDOW_MS;
-    return entries.filter((e) => e.ts > cutoff);
-}
 
-function persist(entries: UsageEntry[]) {
+function save(entries: UsageEntry[]) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 }
+
+
+function load_and_prune(): UsageEntry[] {
+
+    const entries_old = getEntries();
+    const cutoff = Date.now() - WINDOW_MS;
+
+    const entries_new = entries_old.filter((e) => e.ts > cutoff);
+
+    if (entries_new.length !== entries_old.length) {
+        save(entries_new);
+    }
+
+    return entries_new;
+}
+
 
 /**
  * Tracks copy-note usage in localStorage.
@@ -34,29 +48,33 @@ function persist(entries: UsageEntry[]) {
  * Copying the same note (same key) multiple times does not count extra.
  */
 export default function useCopyRateLimit(noteKey: string) {
+
     const [, forceUpdate] = useState(0);
     const rerender = () => forceUpdate((n) => n + 1);
 
-    const getUniqueCount = useCallback(() => {
-        return pruneOld(getEntries()).length;
-    }, []);
-
-    const isAlreadyRecorded = useCallback(() => {
-        return pruneOld(getEntries()).some((e) => e.key === noteKey);
-    }, [noteKey]);
-
-    const uniqueCount = getUniqueCount();
-    const alreadyRecorded = isAlreadyRecorded();
-    const remainingUses = MAX_FREE_COPIES - uniqueCount;
+    const entries = getEntries();
+    const count = entries.length;
+    const alreadyRecorded = entries.some((e) => e.key === noteKey);;
+    const remainingUses = MAX_FREE_COPIES - count;
     const canCopy = alreadyRecorded || remainingUses > 0;
 
     const recordCopy = useCallback(() => {
-        const entries = pruneOld(getEntries());
-        if (entries.some((e) => e.key === noteKey)) return;
+
+        if (alreadyRecorded) return;
+
+        let entries = load_and_prune();
         entries.push({ key: noteKey, ts: Date.now() });
-        persist(entries);
+        save(entries);
+
         rerender();
     }, [noteKey]);
 
-    return { canCopy, remainingUses, maxUses: MAX_FREE_COPIES, recordCopy };
+
+    return {
+        canCopy,
+        remainingUses,
+        alreadyRecorded,
+        maxUses: MAX_FREE_COPIES,
+        recordCopy
+    };
 }

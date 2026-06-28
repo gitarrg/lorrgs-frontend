@@ -8,7 +8,7 @@ import { toMMSS } from "../utils";
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
 import { useEffect, useRef, useState, ChangeEvent } from 'react'
 import * as ui_store from "../store/ui"
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import SimpleCaptcha from "./shared/SimpleCaptcha";
 import style from "./CopyNoteWindow.module.scss";
 import type Actor from "../types/actor";
 import type Boss from "../types/boss";
@@ -17,8 +17,6 @@ import type Phase from "../types/phase";
 import useCopyRateLimit from "../hooks/useCopyRateLimit";
 import useUser from "../routes/auth/useUser";
 
-const IS_DEV = import.meta.env.DEV;
-const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "";
 
 /** Output format for the copy-note modal. */
 export enum NoteFormat {
@@ -212,7 +210,6 @@ export default function CopyNoteWindow() {
     const [isCopied, setIsCopied] = useState(false);
     const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.NSRT);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const captchaRef = useRef<HCaptcha>(null);
     const [showCaptcha, setShowCaptcha] = useState(false); // show the captcha overlay
 
     // Redux
@@ -262,7 +259,7 @@ export default function CopyNoteWindow() {
     useEffect(() => {
         const solved = is_paid_user || remainingUses > 0 || alreadyRecorded;
         setShowCaptcha(!solved);
-    }, [note_key, is_paid_user, remainingUses, alreadyRecorded]);
+    }, [note_key, is_paid_user, canCopy, remainingUses, alreadyRecorded]);
 
 
     // Generate Note
@@ -299,12 +296,10 @@ export default function CopyNoteWindow() {
         // Rate limited -- captcha overlay is already shown via `show_captcha`
     }
 
-    async function onCaptchaVerify(_token: string) {
+    async function onCaptchaVerify() {
         // record the solve
         // this should trigger the "showCaptcha" state to be false
         recordCopy();
-
-        captchaRef.current?.resetCaptcha();
     }
 
     function nameInputChanged(event: ChangeEvent<HTMLInputElement>) {
@@ -324,25 +319,6 @@ export default function CopyNoteWindow() {
 
     if (!show_window) {
         return null;
-    }
-
-    /*
-        Captcha overlay:
-    */
-    let captchaOverlay = null;
-    if (IS_DEV) {
-        captchaOverlay = (
-            <label className={style.dev_captcha}>
-                <input type="checkbox" onChange={() => onCaptchaVerify("")} />
-                I am not a robot (dev)
-            </label>
-        )
-    } else {
-        captchaOverlay = <HCaptcha
-            ref={captchaRef}
-            sitekey={HCAPTCHA_SITE_KEY}
-            onVerify={onCaptchaVerify}
-        />
     }
 
     /*
@@ -426,7 +402,9 @@ export default function CopyNoteWindow() {
                     {showCaptcha &&
                         <div className={style.captcha_overlay}>
                             <div className={style.captcha_content}>
-                                {captchaOverlay}
+
+                                <SimpleCaptcha onVerify={onCaptchaVerify} />
+
                                 <p className={style.upsell}>
                                     <span className="wow-legendary">
                                         Legendary&nbsp;
