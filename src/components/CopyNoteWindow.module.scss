@@ -175,34 +175,13 @@
 }
 
 
-
 .usage_counter {
-    margin-bottom: 0.5em;
     font-size: 0.85rem;
-    color: hsl(0 0% 65%);
     text-align: right;
-    padding-right: 0.25rem;
-
-
-    &[data-uses="0"] {
-        color: var(--danger);
-    }
-    &[data-uses="1"] {
-        color: var(--warning);
-    }
-    &[data-uses="2"] {
-        color: var(--warning);
-    }
-    &[data-uses="3"] {
-        color: var(--success);
-    }
-
-
 }
 
 .unlimited_badge {
     color: hsl(45 80% 60%);
-    font-weight: 600;
 }
 
 .captcha_overlay {
@@ -220,12 +199,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
 }
 
 .upsell {
     font-size: 0.8rem;
-    color: hsl(0 0% 60%);
     margin: 0;
 
     a {

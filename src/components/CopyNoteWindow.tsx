@@ -222,10 +222,16 @@ export default function CopyNoteWindow() {
     const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
 
     // Rate limiting
-    const is_paid_user = false; // user.permissions.includes("dynamic_timers");
+    const is_paid_user = user.permissions.includes("dynamic_timers");
     const is_free_user = !is_paid_user;
     const note_key = `${fight?.report_id}:${fight?.fight_id}:${player?.source_id}`;
     const { canCopy, remainingUses, alreadyRecorded, maxUses, recordCopy } = useCopyRateLimit(note_key);
+    const attempt_counter = Math.abs(Math.min(0, remainingUses)); // count overflow as attempts
+
+    let remaining_uses_class = "";
+    if (remainingUses <= 2) { remaining_uses_class = "text-danger" }
+    else if (remainingUses <= 0) { remaining_uses_class = "text-warning" }
+    else { remaining_uses_class = "text-success" }
 
     // Close window when Escape key is pressed
     useEffect(() => {
@@ -403,14 +409,13 @@ export default function CopyNoteWindow() {
                         <div className={style.captcha_overlay}>
                             <div className={style.captcha_content}>
 
-                                <SimpleCaptcha onVerify={onCaptchaVerify} />
+                                <SimpleCaptcha onVerify={onCaptchaVerify} attempt_counter={attempt_counter} />
 
                                 <p className={style.upsell}>
-                                    <span className="wow-legendary">
-                                        Legendary&nbsp;
-                                        <a href="https://www.patreon.com/c/lorrgs" target="_blank" rel="noopener noreferrer">Patrons</a>
-                                    </span>
-                                    <span>&nbsp;get unlimited copies.</span>
+                                    <a href="https://www.patreon.com/c/lorrgs" target="_blank" rel="noopener noreferrer">
+                                        Legendary Patrons
+                                    </a>
+                                    <span className="text-muted">&nbsp;get unlimited copies.</span>
                                 </p>
                             </div>
                         </div>
@@ -420,10 +425,12 @@ export default function CopyNoteWindow() {
                 </div>
 
                 {/* Usage counter */}
-                <div className={style.usage_counter} data-uses={remainingUses}>
+                <div className={`${style.usage_counter} ${remaining_uses_class}`}>
                     {is_paid_user
                         ? <span className={style.unlimited_badge}>unlimited copies.</span>
-                        : <span>{remainingUses}/{maxUses} copies remaining.</span>
+                        : <span
+                            data-tooltip="3 instant copies per 15 minutes."
+                        >{remainingUses}/{maxUses} copies remaining.</span>
                     }
                 </div>
 

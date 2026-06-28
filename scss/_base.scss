@@ -72,9 +72,9 @@ a, a:hover, a:visited, a:active {
     color: #303030; // only used on the help page
 }
 
-.text-danger {
-    color: var(--danger);
-}
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+.text-success { color: var(--success); }
 
 
 /*******************************************************************************

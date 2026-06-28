@@ -52,7 +52,7 @@ export default function useCopyRateLimit(noteKey: string) {
     const [, forceUpdate] = useState(0);
     const rerender = () => forceUpdate((n) => n + 1);
 
-    const entries = getEntries();
+    const entries = load_and_prune();
     const count = entries.length;
     const alreadyRecorded = entries.some((e) => e.key === noteKey);;
     const remainingUses = MAX_FREE_COPIES - count;
@@ -60,14 +60,17 @@ export default function useCopyRateLimit(noteKey: string) {
 
     const recordCopy = useCallback(() => {
 
-        if (alreadyRecorded) return;
+        // dont record if already recorded
+        if (alreadyRecorded) {
+            return;
+        }
 
         let entries = load_and_prune();
         entries.push({ key: noteKey, ts: Date.now() });
         save(entries);
 
         rerender();
-    }, [noteKey]);
+    }, [noteKey, alreadyRecorded]);
 
 
     return {

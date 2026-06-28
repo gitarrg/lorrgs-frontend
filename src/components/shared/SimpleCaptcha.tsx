@@ -5,13 +5,17 @@ import style from "./SimpleCaptcha.module.css";
 import { toMMSS } from "../../utils";
 
 
-const TOTAL_SECONDS = 10;
+const TOTAL_SECONDS = 5;
+const MAX_SECONDS = 60;
+
 
 export default function SimpleCaptcha(
-    { onVerify }: { onVerify: () => void },
+    { onVerify, attempt_counter }: { onVerify: () => void, attempt_counter: number },
 
 ) {
-    const [secondsRemaining, setSecondsRemaining] = useState(TOTAL_SECONDS)
+
+    const time = Math.min(MAX_SECONDS, TOTAL_SECONDS * attempt_counter);
+    const [secondsRemaining, setSecondsRemaining] = useState(time)
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -37,7 +41,7 @@ export default function SimpleCaptcha(
     return (
         <label className={style.captcha} onClick={onVerify}>
             <div className={style.fake_checkbox} />
-            <span className={style.labelText}>I love World of Warcraft</span>
+            <span>I love World of Warcraft</span>
         </label>
     )
 }
