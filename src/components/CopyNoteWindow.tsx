@@ -234,7 +234,8 @@ export default function CopyNoteWindow() {
     // Rate limiting
     const is_paid_user = false; // user.permissions.includes("dynamic_timers");
     const is_free_user = !is_paid_user;
-    const { canCopy, remainingUses, maxUses, recordCopy } = useCopyRateLimit();
+    const noteKey = `${fight?.report_id}:${fight?.fight_id}:${player?.source_id}`;
+    const { canCopy, remainingUses, maxUses, recordCopy } = useCopyRateLimit(noteKey);
 
     // Close window when Escape key is pressed
     useEffect(() => {
@@ -250,6 +251,7 @@ export default function CopyNoteWindow() {
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [show_window, dispatch]);
 
+    // Update name
     useEffect(() => {
         if (nameInputMode !== "player_spec") {
             return;
