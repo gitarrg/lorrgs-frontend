@@ -234,6 +234,8 @@
         
         &:hover {
             color: hsl(32 80% 65%);
+            font-weight: bold;
+            cursor: url("/cur/bag_on.cur"), auto;
         }
     }
 }

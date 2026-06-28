@@ -35,9 +35,9 @@ export default function SimpleCaptcha(
     }
 
     return (
-        <label className={style.dev_captcha}>
-            <input type="checkbox" onChange={onVerify} disabled={!enabled} />
-            I am not a robot (dev)
+        <label className={style.captcha} onClick={onVerify}>
+            <div className={style.fake_checkbox} />
+            <span className={style.labelText}>I love World of Warcraft</span>
         </label>
     )
 }
