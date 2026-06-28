@@ -1,0 +1,65 @@
+
+
+
+.captcha {
+
+    --color-yellow: rgb(248, 183, 0);
+
+
+    display: flex;
+    align-items: center;
+    user-select: none;
+    
+    gap: 0.625rem;
+    padding: 0.75rem 1rem;
+
+    /* background: hsla(0 0% 0%, 0.5); */
+    /* // border: 1px solid hsl(0 0% 30%); */
+    /* border-radius: 5px; */
+    color: hsl(0 0% 88%);
+    color: #F8B700;
+    
+    font-size: 0.9rem;
+
+    border-radius: 0px;
+    border: 1px solid var(--color-yellow);
+    
+    /* font-family: "Open Sans"; */
+    
+    text-align: center;
+    font-weight: 400;
+    font-style: normal;
+    line-height: normal;
+    /* text-transform: uppercase; */
+
+    background-color: rgba(0, 0, 0, 0.3);
+
+    cursor: url("/cur/gauntlet.cur"), auto;
+    transition: background-color .2s, color .2s;
+
+    &:hover {
+        color: #FFEC71;
+        border: 1px solid #FFEC71;
+        background-color: rgba(199, 103, 0, 0.7);
+        
+        .fake_checkbox {
+            border: 1px solid #FFEC71;
+            background-color: hsl(0, 0%, 20%);
+        }
+    }
+}
+
+
+.fake_checkbox {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--color-yellow);
+    background-color: hsl(0, 0%, 10%);
+    cursor: url("/cur/gauntlet_active.cur"), auto;
+
+    &:hover {
+        &::after {
+            content: "✕";
+        }
+    }
+}

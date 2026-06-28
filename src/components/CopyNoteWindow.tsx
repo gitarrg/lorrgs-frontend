@@ -8,13 +8,15 @@ import { toMMSS } from "../utils";
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
 import { useEffect, useRef, useState, ChangeEvent } from 'react'
 import * as ui_store from "../store/ui"
-import Spec from "../types/spec";
+import SimpleCaptcha from "./shared/SimpleCaptcha";
 import style from "./CopyNoteWindow.module.scss";
 import type Actor from "../types/actor";
 import type Boss from "../types/boss";
 import type Fight from "../types/fight";
 import type Phase from "../types/phase";
+import useCopyRateLimit from "../hooks/useCopyRateLimit";
 import useUser from "../routes/auth/useUser";
+
 
 /** Output format for the copy-note modal. */
 export enum NoteFormat {
@@ -67,7 +69,6 @@ function format_nsrt_row(entries: readonly [string, string | number][]): string 
  */
 function get_note_mrt(
     name: string,
-    dynamic: boolean,
     player: Actor,
     fight: Fight,
     spell_display: SpellDisplayMap,
@@ -81,11 +82,10 @@ function get_note_mrt(
             return;
         }
 
-        const phase = dynamic && get_phase_at_time(fight, cast.ts);
-
         let ts = cast.ts;
         let trigger = "";
 
+        const phase = get_phase_at_time(fight, cast.ts);
         if (phase) {
             ts -= phase.ts;
             trigger = `,p${phase.id}`;
@@ -101,7 +101,6 @@ function get_note_mrt(
  * "Northern Sky Raid Tools" style note.
  */
 function get_note_nsrt(
-    dynamic: boolean,
     name: string,
     player: Actor,
     fight: Fight,
@@ -131,10 +130,8 @@ function get_note_nsrt(
         // key-value pairs for the row
         const pairs: [string, string | number][] = [];
 
-        let phase: Phase | null = null;
-        if (dynamic) {
-            phase = get_phase_at_time(fight, cast.ts);
-        }
+        // let phase: Phase | null = null;
+        const phase = get_phase_at_time(fight, cast.ts);
 
         // +2 because ph1 = from pull; ph2 = first real phase (phase.id = 0 -> 2)
         const phase_id = phase ? phase.id : 1;
@@ -174,7 +171,6 @@ function get_note_nsrt(
  */
 function get_formatted_note(
     name: string,
-    dynamic: boolean,
     noteFormat: NoteFormat,
 ): string {
 
@@ -192,10 +188,9 @@ function get_formatted_note(
 
     switch (noteFormat) {
         case NoteFormat.MRT:
-            return get_note_mrt(name, dynamic, player, fight, spell_display);
+            return get_note_mrt(name, player, fight, spell_display);
         case NoteFormat.NSRT:
             return get_note_nsrt(
-                dynamic,
                 name,
                 player,
                 fight,
@@ -213,19 +208,36 @@ export default function CopyNoteWindow() {
     const [nameInputMode, setNameInputMode] = useState<NameInputMode>(NameInputMode.PLAYER_NAME);
     const lastManualNameRef = useRef("");
     const [isCopied, setIsCopied] = useState(false);
-    const [useDynamicTimer, setUseDynamicTimer] = useState(false);
-    const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.MRT);
+    const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.NSRT);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [showCaptcha, setShowCaptcha] = useState(false); // show the captcha overlay
+    const [nowMs, setNowMs] = useState(() => Date.now());
 
     // Redux
     const show_window = useAppSelector(ui_store.get_show_copynote)
     const fight = useAppSelector(ui_store.get_copynote_fight)
     const dispatch = useAppDispatch()
     const user = useUser()
-    const boss = useAppSelector(state => get_boss(state, fight?.boss?.boss_slug));
 
     const player = useAppSelector(ui_store.get_copynote_player);
     const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
+
+    // Rate limiting
+    const is_paid_user = user.permissions.includes("dynamic_timers");
+    const is_free_user = !is_paid_user;
+    const note_key = `${fight?.report_id}:${fight?.fight_id}:${player?.source_id}`;
+    const { canCopy, remainingUses, alreadyRecorded, nextExpiryAtMs, maxUses, recordCopy } = useCopyRateLimit(note_key);
+    const attempt_counter = Math.abs(Math.min(0, remainingUses)); // count overflow as attempts
+
+    let remaining_uses_class = "";
+    if (remainingUses <= 2) { remaining_uses_class = "text-danger" }
+    else if (remainingUses <= 0) { remaining_uses_class = "text-warning" }
+    else { remaining_uses_class = "text-success" }
+
+    const nextExpiryRemainingMs = nextExpiryAtMs ? Math.max(0, nextExpiryAtMs - nowMs) : null;
+    const next_expiry_remaining_time = nextExpiryRemainingMs !== null ? toMMSS(nextExpiryRemainingMs / 1000) : null;
+    const next_expiry_remaining_tooltip = next_expiry_remaining_time ? `next copy charge in ${next_expiry_remaining_time}.` : null;
+
 
     // Close window when Escape key is pressed
     useEffect(() => {
@@ -241,6 +253,7 @@ export default function CopyNoteWindow() {
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [show_window, dispatch]);
 
+    // Update name
     useEffect(() => {
         if (nameInputMode !== "player_spec") {
             return;
@@ -255,64 +268,63 @@ export default function CopyNoteWindow() {
 
     }, [nameInputMode, noteFormat, spec?.id]);
 
-    let permission_dyn_timer = user.permissions.includes("dynamic_timers")
-    const phasesAvailable = boss?.phase_type === "dynamic" && Boolean(fight?.phases?.length)
+    useEffect(() => {
+        const solved = is_paid_user || remainingUses > 0 || alreadyRecorded;
+        setShowCaptcha(!solved);
+    }, [note_key, is_paid_user, canCopy, remainingUses, alreadyRecorded]);
 
-    if (!phasesAvailable) {
-        permission_dyn_timer = true;
-    }
-    if (!useDynamicTimer) {
-        permission_dyn_timer = true;
+    useEffect(() => {
+        if (!show_window) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setNowMs(Date.now());
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [show_window]);
+
+
+    // Generate Note
+    let note = get_formatted_note(name, noteFormat);
+    if (showCaptcha) {
+        note = "You have reached the maximum number of copies for this note.\nPlease wait 15 minutes and try again.";
     }
 
-    let note = get_formatted_note(
-        name,
-        phasesAvailable && permission_dyn_timer && useDynamicTimer,
-        noteFormat
-    )
-
-    if (!permission_dyn_timer) {
-        note += "\n".repeat(10)
-        note += `
-    "Dear Visitor,"
-    
-    I'm sorry but dynamic Timers are not yet ready for free users.
-    Please visit https://www.patreon.com/c/lorrgs or the discord server if you want to support the development.
-    
-    Thank you!"`
-    }
 
     function closeWindow() {
         dispatch(ui_store.set_show_copynote(false));
     }
 
-    async function textAreaClicked() {
-        console.log("textAreaClicked")
-
-        if (!permission_dyn_timer) {
-            // hehe cat
-            await navigator.clipboard.writeText("https://www.patreon.com/c/lorrgs");
-            return
-        }
-
-        // copy to clipboard
+    async function doCopy() {
         await navigator.clipboard.writeText(note);
-
-        // update UI elements
-        setIsCopied(true)
-
-        // show
+        setIsCopied(true);
         setTimeout(() => {
             setIsCopied(false);
         }, 1500);
     }
 
-    const preventSelection = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
-        if (useDynamicTimer && !permission_dyn_timer) {
-            e.preventDefault();
+    async function textAreaClicked() {
+        if (is_paid_user) {
+            await doCopy();
+            return;
         }
-    };
 
+        if (is_free_user && canCopy) {
+            recordCopy();
+            await doCopy();
+            return;
+        }
+
+        // Rate limited -- captcha overlay is already shown via `show_captcha`
+    }
+
+    async function onCaptchaVerify() {
+        // record the solve
+        // this should trigger the "showCaptcha" state to be false
+        recordCopy();
+    }
 
     function nameInputChanged(event: ChangeEvent<HTMLInputElement>) {
         const value = event.target.value;
@@ -333,11 +345,9 @@ export default function CopyNoteWindow() {
         return null;
     }
 
-    let dynTimerTooltip = "Use Dynamic Timers relative to combat events."
-    if (!phasesAvailable) {
-        dynTimerTooltip = "Dynamic Timers not available for this Fight."
-    }
-
+    /*
+        Main Render
+    */
     return (
         <div className={style.modal}>
             <div className="p-2 bg-dark rounded border">
@@ -365,16 +375,6 @@ export default function CopyNoteWindow() {
                         value={name}
                         placeholder="Name or Nickname"
                     ></input>
-
-                    <label className={phasesAvailable ? "" : "text-muted"}>use dynamic timer:</label>
-                    <input
-                        type="checkbox"
-                        onChange={() => setUseDynamicTimer(!useDynamicTimer)}
-                        checked={phasesAvailable && useDynamicTimer}
-                        disabled={!phasesAvailable}
-                        data-tooltip={dynTimerTooltip}
-                        data-tooltip-size="small"
-                    />
 
                     <label>Note Format:</label>
                     <div
@@ -410,25 +410,46 @@ export default function CopyNoteWindow() {
                 </div>
 
                 {/* Note */}
-                <div className={`${style.textarea} ${!permission_dyn_timer ? `${style.textarea_disabled} no-select` : ""}`}>
+                <div className={style.textarea}>
                     <textarea
                         ref={textareaRef}
                         readOnly
                         className="border rounded"
                         onClick={textAreaClicked}
-                        onFocus={() => {
-                            if (permission_dyn_timer) {
-                                textareaRef.current?.select();
-                            }
-                        }}
+                        onFocus={() => textareaRef.current?.select()}
+
                         value={note}
-                        onSelect={!permission_dyn_timer ? preventSelection : undefined}
                     >
                     </textarea>
-                    {!permission_dyn_timer && useDynamicTimer && <div className={style.notification_patreon}>
-                        Dynamic Timers only available for Legendary Patreon Members.<br></br>
-                    </div>}
+
+                    {/* Captcha overlay */}
+                    {showCaptcha &&
+                        <div className={style.captcha_overlay}>
+                            <div className={style.captcha_content}>
+
+                                <SimpleCaptcha onVerify={onCaptchaVerify} attempt_counter={attempt_counter} />
+
+                                <p className={style.upsell}>
+                                    <a href="https://www.patreon.com/c/lorrgs" target="_blank" rel="noopener noreferrer">
+                                        Legendary Patrons
+                                    </a>
+                                    <span className="text-muted">&nbsp;get unlimited copies.</span>
+                                </p>
+                            </div>
+                        </div>
+                    }
+
                     {isCopied && <div className={style.notification}>note copied to clipboard.</div>}
+                </div>
+
+                {/* Usage counter */}
+                <div className={`${style.usage_counter} ${remaining_uses_class}`}>
+                    {is_paid_user
+                        ? <span className={style.unlimited_badge}>unlimited copies.</span>
+                        : <span
+                            data-tooltip={next_expiry_remaining_tooltip}
+                        >{remainingUses}/{maxUses} instant copies per 15 minutes.</span>
+                    }
                 </div>
 
                 {/* Info & Disclaimer */}

@@ -175,44 +175,57 @@
 }
 
 
-.textarea_disabled {
+.usage_counter {
+    font-size: 0.85rem;
+    text-align: right;
+}
 
-    textarea {
-        color: hsl(0 0% 30%);
-        filter: blur(1px);
+.unlimited_badge {
+    color: hsl(45 80% 60%);
+}
+
+.captcha_overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.75);
+    border-radius: 4px;
+    z-index: 2;
+}
+
+.captcha_content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.upsell {
+    font-size: 0.8rem;
+    margin: 0;
+
+    a {
+        color: hsl(32 70% 55%);
+        text-decoration: underline;
+        
+        &:hover {
+            color: hsl(32 80% 65%);
+            font-weight: bold;
+            cursor: url("/cur/bag_on.cur"), auto;
+        }
     }
 }
 
 
-
-
 .notification {
-    // background: hsl(0 0% 70%)
-
     color: var(--wow-kill);
     opacity: 0.8;
 
     position: absolute;
-    // top: 60%;
     left: 50%;
     translate: -50% 0;
     bottom: 1rem;
-}
-
-.notification_patreon {
-    // background: hsl(0 0% 70%)
-
-    opacity: 0.9;
-    color: var(--wow-wipe);
-    background-color: rgba(black, 20%);
-    padding: 2rem;
-
-    position: absolute;
-    top: 0%;
-    bottom: 0%;
-    left: 50%;
-    translate: -50% 0;
-    align-content: center;
 }
 
 

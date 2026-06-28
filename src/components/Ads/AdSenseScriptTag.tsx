@@ -1,4 +1,4 @@
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import useUser from "../../routes/auth/useUser"
 
 const ADSENSE_CLIENT_ID = "ca-pub-4043710965953712"
