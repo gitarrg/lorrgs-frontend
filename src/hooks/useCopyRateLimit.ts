@@ -10,6 +10,12 @@ interface UsageEntry {
     ts: number;
 }
 
+interface NextExpiry {
+    key: string;
+    expiresAtMs: number;
+    remainingMs: number;
+}
+
 
 function getEntries(): UsageEntry[] {
     try {
@@ -41,6 +47,23 @@ function load_and_prune(): UsageEntry[] {
     return entries_new;
 }
 
+function get_next_expiry(entries: UsageEntry[]): NextExpiry | null {
+    if (!entries.length) {
+        return null;
+    }
+
+    const oldest_entry = entries.reduce((oldest, current) => {
+        return current.ts < oldest.ts ? current : oldest;
+    });
+
+    const expires_at = oldest_entry.ts + WINDOW_MS;
+    return {
+        key: oldest_entry.key,
+        expiresAtMs: expires_at,
+        remainingMs: Math.max(0, expires_at - Date.now()),
+    };
+}
+
 
 /**
  * Tracks copy-note usage in localStorage.
@@ -57,6 +80,8 @@ export default function useCopyRateLimit(noteKey: string) {
     const alreadyRecorded = entries.some((e) => e.key === noteKey);;
     const remainingUses = MAX_FREE_COPIES - count;
     const canCopy = alreadyRecorded || remainingUses > 0;
+    const nextExpiry = get_next_expiry(entries);
+
 
     const recordCopy = useCallback(() => {
 
@@ -77,6 +102,9 @@ export default function useCopyRateLimit(noteKey: string) {
         canCopy,
         remainingUses,
         alreadyRecorded,
+        nextExpiringKey: nextExpiry?.key ?? null,
+        nextExpiryAtMs: nextExpiry?.expiresAtMs ?? null,
+        nextExpiryRemainingMs: nextExpiry?.remainingMs ?? null,
         maxUses: MAX_FREE_COPIES,
         recordCopy
     };

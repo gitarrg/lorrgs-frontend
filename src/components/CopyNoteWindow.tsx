@@ -211,6 +211,7 @@ export default function CopyNoteWindow() {
     const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.NSRT);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [showCaptcha, setShowCaptcha] = useState(false); // show the captcha overlay
+    const [nowMs, setNowMs] = useState(() => Date.now());
 
     // Redux
     const show_window = useAppSelector(ui_store.get_show_copynote)
@@ -225,13 +226,18 @@ export default function CopyNoteWindow() {
     const is_paid_user = user.permissions.includes("dynamic_timers");
     const is_free_user = !is_paid_user;
     const note_key = `${fight?.report_id}:${fight?.fight_id}:${player?.source_id}`;
-    const { canCopy, remainingUses, alreadyRecorded, maxUses, recordCopy } = useCopyRateLimit(note_key);
+    const { canCopy, remainingUses, alreadyRecorded, nextExpiryAtMs, maxUses, recordCopy } = useCopyRateLimit(note_key);
     const attempt_counter = Math.abs(Math.min(0, remainingUses)); // count overflow as attempts
 
     let remaining_uses_class = "";
     if (remainingUses <= 2) { remaining_uses_class = "text-danger" }
     else if (remainingUses <= 0) { remaining_uses_class = "text-warning" }
     else { remaining_uses_class = "text-success" }
+
+    const nextExpiryRemainingMs = nextExpiryAtMs ? Math.max(0, nextExpiryAtMs - nowMs) : null;
+    const next_expiry_remaining_time = nextExpiryRemainingMs !== null ? toMMSS(nextExpiryRemainingMs / 1000) : null;
+    const next_expiry_remaining_tooltip = next_expiry_remaining_time ? `next copy charge in ${next_expiry_remaining_time}.` : null;
+
 
     // Close window when Escape key is pressed
     useEffect(() => {
@@ -267,11 +273,23 @@ export default function CopyNoteWindow() {
         setShowCaptcha(!solved);
     }, [note_key, is_paid_user, canCopy, remainingUses, alreadyRecorded]);
 
+    useEffect(() => {
+        if (!show_window) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setNowMs(Date.now());
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [show_window]);
+
 
     // Generate Note
     let note = get_formatted_note(name, noteFormat);
     if (showCaptcha) {
-        note = "You have reached the maximum number of copies for this note. Please wait 15 minutes and try again.";
+        note = "You have reached the maximum number of copies for this note.\nPlease wait 15 minutes and try again.";
     }
 
 
@@ -429,8 +447,8 @@ export default function CopyNoteWindow() {
                     {is_paid_user
                         ? <span className={style.unlimited_badge}>unlimited copies.</span>
                         : <span
-                            data-tooltip="3 instant copies per 15 minutes."
-                        >{remainingUses}/{maxUses} copies remaining.</span>
+                            data-tooltip={next_expiry_remaining_tooltip}
+                        >{remainingUses}/{maxUses} instant copies per 15 minutes.</span>
                     }
                 </div>
 
