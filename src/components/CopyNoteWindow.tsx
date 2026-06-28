@@ -17,6 +17,9 @@ import type Phase from "../types/phase";
 import useCopyRateLimit from "../hooks/useCopyRateLimit";
 import useUser from "../routes/auth/useUser";
 
+const IS_DEV = import.meta.env.DEV;
+const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "";
+
 /** Output format for the copy-note modal. */
 export enum NoteFormat {
     MRT = "MRT",
@@ -29,8 +32,6 @@ export enum NameInputMode {
 }
 
 type SpellDisplayMap = Record<number, boolean | undefined>;
-
-const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "";
 
 
 /**
@@ -70,7 +71,6 @@ function format_nsrt_row(entries: readonly [string, string | number][]): string 
  */
 function get_note_mrt(
     name: string,
-    dynamic: boolean,
     player: Actor,
     fight: Fight,
     spell_display: SpellDisplayMap,
@@ -84,11 +84,10 @@ function get_note_mrt(
             return;
         }
 
-        const phase = dynamic && get_phase_at_time(fight, cast.ts);
-
         let ts = cast.ts;
         let trigger = "";
 
+        const phase = get_phase_at_time(fight, cast.ts);
         if (phase) {
             ts -= phase.ts;
             trigger = `,p${phase.id}`;
@@ -104,7 +103,6 @@ function get_note_mrt(
  * "Northern Sky Raid Tools" style note.
  */
 function get_note_nsrt(
-    dynamic: boolean,
     name: string,
     player: Actor,
     fight: Fight,
@@ -134,10 +132,8 @@ function get_note_nsrt(
         // key-value pairs for the row
         const pairs: [string, string | number][] = [];
 
-        let phase: Phase | null = null;
-        if (dynamic) {
-            phase = get_phase_at_time(fight, cast.ts);
-        }
+        // let phase: Phase | null = null;
+        const phase = get_phase_at_time(fight, cast.ts);
 
         // +2 because ph1 = from pull; ph2 = first real phase (phase.id = 0 -> 2)
         const phase_id = phase ? phase.id : 1;
@@ -177,7 +173,6 @@ function get_note_nsrt(
  */
 function get_formatted_note(
     name: string,
-    dynamic: boolean,
     noteFormat: NoteFormat,
 ): string {
 
@@ -195,10 +190,9 @@ function get_formatted_note(
 
     switch (noteFormat) {
         case NoteFormat.MRT:
-            return get_note_mrt(name, dynamic, player, fight, spell_display);
+            return get_note_mrt(name, player, fight, spell_display);
         case NoteFormat.NSRT:
             return get_note_nsrt(
-                dynamic,
                 name,
                 player,
                 fight,
@@ -216,17 +210,16 @@ export default function CopyNoteWindow() {
     const [nameInputMode, setNameInputMode] = useState<NameInputMode>(NameInputMode.PLAYER_NAME);
     const lastManualNameRef = useRef("");
     const [isCopied, setIsCopied] = useState(false);
-    const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.MRT);
-    const [showCaptcha, setShowCaptcha] = useState(false);
+    const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.NSRT);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const captchaRef = useRef<HCaptcha>(null);
+    const [showCaptcha, setShowCaptcha] = useState(false); // show the captcha overlay
 
     // Redux
     const show_window = useAppSelector(ui_store.get_show_copynote)
     const fight = useAppSelector(ui_store.get_copynote_fight)
     const dispatch = useAppDispatch()
     const user = useUser()
-    const boss = useAppSelector(state => get_boss(state, fight?.boss?.boss_slug));
 
     const player = useAppSelector(ui_store.get_copynote_player);
     const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
@@ -234,8 +227,8 @@ export default function CopyNoteWindow() {
     // Rate limiting
     const is_paid_user = false; // user.permissions.includes("dynamic_timers");
     const is_free_user = !is_paid_user;
-    const noteKey = `${fight?.report_id}:${fight?.fight_id}:${player?.source_id}`;
-    const { canCopy, remainingUses, maxUses, recordCopy } = useCopyRateLimit(noteKey);
+    const note_key = `${fight?.report_id}:${fight?.fight_id}:${player?.source_id}`;
+    const { canCopy, remainingUses, alreadyRecorded, maxUses, recordCopy } = useCopyRateLimit(note_key);
 
     // Close window when Escape key is pressed
     useEffect(() => {
@@ -266,13 +259,18 @@ export default function CopyNoteWindow() {
 
     }, [nameInputMode, noteFormat, spec?.id]);
 
-    const phasesAvailable = boss?.phase_type === "dynamic" && Boolean(fight?.phases?.length);
+    useEffect(() => {
+        const solved = is_paid_user || remainingUses > 0 || alreadyRecorded;
+        setShowCaptcha(!solved);
+    }, [note_key, is_paid_user, remainingUses, alreadyRecorded]);
 
-    const note = get_formatted_note(
-        name,
-        phasesAvailable,
-        noteFormat
-    );
+
+    // Generate Note
+    let note = get_formatted_note(name, noteFormat);
+    if (showCaptcha) {
+        note = "You have reached the maximum number of copies for this note. Please wait 15 minutes and try again.";
+    }
+
 
     function closeWindow() {
         dispatch(ui_store.set_show_copynote(false));
@@ -298,15 +296,15 @@ export default function CopyNoteWindow() {
             return;
         }
 
-        // Rate limited -- show captcha
-        setShowCaptcha(true);
+        // Rate limited -- captcha overlay is already shown via `show_captcha`
     }
 
     async function onCaptchaVerify(_token: string) {
-        setShowCaptcha(false);
-        captchaRef.current?.resetCaptcha();
+        // record the solve
+        // this should trigger the "showCaptcha" state to be false
         recordCopy();
-        await doCopy();
+
+        captchaRef.current?.resetCaptcha();
     }
 
     function nameInputChanged(event: ChangeEvent<HTMLInputElement>) {
@@ -328,6 +326,28 @@ export default function CopyNoteWindow() {
         return null;
     }
 
+    /*
+        Captcha overlay:
+    */
+    let captchaOverlay = null;
+    if (IS_DEV) {
+        captchaOverlay = (
+            <label className={style.dev_captcha}>
+                <input type="checkbox" onChange={() => onCaptchaVerify("")} />
+                I am not a robot (dev)
+            </label>
+        )
+    } else {
+        captchaOverlay = <HCaptcha
+            ref={captchaRef}
+            sitekey={HCAPTCHA_SITE_KEY}
+            onVerify={onCaptchaVerify}
+        />
+    }
+
+    /*
+        Main Render
+    */
     return (
         <div className={style.modal}>
             <div className="p-2 bg-dark rounded border">
@@ -402,15 +422,11 @@ export default function CopyNoteWindow() {
                     >
                     </textarea>
 
-                    {showCaptcha && (
+                    {/* Captcha overlay */}
+                    {showCaptcha &&
                         <div className={style.captcha_overlay}>
                             <div className={style.captcha_content}>
-                                <HCaptcha
-                                    ref={captchaRef}
-                                    sitekey={HCAPTCHA_SITE_KEY}
-                                    onVerify={onCaptchaVerify}
-                                    onExpire={() => setShowCaptcha(false)}
-                                />
+                                {captchaOverlay}
                                 <p className={style.upsell}>
                                     <span className="wow-legendary">
                                         Legendary&nbsp;
@@ -420,7 +436,7 @@ export default function CopyNoteWindow() {
                                 </p>
                             </div>
                         </div>
-                    )}
+                    }
 
                     {isCopied && <div className={style.notification}>note copied to clipboard.</div>}
                 </div>
