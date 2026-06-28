@@ -8,12 +8,13 @@ import { toMMSS } from "../utils";
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
 import { useEffect, useRef, useState, ChangeEvent } from 'react'
 import * as ui_store from "../store/ui"
-import Spec from "../types/spec";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 import style from "./CopyNoteWindow.module.scss";
 import type Actor from "../types/actor";
 import type Boss from "../types/boss";
 import type Fight from "../types/fight";
 import type Phase from "../types/phase";
+import useCopyRateLimit from "../hooks/useCopyRateLimit";
 import useUser from "../routes/auth/useUser";
 
 /** Output format for the copy-note modal. */
@@ -28,6 +29,8 @@ export enum NameInputMode {
 }
 
 type SpellDisplayMap = Record<number, boolean | undefined>;
+
+const HCAPTCHA_SITE_KEY = import.meta.env.VITE_HCAPTCHA_SITE_KEY || "";
 
 
 /**
@@ -213,9 +216,10 @@ export default function CopyNoteWindow() {
     const [nameInputMode, setNameInputMode] = useState<NameInputMode>(NameInputMode.PLAYER_NAME);
     const lastManualNameRef = useRef("");
     const [isCopied, setIsCopied] = useState(false);
-    const [useDynamicTimer, setUseDynamicTimer] = useState(false);
     const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.MRT);
+    const [showCaptcha, setShowCaptcha] = useState(false);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const captchaRef = useRef<HCaptcha>(null);
 
     // Redux
     const show_window = useAppSelector(ui_store.get_show_copynote)
@@ -226,6 +230,11 @@ export default function CopyNoteWindow() {
 
     const player = useAppSelector(ui_store.get_copynote_player);
     const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
+
+    // Rate limiting
+    const is_paid_user = false; // user.permissions.includes("dynamic_timers");
+    const is_free_user = !is_paid_user;
+    const { canCopy, remainingUses, maxUses, recordCopy } = useCopyRateLimit();
 
     // Close window when Escape key is pressed
     useEffect(() => {
@@ -255,64 +264,48 @@ export default function CopyNoteWindow() {
 
     }, [nameInputMode, noteFormat, spec?.id]);
 
-    let permission_dyn_timer = user.permissions.includes("dynamic_timers")
-    const phasesAvailable = boss?.phase_type === "dynamic" && Boolean(fight?.phases?.length)
+    const phasesAvailable = boss?.phase_type === "dynamic" && Boolean(fight?.phases?.length);
 
-    if (!phasesAvailable) {
-        permission_dyn_timer = true;
-    }
-    if (!useDynamicTimer) {
-        permission_dyn_timer = true;
-    }
-
-    let note = get_formatted_note(
+    const note = get_formatted_note(
         name,
-        phasesAvailable && permission_dyn_timer && useDynamicTimer,
+        phasesAvailable,
         noteFormat
-    )
-
-    if (!permission_dyn_timer) {
-        note += "\n".repeat(10)
-        note += `
-    "Dear Visitor,"
-    
-    I'm sorry but dynamic Timers are not yet ready for free users.
-    Please visit https://www.patreon.com/c/lorrgs or the discord server if you want to support the development.
-    
-    Thank you!"`
-    }
+    );
 
     function closeWindow() {
         dispatch(ui_store.set_show_copynote(false));
     }
 
-    async function textAreaClicked() {
-        console.log("textAreaClicked")
-
-        if (!permission_dyn_timer) {
-            // hehe cat
-            await navigator.clipboard.writeText("https://www.patreon.com/c/lorrgs");
-            return
-        }
-
-        // copy to clipboard
+    async function doCopy() {
         await navigator.clipboard.writeText(note);
-
-        // update UI elements
-        setIsCopied(true)
-
-        // show
+        setIsCopied(true);
         setTimeout(() => {
             setIsCopied(false);
         }, 1500);
     }
 
-    const preventSelection = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
-        if (useDynamicTimer && !permission_dyn_timer) {
-            e.preventDefault();
+    async function textAreaClicked() {
+        if (is_paid_user) {
+            await doCopy();
+            return;
         }
-    };
 
+        if (is_free_user && canCopy) {
+            recordCopy();
+            await doCopy();
+            return;
+        }
+
+        // Rate limited -- show captcha
+        setShowCaptcha(true);
+    }
+
+    async function onCaptchaVerify(_token: string) {
+        setShowCaptcha(false);
+        captchaRef.current?.resetCaptcha();
+        recordCopy();
+        await doCopy();
+    }
 
     function nameInputChanged(event: ChangeEvent<HTMLInputElement>) {
         const value = event.target.value;
@@ -331,11 +324,6 @@ export default function CopyNoteWindow() {
 
     if (!show_window) {
         return null;
-    }
-
-    let dynTimerTooltip = "Use Dynamic Timers relative to combat events."
-    if (!phasesAvailable) {
-        dynTimerTooltip = "Dynamic Timers not available for this Fight."
     }
 
     return (
@@ -365,16 +353,6 @@ export default function CopyNoteWindow() {
                         value={name}
                         placeholder="Name or Nickname"
                     ></input>
-
-                    <label className={phasesAvailable ? "" : "text-muted"}>use dynamic timer:</label>
-                    <input
-                        type="checkbox"
-                        onChange={() => setUseDynamicTimer(!useDynamicTimer)}
-                        checked={phasesAvailable && useDynamicTimer}
-                        disabled={!phasesAvailable}
-                        data-tooltip={dynTimerTooltip}
-                        data-tooltip-size="small"
-                    />
 
                     <label>Note Format:</label>
                     <div
@@ -410,25 +388,47 @@ export default function CopyNoteWindow() {
                 </div>
 
                 {/* Note */}
-                <div className={`${style.textarea} ${!permission_dyn_timer ? `${style.textarea_disabled} no-select` : ""}`}>
+                <div className={style.textarea}>
                     <textarea
                         ref={textareaRef}
                         readOnly
                         className="border rounded"
                         onClick={textAreaClicked}
-                        onFocus={() => {
-                            if (permission_dyn_timer) {
-                                textareaRef.current?.select();
-                            }
-                        }}
+                        onFocus={() => textareaRef.current?.select()}
+
                         value={note}
-                        onSelect={!permission_dyn_timer ? preventSelection : undefined}
                     >
                     </textarea>
-                    {!permission_dyn_timer && useDynamicTimer && <div className={style.notification_patreon}>
-                        Dynamic Timers only available for Legendary Patreon Members.<br></br>
-                    </div>}
+
+                    {showCaptcha && (
+                        <div className={style.captcha_overlay}>
+                            <div className={style.captcha_content}>
+                                <HCaptcha
+                                    ref={captchaRef}
+                                    sitekey={HCAPTCHA_SITE_KEY}
+                                    onVerify={onCaptchaVerify}
+                                    onExpire={() => setShowCaptcha(false)}
+                                />
+                                <p className={style.upsell}>
+                                    <span className="wow-legendary">
+                                        Legendary&nbsp;
+                                        <a href="https://www.patreon.com/c/lorrgs" target="_blank" rel="noopener noreferrer">Patrons</a>
+                                    </span>
+                                    <span>&nbsp;get unlimited copies.</span>
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     {isCopied && <div className={style.notification}>note copied to clipboard.</div>}
+                </div>
+
+                {/* Usage counter */}
+                <div className={style.usage_counter} data-uses={remainingUses}>
+                    {is_paid_user
+                        ? <span className={style.unlimited_badge}>unlimited copies.</span>
+                        : <span>{remainingUses}/{maxUses} copies remaining.</span>
+                    }
                 </div>
 
                 {/* Info & Disclaimer */}
