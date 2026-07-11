@@ -129,6 +129,18 @@
 }
 
 
+.dynamic_timer_checkbox {
+
+    width: 1rem;
+
+    &.disabled {
+        opacity: 0.5;
+        accent-color: #34495e;
+    }
+
+}
+
+
 .textarea {
 
     min-width: 25rem;

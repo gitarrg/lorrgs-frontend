@@ -72,6 +72,7 @@ function get_note_mrt(
     player: Actor,
     fight: Fight,
     spell_display: SpellDisplayMap,
+    dynamic: boolean,
 ): string {
 
     const rows: string[] = [];
@@ -85,7 +86,11 @@ function get_note_mrt(
         let ts = cast.ts;
         let trigger = "";
 
-        const phase = get_phase_at_time(fight, cast.ts);
+        let phase: Phase | null = null;
+        if (dynamic) {
+            phase = get_phase_at_time(fight, cast.ts);
+        }
+
         if (phase) {
             ts -= phase.ts;
             trigger = `,p${phase.id}`;
@@ -172,6 +177,7 @@ function get_note_nsrt(
 function get_formatted_note(
     name: string,
     noteFormat: NoteFormat,
+    dynamic: boolean,
 ): string {
 
     const player = useAppSelector(ui_store.get_copynote_player);
@@ -188,7 +194,13 @@ function get_formatted_note(
 
     switch (noteFormat) {
         case NoteFormat.MRT:
-            return get_note_mrt(name, player, fight, spell_display);
+            return get_note_mrt(
+                name,
+                player,
+                fight,
+                spell_display,
+                dynamic
+            );
         case NoteFormat.NSRT:
             return get_note_nsrt(
                 name,
@@ -208,6 +220,7 @@ export default function CopyNoteWindow() {
     const [nameInputMode, setNameInputMode] = useState<NameInputMode>(NameInputMode.PLAYER_NAME);
     const lastManualNameRef = useRef("");
     const [isCopied, setIsCopied] = useState(false);
+    const [useDynamicTimer, setUseDynamicTimer] = useState(false);
     const [noteFormat, setNoteFormat] = useState<NoteFormat>(NoteFormat.NSRT);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const [showCaptcha, setShowCaptcha] = useState(false); // show the captcha overlay
@@ -218,6 +231,7 @@ export default function CopyNoteWindow() {
     const fight = useAppSelector(ui_store.get_copynote_fight)
     const dispatch = useAppDispatch()
     const user = useUser()
+    const boss = useAppSelector(state => get_boss(state, fight?.boss?.boss_slug))
 
     const player = useAppSelector(ui_store.get_copynote_player);
     const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
@@ -285,11 +299,21 @@ export default function CopyNoteWindow() {
         return () => clearInterval(interval);
     }, [show_window]);
 
+    const phasesAvailable = boss?.phase_type === "dynamic" && Boolean(fight?.phases?.length)
+    const dynamic = phasesAvailable && useDynamicTimer;
 
     // Generate Note
-    let note = get_formatted_note(name, noteFormat);
+    let note = get_formatted_note(name, noteFormat, dynamic);
     if (showCaptcha) {
         note = "You have reached the maximum number of copies for this note.\nPlease wait 15 minutes and try again.";
+    }
+
+    let dynTimerTooltip = "Use Dynamic Timers relative to combat events."
+    if (!phasesAvailable) {
+        dynTimerTooltip = "Dynamic Timers not available for this Fight."
+    }
+    if (noteFormat === NoteFormat.NSRT) {
+        dynTimerTooltip = "Dynamic Timers are always enabled for NSRT format.";
     }
 
 
@@ -406,6 +430,23 @@ export default function CopyNoteWindow() {
                         >
                             NSRT
                         </button>
+                    </div>
+
+
+                    <label
+                        className={!phasesAvailable || noteFormat === NoteFormat.NSRT ? "text-muted" : ""}>
+                        use dynamic timer:
+                    </label>
+                    <div className="d-flex">
+                        <input
+                            className={style.dynamic_timer_checkbox}
+                            type="checkbox"
+                            onChange={() => setUseDynamicTimer(!useDynamicTimer)}
+                            checked={phasesAvailable && useDynamicTimer || noteFormat === NoteFormat.NSRT} // always enabled for NSRT
+                            disabled={!phasesAvailable || noteFormat === NoteFormat.NSRT} // only disable for MRT
+                            data-tooltip={dynTimerTooltip}
+                            data-tooltip-size="small"
+                        />
                     </div>
                 </div>
 
