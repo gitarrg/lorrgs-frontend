@@ -22,7 +22,7 @@ export const DIFFICULTIES = {
     MYTHIC: "mythic",
 }
 
-export const DEFAULT_DIFFICULTY = DIFFICULTIES.MYTHIC
+export const DEFAULT_DIFFICULTY = DIFFICULTIES.HEROIC
 
 
 ///////////////////////////////////
