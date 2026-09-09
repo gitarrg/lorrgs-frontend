@@ -133,8 +133,8 @@ function _process_fight(fight: Fight) {
     if (fight.phases) {
         let phase_id = 2;  // 1 = pull; 2 = first real phase
         fight.phases.forEach(phase => {
-            phase.id = phase_id;
-            phase.name = `P${phase_id}`
+            phase.id = phase.phase_id ?? phase_id;
+            phase.name = `P${phase.id}`
             phase_id++;
         })
     }
