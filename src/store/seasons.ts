@@ -30,6 +30,16 @@ export function get_current_season(state: RootState): Season {
 }
 
 
+export function get_collapse_raids(state: RootState): boolean {
+    return get_current_season(state)?.collapse_raids ?? false
+}
+
+
+export function get_has_comp_modes(state: RootState): boolean {
+    return get_current_season(state)?.has_comp_modes ?? true
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Slice

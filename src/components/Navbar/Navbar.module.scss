@@ -105,3 +105,53 @@
     /* Styles for the non-selected specs */
     // a:not(.active) {}
 }
+
+
+////////////////////////////////////////////
+// Raid Dropdowns (collapsed raids)
+
+.zone_dropdown {
+
+    // anchored to the right: the navbar is right aligned
+    &__dropdown {
+        display: none;
+        z-index: 99;
+        position: absolute;
+        top: 100%;
+        right: -0.5rem;
+    }
+    &:hover &__dropdown {
+        display: block;
+    }
+}
+
+.zone_title {
+    font-size: 0.8em;
+    opacity: 0.6;
+    text-transform: uppercase;
+}
+
+.boss_list {
+    display: grid;
+    grid-row-gap: 0.25rem;
+
+    a {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        white-space: nowrap;
+
+        img { opacity: 60%; }
+        &:hover span { text-decoration: underline; }
+
+        &:global.active {
+            font-weight: bold;
+
+            span::after { content: " •"; }
+            img {
+                border-width: 2px;
+                opacity: 100%;
+            }
+        }
+    }
+}
