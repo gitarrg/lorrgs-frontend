@@ -55,7 +55,7 @@
 .hidden_tabs_panel {
     position: absolute;
     left: 50%;
-    top: 0;
+    top: -0.75rem;  // same distance from the screen top as the home page tabs
     z-index: 1;  // above the hit area, which would otherwise swallow hover/clicks on the tabs
     transform: translate(-50%, -100%);
     opacity: 0;
