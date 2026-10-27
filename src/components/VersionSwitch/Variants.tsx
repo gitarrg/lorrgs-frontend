@@ -1,5 +1,4 @@
 import { ReactNode, useLayoutEffect, useRef, useState } from "react"
-import { useLocation } from "react-router-dom"
 import WowLogo, { version_color } from "./WowLogo"
 import styles from "./VersionSwitch.module.scss"
 import { useVersionSwitch } from "./useVersionSwitch"
@@ -59,25 +58,16 @@ export function VersionTabsCentered() {
 }
 
 
-/** Spec rankings: a sliver in the version's color on the left edge, expands on hover. */
-export function VersionPeekbar() {
-    const { pathname } = useLocation()
-    const { versions, current, switch_to } = useVersionSwitch()
-    if (!pathname.startsWith("/spec_ranking")) { return null }
+/** Spec rankings: the home tab bar, hidden until hovered (a colored sliver stays visible). Sits in the page layout, so it scrolls with the page. */
+export function VersionTabsHidden() {
+    const { current } = useVersionSwitch()
     return (
-        <div className={styles.peek}>
-            <div className={styles.peek_sliver} style={{ background: version_color(current.name) }} />
-            <div className={`${styles.peek_panel} bg-dark border rounded`}>
-                {versions.map(version =>
-                    <div
-                        key={version.name}
-                        className={`${styles.peek_item} ${version.name == current.name ? styles.active : ""}`}
-                        onClick={() => switch_to(version)}
-                    >
-                        <WowLogo name={version.name} className={styles.w_tiny} />
-                        {version.title}
-                    </div>
-                )}
+        <div className={styles.hidden_tabs}>
+            <div className={styles.hidden_tabs_panel}>
+                <Tabs />
+            </div>
+            <div className={styles.hidden_tabs_hit}>
+                <div style={{ background: version_color(current.name) }} />
             </div>
         </div>
     )

@@ -15,6 +15,7 @@ import Navbar from "./../components/Navbar/Navbar"
 import PlayerNamesList from "./../components/PlayerNames/PlayerNamesList"
 import SpecRankingsHeader from './SpecRankings/SpecRankingsHeader'
 import SpecSettingsBar from './SpecRankings/SpecSettingsBar'
+import { VersionTabsHidden } from '../components/VersionSwitch/Variants'
 import TimelineCanvas from "./../components/Timeline/TimelineCanvas"
 import type Spec from '../types/spec'
 import useQuery from "../hooks/useQuery"
@@ -97,6 +98,7 @@ export default function SpecRankings() {
     //
     return (
         <div className={mode}>
+            <VersionTabsHidden />
 
             <div className="mt-3 flex-row d-flex flex-wrap-reverse">
                 <SpecRankingsHeader spec_slug={spec_slug} boss_slug={boss_slug} />

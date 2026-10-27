@@ -1,7 +1,6 @@
 import { useLocation } from "react-router-dom"
 import { get_current_game_version, get_selectable_game_versions, switch_game_version } from "../../store/game_versions"
 import { useAppSelector } from "../../store/store_hooks"
-import { MODES } from "../../store/ui"
 import type GameVersion from "../../types/game_version"
 
 // shown when the backend lists only one version, so the prototypes are visible during development
@@ -30,7 +29,6 @@ function with_display_names(versions: GameVersion[]): GameVersion[] {
 export function useVersionSwitch() {
     const real = useAppSelector(get_selectable_game_versions)
     const real_current = useAppSelector(get_current_game_version)
-    const mode = useAppSelector(state => state.ui.mode)
     const spec_slug = useAppSelector(state => state.ui.spec_slug)
 
     const versions = with_display_names(real.length > 1 ? real : MOCK_VERSIONS)
@@ -40,7 +38,7 @@ export function useVersionSwitch() {
 
     // stay on the current page, only the game version changes
     let target = "/"
-    if (mode == MODES.SPEC_RANKING && spec_slug) { target = `/spec_ranking/${spec_slug}/random` }  // same spec, any boss
+    if (pathname.startsWith("/spec_ranking/") && spec_slug) { target = `/spec_ranking/${spec_slug}/random` }  // same spec, any boss
     if (pathname.startsWith("/user_report/")) { target = `${pathname}${search}` }  // same report
     // home: "/"
     const switch_to = (version: GameVersion) => switch_game_version(version, target)
