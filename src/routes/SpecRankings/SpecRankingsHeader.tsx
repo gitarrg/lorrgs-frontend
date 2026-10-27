@@ -16,7 +16,8 @@ DIFFICULTY_IDS["normal"] = 3
 
 function get_spec_ranking_url(spec: Spec, boss: Boss, difficulty: string, metric: string) {
 
-    const difficulty_id = DIFFICULTY_IDS[difficulty] ?? 5
+    // `auto` stands for the one difficulty ranked in the boss's zone
+    const difficulty_id = DIFFICULTY_IDS[boss.difficulty ?? difficulty] ?? 5
     const search_params = new URLSearchParams({
         boss: boss.id.toString(),
         class: spec.class.name.replace(" ", ""),  // WCL uses no spaces in classnames

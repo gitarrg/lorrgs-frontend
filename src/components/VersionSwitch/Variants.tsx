@@ -1,4 +1,4 @@
-import { ReactNode } from "react"
+import { ReactNode, useLayoutEffect, useRef, useState } from "react"
 import { useLocation } from "react-router-dom"
 import WowLogo, { version_color } from "./WowLogo"
 import styles from "./VersionSwitch.module.scss"
@@ -7,18 +7,32 @@ import { useVersionSwitch } from "./useVersionSwitch"
 
 function Tabs() {
     const { versions, current, switch_to } = useVersionSwitch()
+    const [hovered, set_hovered] = useState<string | null>(null)
+    const [bar, set_bar] = useState({ left: 0, width: 0 })
+    const refs = useRef<{ [name: string]: HTMLButtonElement | null }>({})
+
+    // the underline follows the hovered tab, and rests on the current one
+    const target = hovered ?? current.name
+    useLayoutEffect(() => {
+        const el = refs.current[target]
+        el && set_bar({ left: el.offsetLeft, width: el.offsetWidth })
+    }, [target, versions.length])
+
     return (
-        <div className={styles.tabs}>
+        <div className={styles.tabs} onMouseLeave={() => set_hovered(null)}>
             {versions.map(version =>
                 <button
                     key={version.name}
+                    ref={el => { refs.current[version.name] = el }}
                     className={`${styles.tab} ${version.name == current.name ? styles.active : ""}`}
                     onClick={() => switch_to(version)}
+                    onMouseEnter={() => set_hovered(version.name)}
                 >
                     <WowLogo name={version.name} className={styles.w_tiny} />
                     {version.title}
                 </button>
             )}
+            <div className={styles.tab_bar} style={{ ...bar, background: version_color(target) }} />
         </div>
     )
 }

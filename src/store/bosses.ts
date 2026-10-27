@@ -60,6 +60,7 @@ function _post_process_boss(zone: RaidZone, boss: Boss) {
     }
 
     boss.zone_id = Math.floor(zone.id)
+    boss.difficulty = zone.difficulty
 
     // insert some static data
     boss.role = "boss"
@@ -71,6 +72,7 @@ interface RaidZoneAPIResponse {
     id: -1,
     name: "",
     name_slug: "",
+    difficulty: string | null,
     bosses: Boss[],
 }
 
@@ -94,6 +96,7 @@ const SLICE = createSlice({
                 id: action.payload.id,
                 name: action.payload.name,
                 name_slug: action.payload.name_slug,
+                difficulty: action.payload.difficulty ?? null,
                 bosses: []
             }
             state.zones[zone.id] = zone

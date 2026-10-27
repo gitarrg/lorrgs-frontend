@@ -24,6 +24,9 @@ export const DIFFICULTIES = {
 
 export const DEFAULT_DIFFICULTY = DIFFICULTIES.MYTHIC
 
+/** difficulty token for zones that rank a single difficulty (`RaidZone.difficulty`): the backend picks it. */
+export const AUTO_DIFFICULTY = "auto"
+
 
 ///////////////////////////////////
 // UI: Timeline

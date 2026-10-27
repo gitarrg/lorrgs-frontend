@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useTitle } from 'react-use'
 
 /* local imports */
-import { DEFAULT_DIFFICULTY } from '../constants'
+import { AUTO_DIFFICULTY, DEFAULT_DIFFICULTY } from '../constants'
 import { get_boss, get_zones, load_boss_spells } from '../store/bosses'
 import { get_spec, load_spec_spells } from '../store/specs'
 import { load_fights } from "../store/fights"
@@ -43,7 +43,8 @@ export default function SpecRankings() {
     // if (!boss_slug || !spec_slug) { return null }
     // if (!spec || !boss) { return null }
 
-    const difficulty = query.get("difficulty") || DEFAULT_DIFFICULTY
+    // zones with a single ranked difficulty ignore the url param and use `auto`
+    const difficulty = boss?.difficulty ? AUTO_DIFFICULTY : (query.get("difficulty") || DEFAULT_DIFFICULTY)
     const metric = query.get("metric") || spec_metric(spec)
 
     // const

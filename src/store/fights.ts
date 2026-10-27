@@ -225,7 +225,7 @@ async function _load_spec_rankings(
         report.fights?.forEach(fight => {
             fight.report_id = report.report_id
             fight.start_time = fight.start_time ?? report.start_time
-            fight.difficulty = fight.difficulty ?? get_difficulty_id(difficulty);
+            fight.difficulty = fight.difficulty ?? get_difficulty_id(spec_ranking.difficulty);
             fight.region = report.region
             fights.push(fight)
             // insert ranking data
