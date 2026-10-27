@@ -1,6 +1,6 @@
 import { get_default_boss } from "../../store/bosses";
 import { get_player_roles } from "../../store/roles";
-import { get_has_comp_modes } from "../../store/seasons";
+import { get_has_comp_modes } from "../../store/game_versions";
 import { useAppSelector } from "../../store/store_hooks";
 import Icon from "../../components/shared/Icon";
 import IndexModuleLink from "./IndexModuleLink";

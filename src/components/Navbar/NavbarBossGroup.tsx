@@ -2,7 +2,7 @@ import NavbarBossButton from "./NavbarBossButton";
 import NavbarGroup from './NavbarGroup';
 import NavbarZoneDropdown from "./NavbarZoneDropdown";
 import { get_boss, get_zones } from '../../store/bosses';
-import { get_collapse_raids } from '../../store/seasons';
+import { get_collapse_raids } from '../../store/game_versions';
 import { useAppSelector } from '../../store/store_hooks';
 import type RaidZone from "../../types/raid_zone";
 

@@ -9,6 +9,7 @@ import admin_reducer from "./admin"
 import bosses_reducer from "./bosses"
 import classes_reducer from "./classes"
 import fights_reducer from "./fights"
+import game_versions_reducer from "./game_versions"
 import roles_reducer from "./roles"
 import seasons_reducer from "./seasons"
 import specs_reducer from "./specs"
@@ -27,6 +28,7 @@ const store = configureStore({
         admin: admin_reducer,
         classes: classes_reducer,
         fights: fights_reducer,
+        game_versions: game_versions_reducer,
         roles: roles_reducer,
         seasons: seasons_reducer,
         specs: specs_reducer,

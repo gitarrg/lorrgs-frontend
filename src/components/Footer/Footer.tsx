@@ -1,5 +1,6 @@
 
 
+import GameVersionMenu from "./GameVersionMenu"
 import styles from "./Footer.module.scss"
 
 
@@ -31,7 +32,10 @@ export default function Footer() {
     return (
         <footer className="p-1 d-flex text-muted">
             <LegalText />
-            < VersionInfo />
+            <div className="ml-auto d-flex align-items-start">
+                <GameVersionMenu />
+                < VersionInfo />
+            </div>
         </footer>
     )
 }

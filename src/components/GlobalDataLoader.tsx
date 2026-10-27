@@ -1,5 +1,6 @@
 /* Loads Constant Data from the API that is used on all pages. */
 import { get_season, load_season } from "../store/seasons";
+import { load_game_versions } from "../store/game_versions";
 import { load_bosses } from "../store/bosses";
 import { load_classes } from "../store/classes";
 import { load_roles } from "../store/roles";
@@ -15,11 +16,13 @@ export default function GlobalDataLoader() {
 
     // Constant Data
     useEffect(() => {
-        dispatch(load_classes());
-        dispatch(load_roles());
-        dispatch(load_specs());
-        
-        dispatch(load_season());
+        // the game versions come first: they can switch us to another backend
+        dispatch(load_game_versions()).then(() => {
+            dispatch(load_classes());
+            dispatch(load_roles());
+            dispatch(load_specs());
+            dispatch(load_season());
+        })
     }, []);
     
     // Seasonal Data
