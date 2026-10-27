@@ -8,6 +8,7 @@ import data_store from "./store/store"
 import Footer from "./components/Footer/Footer";
 import GlobalDataLoader from "./components/GlobalDataLoader";
 import React from 'react';
+import { VersionPeekbar } from "./components/VersionSwitch/Variants";
 import UserProvider from "./routes/auth/UserProvider";
 
 import "../scss/main.scss"
@@ -72,6 +73,7 @@ function App() {
                                     <Route path="/" element={<Index />} />
                                 </Routes>
                             </Suspense>
+                            <VersionPeekbar />
                         </Router>
 
                     </main>

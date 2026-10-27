@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useTitle } from 'react-use'
 
 /* local imports */
 import { DEFAULT_DIFFICULTY } from '../constants'
-import { get_boss, load_boss_spells } from '../store/bosses'
+import { get_boss, get_zones, load_boss_spells } from '../store/bosses'
 import { get_spec, load_spec_spells } from '../store/specs'
 import { load_fights } from "../store/fights"
 import { useAppDispatch, useAppSelector } from '../store/store_hooks'
@@ -34,6 +34,8 @@ export default function SpecRankings() {
     // Hooks
     let { spec_slug, boss_slug } = useParams<{ spec_slug: string, boss_slug: string }>();
     const query = useQuery()
+    const navigate = useNavigate()
+    const zones = useAppSelector(state => get_zones(state))
     const dispatch = useAppDispatch()
     const is_loading = useAppSelector(state => ui_store.get_is_loading(state))
     const boss = useAppSelector(state => get_boss(state, boss_slug))
@@ -51,6 +53,15 @@ export default function SpecRankings() {
     // Update State
     //
     useTitle(`Lorrgs: ${spec?.full_name || "..."} vs. ${boss?.full_name || "..."}`)
+
+    // `random` (after switching game version): keep the spec, pick any boss of the new version
+    useEffect(() => {
+        if (boss_slug != "random") { return }
+        const boss_names = zones.flatMap(zone => zone.bosses)
+        if (!boss_names.length) { return }  // not loaded yet
+        const pick = boss_names[Math.floor(Math.random() * boss_names.length)]
+        navigate(`/spec_ranking/${spec_slug}/${pick}`, { replace: true })
+    }, [boss_slug, zones])
 
     // set UI values
     useEffect(() => { dispatch(ui_store.set_mode(mode)) }, [])

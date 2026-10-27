@@ -14,6 +14,7 @@ import PlayerNamesList from "./../../components/PlayerNames/PlayerNamesList"
 import ReportHeader from './ReportHeader'
 import ReportSettingsBar from './ReportSettingsBar'
 import TimelineCanvas from "./../../components/Timeline/TimelineCanvas"
+import { VersionTabsCentered } from "../../components/VersionSwitch/Variants"
 import UserReportNavbar from './UserReportNavbar'
 
 
@@ -77,8 +78,9 @@ export default function UserReport() {
     return (
         <div className={mode}>
 
-            <div className="mt-3 flex-row justify-content-space-between d-flex align-items-center">
+            <div className="mt-3 flex-row justify-content-space-between d-flex align-items-center" style={{ position: "relative" }}>
                 <ReportHeader />
+                <VersionTabsCentered />
                 <UserReportNavbar />
             </div>
 

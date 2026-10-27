@@ -107,12 +107,12 @@ export function load_game_versions() {
 }
 
 
-/** Switch to another Game Version. All data is specific to it, so we start over from the home page. */
-export function switch_game_version(game_version: GameVersion) {
+/** Switch to another Game Version. All data is specific to it, so we reload (on `target`, the home page by default). */
+export function switch_game_version(game_version: GameVersion, target: string = "/") {
 
     if (game_version.active) { return }
     if (!game_version.api_url) { return }
 
     set_backend_url(game_version.api_url)
-    window.location.assign("/")
+    window.location.assign(target)
 }

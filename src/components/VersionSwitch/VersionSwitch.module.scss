@@ -1,0 +1,66 @@
+.w_tiny { width: 0.9rem; height: 0.9rem; margin-right: 0.35rem; vertical-align: -0.1rem; }
+
+// home: tabs share the row with the login (login keeps its height)
+.home_row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: start;
+    > :first-child { grid-column: 2; grid-row: 1; }
+    > :last-child { grid-column: 3; grid-row: 1; }
+}
+.tabs {
+    display: flex;
+    gap: 0.25rem;
+}
+.tabs_centered {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+}
+.tab {
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: inherit;
+    opacity: 0.5;
+    padding: 0.1rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &:hover { opacity: 1; }
+    &.active { opacity: 1; border-bottom-color: currentColor; }
+}
+
+// peekbar: top left corner, with some margin to the edges; the list grows down
+.peek {
+    position: fixed;
+    left: 1rem;
+    top: 0.5rem;
+    z-index: 100;
+    padding-bottom: 0.5rem;  // keeps hover while moving onto the panel
+
+    &:hover .peek_panel { opacity: 1; transform: scaleY(1); pointer-events: auto; }
+
+    @media (max-width: 1100px) { display: none; }
+}
+.peek_sliver { width: 4rem; height: 4px; border-radius: 4px; }
+.peek_panel {
+    display: grid;
+    gap: 0.4rem;
+    padding: 0.5rem 0.8rem;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    transform-origin: top;
+    transform: scaleY(0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+}
+.peek_item {
+    cursor: pointer;
+    opacity: 0.55;
+    &:hover { opacity: 1; }
+    &.active { opacity: 1; font-weight: bold; }
+}
