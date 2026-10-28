@@ -1,6 +1,6 @@
 export default interface GameVersion {
 
-    /** unique id (e.g. "retail", "classic_mop") */
+    /** unique id (e.g. "retail", "mists", "classic", "forever") */
     name: string
 
     /** display name */

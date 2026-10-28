@@ -8,7 +8,7 @@ const MOCK_VERSIONS: GameVersion[] = [
     { name: "retail", title: "Retail", api_url: "", active: true },
     { name: "forever", title: "Forever", api_url: "", active: false },
     { name: "classic", title: "Classic Era", api_url: "", active: false },
-    { name: "classic_mop", title: "Mists", api_url: "", active: false },
+    { name: "mists", title: "Mists", api_url: "", active: false },
 ]
 
 /** display names + order (the icon is picked by the same name, see WowLogo) */
@@ -16,7 +16,7 @@ const DISPLAY: { [name: string]: { title: string, order: number } } = {
     retail: { title: "Retail", order: 0 },
     forever: { title: "Forever", order: 1 },
     classic: { title: "Classic Era", order: 2 },
-    classic_mop: { title: "Mists", order: 3 },
+    mists: { title: "Mists", order: 3 },
 }
 
 function with_display_names(versions: GameVersion[]): GameVersion[] {
