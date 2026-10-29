@@ -11,7 +11,7 @@ function Tabs() {
     const refs = useRef<{ [name: string]: HTMLButtonElement | null }>({})
 
     // the underline follows the hovered tab, and rests on the current one
-    const target = hovered ?? current.name
+    const target = hovered ?? current?.name ?? ""
     useLayoutEffect(() => {
         const el = refs.current[target]
         el && set_bar({ left: el.offsetLeft, width: el.offsetWidth })
@@ -23,7 +23,7 @@ function Tabs() {
                 <button
                     key={version.name}
                     ref={el => { refs.current[version.name] = el }}
-                    className={`${styles.tab} ${version.name == current.name ? styles.active : ""}`}
+                    className={`${styles.tab} ${version.name == current?.name ? styles.active : ""}`}
                     onClick={() => switch_to(version)}
                     onMouseEnter={() => set_hovered(version.name)}
                 >
@@ -61,6 +61,7 @@ export function VersionTabsCentered() {
 /** Spec rankings: the home tab bar, hidden until hovered (a colored sliver stays visible). Sits in the page layout, so it scrolls with the page. */
 export function VersionTabsHidden() {
     const { current } = useVersionSwitch()
+    if (!current) { return null }  // Game Versions not loaded yet
     return (
         <div className={styles.hidden_tabs}>
             <div className={styles.hidden_tabs_panel}>
