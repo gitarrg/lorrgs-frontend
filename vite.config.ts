@@ -86,6 +86,8 @@ export default defineConfig(({ mode }) => {
 
         ], // end: plugins
 
+        envPrefix: ["VITE_", "LORRGS_"],
+
         define: {
             "GIT_COMMIT_HASH": JSON.stringify(commitHash),
             "GIT_COMMIT_DATE": JSON.stringify(commitDate),

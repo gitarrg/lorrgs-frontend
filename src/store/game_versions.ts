@@ -6,7 +6,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type GameVersion from '../types/game_version'
 import { AppDispatch, RootState } from './store'
-import { BACKEND_URL } from '../constants'
+import { API_URL_BY_GAME_VERSION, BACKEND_URL } from '../constants'
 import { fetch_data, get_backend_url, set_backend_url } from '../api'
 
 
@@ -77,10 +77,16 @@ export default SLICE.reducer
 // Extra Actions
 
 
+function with_api_url(version: GameVersion): GameVersion {
+    const api_url = API_URL_BY_GAME_VERSION[version.name]
+    return api_url ? { ...version, api_url } : version
+}
+
+
 async function fetch_game_versions(): Promise<GameVersion[] | null> {
     try {
         const data = await fetch_data("/api/game_versions")
-        return Array.isArray(data) ? data : null
+        return Array.isArray(data) ? data.map(with_api_url) : null
     } catch {
         return null // backend not reachable
     }

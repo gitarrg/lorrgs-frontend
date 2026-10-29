@@ -3,6 +3,15 @@
 export const DEBUG = import.meta.env.VITE_DEBUG
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
+/** Backend base url for a game version */
+//@ts-format-ignore-region
+export const API_URL_BY_GAME_VERSION: { [name: string]: string } = {
+    retail: import.meta.env.LORRGS_API_URL_RETAIL || "https://retail.lorrgs.io",
+    mists: import.meta.env.LORRGS_API_URL_MISTS || "https://mists-api.lorrgs.io",
+    forever: import.meta.env.LORRGS_API_URL_FOREVER || "https://forever-api.lorrgs.io",
+}
+
+
 export const LOGO_URL = "/static/logo.svg";
 export const ASSETS = "https://assets2.lorrgs.io"
 
