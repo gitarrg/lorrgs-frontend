@@ -15,8 +15,7 @@
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 2rem;
-    row-gap: 1rem;
+    gap: 1rem;
 
     @media (max-width: 1100px) {
         grid-template-columns: 1fr;
