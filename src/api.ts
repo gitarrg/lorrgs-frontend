@@ -39,6 +39,17 @@ export function set_game_version_name(name: string) {
 }
 
 
+/**
+ * Fetch a versioned route (see `versioned`).
+ * Returns `null` if the Game Version changed while waiting: the response belongs to the previous one and has to be dropped.
+ */
+export async function fetch_versioned(path: string, params = {}) {
+    const requested_for = game_version_name
+    const data = await fetch_data(versioned(path), params)
+    return requested_for == game_version_name ? data : null
+}
+
+
 /** Path of a versioned route (roles, classes, specs, spells, zones, bosses, seasons, spec_ranking, comp_ranking). */
 export function versioned(path: string): string {
     return `/api/${game_version_name}${path}`

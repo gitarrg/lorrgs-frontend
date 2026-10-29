@@ -4,7 +4,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type Season from '../types/season'
 import { AppDispatch, RootState } from './store'
-import { fetch_data, versioned } from '../api'
+import { fetch_versioned } from '../api'
 
 
 
@@ -74,9 +74,9 @@ export function load_season(season_slug?: string) {
         dispatch({ type: "ui/set_loading", payload: { key: "season", value: true } })
 
         // Request
-        const season_info = await fetch_data(versioned(`/seasons/${season_slug}`));
+        const season_info = await fetch_versioned(`/seasons/${season_slug}`);
 
-        dispatch(SLICE.actions.set_season(season_info))
+        season_info && dispatch(SLICE.actions.set_season(season_info))
         dispatch({ type: "ui/set_loading", payload: { key: "season", value: false } })
     }
 }

@@ -2,7 +2,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type Boss from "../types/boss"
 import type { AppDispatch, RootState } from './store'
-import { fetch_data, versioned } from '../api'
+import { fetch_versioned } from '../api'
 import { group_spells_by_type } from './store_utils'
 import { ASSETS } from '../constants'
 import type RaidZone from '../types/raid_zone'
@@ -142,9 +142,9 @@ export function load_bosses(zone_id: number) {
         dispatch({ type: "ui/set_loading", payload: { key: "zone", value: true } })
 
         // Request
-        const zone_info = await fetch_data(versioned(`/zones/${zone_id}`));
+        const zone_info = await fetch_versioned(`/zones/${zone_id}`);
 
-        dispatch(SLICE.actions.set_zone(zone_info))
+        zone_info && dispatch(SLICE.actions.set_zone(zone_info))
         dispatch({ type: "ui/set_loading", payload: { key: "zone", value: false } })
     }
 }
@@ -162,9 +162,9 @@ export function load_boss_spells(boss_slug: string) {
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: true } })
 
         // Request
-        const spells: RaidZoneAPIResponse = await fetch_data(versioned(`/bosses/${boss_slug}/spells`));
+        const spells: RaidZoneAPIResponse | null = await fetch_versioned(`/bosses/${boss_slug}/spells`);
 
-        dispatch(SLICE.actions.set_boss_spells({ boss_slug, spells }))
+        spells && dispatch(SLICE.actions.set_boss_spells({ boss_slug, spells }))
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
     }
 }

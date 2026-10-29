@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { fetch_data, versioned } from '../api'
+import { fetch_data, fetch_versioned } from '../api'
 import { AUTO_DIFFICULTY } from '../constants'
 import { MODES } from './ui'
 import type { AppDispatch, RootState } from './store'
@@ -210,15 +210,15 @@ async function _load_spec_rankings(
     boss_slug: string,
     difficulty: string,
     metric: string = ""
-): Promise<Fight[]> {
+): Promise<Fight[] | null> {
 
     const query = new URLSearchParams({
         difficulty: difficulty,
         metric: metric,
     })
 
-    const url = versioned(`/spec_ranking/${spec_slug}/${boss_slug}?${query.toString()}`);
-    const spec_ranking: SpecRanking = await fetch_data(url);
+    const spec_ranking: SpecRanking | null = await fetch_versioned(`/spec_ranking/${spec_slug}/${boss_slug}?${query.toString()}`);
+    if (!spec_ranking) { return null }  // Game Version changed meanwhile
 
     // unpack the fights
     let fights: Fight[] = []
@@ -247,9 +247,9 @@ async function _load_spec_rankings(
 async function _load_comp_rankings(
     boss_slug: string,
     search = ""
-): Promise<Fight[]> {
-    const url = versioned(`/comp_ranking/${boss_slug}${search}`);
-    const comp_rankings: CompRanking = await fetch_data(url);
+): Promise<Fight[] | null> {
+    const comp_rankings: CompRanking | null = await fetch_versioned(`/comp_ranking/${boss_slug}${search}`);
+    if (!comp_rankings) { return null }  // Game Version changed meanwhile
 
     // unpack the fights
     let fights: Fight[] = []
@@ -273,7 +273,7 @@ export function load_fights(
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
 
         // load
-        let fights: Fight[] = []
+        let fights: Fight[] | null = []
         switch (mode) {
             case MODES.SPEC_RANKING:
                 fights = await _load_spec_rankings(spec_slug, boss_slug, difficulty, metric)
@@ -286,7 +286,7 @@ export function load_fights(
         } // switch
 
         // set
-        dispatch(set_fights(fights))
+        fights && dispatch(set_fights(fights))
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
     } // async dispatch
 }

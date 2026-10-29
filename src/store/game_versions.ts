@@ -2,12 +2,17 @@
     Store to manage the available Game Versions (Retail, Mists, ...).
 
     One backend serves all of them (versioned routes: `/api/{game_version}/...`, see `versioned` in api.ts).
-    All data in the store is specific to the current Game Version: switching reloads the page.
+    All data in the store is specific to the current Game Version: switching clears it (see `store.ts`)
+    and the `GlobalDataLoader` loads it again.
 */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type GameVersion from '../types/game_version'
 import { AppDispatch, RootState } from './store'
 import { fetch_data, get_game_version_name, set_game_version_name } from '../api'
+
+
+/** Action type that makes the root reducer drop all Game Version specific data. */
+export const SWITCH_GAME_VERSION = "game_versions/switch"
 
 
 type GameVersionsSlice = {
@@ -31,6 +36,13 @@ export function get_game_versions(state: RootState): GameVersion[] {
 /** The Game Version we currently show data for. */
 export function get_current_game_version(state: RootState): GameVersion | undefined {
     return state.game_versions.game_versions.find(version => version.name == state.game_versions.current)
+}
+
+
+/** The Game Version a Warcraft Logs game version id (eg.: of a User Report) belongs to. */
+export function get_game_version_by_wcl_id(state: RootState, wcl_game_version?: number): GameVersion | undefined {
+    if (wcl_game_version === undefined) { return undefined }
+    return state.game_versions.game_versions.find(version => version.wcl_game_version == wcl_game_version)
 }
 
 
@@ -62,6 +74,11 @@ const SLICE = createSlice({
     initialState: INITIAL_STATE,
 
     reducers: {
+        /** Request data of another Game Version. */
+        switch: (state, action: PayloadAction<string>) => {
+            state.current = action.payload
+        },
+
         set_game_versions: (state, action: PayloadAction<GameVersion[]>) => {
             state.game_versions = action.payload
 
@@ -105,11 +122,17 @@ export function load_game_versions() {
 }
 
 
-/** Switch to another Game Version. All data is specific to it, so we reload (on `target`, the home page by default). */
-export function switch_game_version(game_version: GameVersion, target: string = "/") {
+/**
+ * Switch to another Game Version, without reloading the page.
+ * All data in the store is specific to it: it is dropped and the `GlobalDataLoader` loads the new one.
+ * Navigating to `target` (if any) is up to the caller.
+ */
+export function switch_game_version(game_version: GameVersion) {
 
-    if (game_version.name == get_game_version_name()) { return }
+    return (dispatch: AppDispatch) => {
+        if (game_version.name == get_game_version_name()) { return }
 
-    set_game_version_name(game_version.name)
-    window.location.assign(target)
+        set_game_version_name(game_version.name)  // before the dispatch: requests from now on are for the new one
+        dispatch(SLICE.actions.switch(game_version.name))
+    }
 }

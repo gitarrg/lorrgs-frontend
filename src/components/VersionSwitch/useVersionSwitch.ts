@@ -1,6 +1,6 @@
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { get_current_game_version, get_game_versions, switch_game_version } from "../../store/game_versions"
-import { useAppSelector } from "../../store/store_hooks"
+import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import type GameVersion from "../../types/game_version"
 
 /** display names + order (the icon is picked by the same name, see WowLogo) */
@@ -26,13 +26,18 @@ export function useVersionSwitch() {
     const current = versions.find(version => version.name == current_version?.name)
 
     const { pathname, search } = useLocation()
+    const navigate = useNavigate()
+    const dispatch = useAppDispatch()
 
     // stay on the current page, only the game version changes
     let target = "/"
     if (pathname.startsWith("/spec_ranking/") && spec_slug) { target = `/spec_ranking/${spec_slug}/random` }  // same spec, any boss
     if (pathname.startsWith("/user_report/")) { target = `${pathname}${search}` }  // same report
     // home: "/"
-    const switch_to = (version: GameVersion) => switch_game_version(version, target)
+    const switch_to = (version: GameVersion) => {
+        dispatch(switch_game_version(version))
+        navigate(target)
+    }
 
     return { versions, current, switch_to }
 }
