@@ -7,6 +7,7 @@ export default interface Role {
     specs: string[]
     spec_ids?: number[]
     metrics: string[]
+    playable: boolean
     icon_path: string
 
 }

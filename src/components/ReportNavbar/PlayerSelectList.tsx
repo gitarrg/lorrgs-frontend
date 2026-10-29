@@ -4,11 +4,24 @@ import SelectGrid from './SelectGrid/SelectGrid'
 import type Actor from '../../types/actor'
 import type Role from '../../types/role'
 import { SelectGroup } from './SelectGrid/SelectGroup'
-import { get_roles } from '../../store/roles'
+import { get_player_roles } from '../../store/roles'
 import { get_user_report_players } from  '../../store/user_reports'
 import { group_by } from '../../utils'
 import { useAppSelector } from '../../store/store_hooks'
 import { get_specs } from '../../store/specs'
+import { ASSETS } from '../../constants'
+
+
+/** Group for players whose spec we don't know. */
+const UNKNOWN_ROLE: Role = {
+    id: 0,
+    code: "unknown",
+    name: "Unknown",
+    specs: [],
+    metrics: [],
+    playable: true,
+    icon_path: `${ASSETS}/images/roles/mix.jpg`,
+}
 
 
 function RoleGroup({role, players} : {role: Role, players: Actor[]}) {
@@ -25,17 +38,17 @@ function RoleGroup({role, players} : {role: Role, players: Actor[]}) {
 export default function PlayerSelectList() {
 
     const players = useAppSelector(get_user_report_players)
-    const roles = useAppSelector(get_roles)
+    const roles = useAppSelector(get_player_roles)
     const specs = useAppSelector(get_specs)
     if (players.length == 0) { return null }
 
-    const players_by_role = group_by(players, (player: Actor) => specs[player.spec_slug]?.role || "mix")
+    const players_by_role = group_by(players, (player: Actor) => specs[player.spec_slug]?.role || UNKNOWN_ROLE.code)
 
 
     // Render
     return (
         <SelectGrid title="Players:">
-            {Object.values(roles).map(role =>
+            {[...roles, UNKNOWN_ROLE].map(role =>
                 <RoleGroup key={role.code} role={role} players={players_by_role[role.code]} />
             )}
         </SelectGrid>

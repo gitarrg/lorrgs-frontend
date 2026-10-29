@@ -19,7 +19,7 @@ export const get_player_roles = createSelector(
     get_roles,
     (roles_map) => {
         const roles = Object.values(roles_map)
-        return roles.filter(role => role.id < 1000)
+        return roles.filter(role => role.playable)
     }
 )
 
@@ -53,6 +53,7 @@ function create_placeholder_role(name: string, num_specs: number) {
         specs: specs,
         spec_ids: [],
         metrics: [],
+        playable: true,
         icon_path: LOGO_URL,
     }
 }

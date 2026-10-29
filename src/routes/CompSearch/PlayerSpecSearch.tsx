@@ -2,6 +2,7 @@ import CountFilterGroup from './SearchCountInput'
 import FormGroup from './FormGroup'
 import type Role from '../../types/role'
 import { get_spec } from '../../store/specs'
+import { get_player_roles } from '../../store/roles'
 import { useAppSelector } from '../../store/store_hooks'
 
 
@@ -31,8 +32,7 @@ function create_spec_search_input_for_role(role: Role) {
 
 export default function PlayerSpecSearch({className = ""}) {
 
-    let roles_map = useAppSelector(state => state.roles)
-    let roles = Object.values(roles_map).filter(role => role.id < 1000)
+    const roles = useAppSelector(get_player_roles)
 
     return (
         <div className={className}>
