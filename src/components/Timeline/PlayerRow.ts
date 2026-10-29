@@ -28,6 +28,9 @@ export default class PlayerRow {
     foreground: Player
     background: PlayerRowBackground
 
+    // latest payload per event received while hidden
+    _pending_events: Map<string, any> = new Map()
+
     constructor(fight: Fight, player: Actor) {
         this.duration = Math.ceil(fight.duration / 1000); // ms to s
 
@@ -73,21 +76,35 @@ export default class PlayerRow {
         this.visible(visible)
     }
 
-    handle_event(event_name: string, payload: any) {
-        if (event_name === EVENT_APPLY_FILTERS) {
-            this._handle_apply_filters(payload)
-            if (!this.visible()) { return }
-        }
-
-        // events that only concern phase markers / the ruler: no need to walk every cast
-        if (
-            event_name === EVENT_PHASE_HOVER ||
-            event_name === EVENT_ANCHOR_CHANGED ||
-            event_name === EVENT_APPLY_FILTERS
-        ) { return }
-
+    _handle_visible_event(event_name: string, payload: any) {
         // the background only depends on the zoom
         if (event_name === EVENT_ZOOM_CHANGE) { this.background.handle_event(event_name, payload) }
         this.foreground.handle_event(event_name, payload)
+    }
+
+    _replay_pending_events() {
+        const pending = this._pending_events
+        this._pending_events = new Map()
+        pending.forEach((payload, event_name) => this._handle_visible_event(event_name, payload))
+    }
+
+    handle_event(event_name: string, payload: any) {
+        if (event_name === EVENT_APPLY_FILTERS) {
+            this._handle_apply_filters(payload)
+            if (this.visible()) { this._replay_pending_events() }
+            return
+        }
+
+        // events that only concern phase markers / the ruler: no need to walk every cast
+        if (event_name === EVENT_PHASE_HOVER || event_name === EVENT_ANCHOR_CHANGED) { return }
+
+        // hidden: remember the latest payload and replay once visible again
+        if (!this.visible()) {
+            this._pending_events.delete(event_name)
+            this._pending_events.set(event_name, payload)
+            return
+        }
+
+        this._handle_visible_event(event_name, payload)
     }
 }

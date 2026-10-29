@@ -254,7 +254,9 @@ export default class Cast extends Konva.Group {
 
     _handle_spell_display(payload: { [key: number]: boolean }) {
         const visible = payload[this.spell_id] !== false
+        const was_visible = this.visible()
         this.visible(visible)
+        if (visible && !was_visible) { this.update_style() }
     }
 
     _handle_spell_selected(payload: number[]) {

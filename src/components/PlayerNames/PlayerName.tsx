@@ -88,7 +88,7 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     const mode = useAppSelector((state) => state.ui.mode);
     const filters = useAppSelector((state) => state.ui.filters);
     const spec = useAppSelector((state) => get_spec(state, player.spec_slug));
-    const role = useAppSelector((state) => get_role(state, spec.role));
+    const role = useAppSelector((state) => get_role(state, spec?.role ?? ""));
     const mode_spec = mode == MODES.SPEC_RANKING;
     const mode_comp = mode == MODES.COMP_RANKING;
 
@@ -121,13 +121,13 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     return (
         <div className={`${styles.player_name} ${className}`}>
             <a target="_blank" href={report_url}>
-                {mode_comp && <img className={styles.icon} src={role.icon_path}></img>}
+                {mode_comp && role?.icon_path && <img className={styles.icon} src={role.icon_path}></img>}
                 <WebpImg className={styles.icon} src={spec.icon_path} />
 
                 <span className={styles.name}>{player.name.substring(0, MAX_CHAR_NAME)}</span>
                 <span className={styles.copy}><CopyAsNoteButton fight={fight} player={player} /></span>
-                {mode_spec && player.rank && <span className={styles.rank}>#{player.rank}</span>}
-                {player.total && <span className={styles.total}>{kFormatter(player.total)}</span>}
+                {mode_spec && !!player.rank && <span className={styles.rank}>#{player.rank}</span>}
+                {!!player.total && <span className={styles.total}>{kFormatter(player.total)}</span>}
             </a>
         </div>
     );

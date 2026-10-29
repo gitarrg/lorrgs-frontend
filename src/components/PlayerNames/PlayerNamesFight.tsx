@@ -1,9 +1,7 @@
-import FILTERS from "../../filter_logic";
 import styles from "./PlayerName.module.scss"
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 import { FightInfo } from "./FightInfo";
-import { useAppSelector } from "../../store/store_hooks";
 import { PlayerName, BossName} from "./PlayerName"
 
 
@@ -24,11 +22,7 @@ function create_players(fight: Fight) {
 
 
 
-export default function PlayerNamesFight( {i, fight} : {i: number, fight: Fight} ) {
-
-    const filters = useAppSelector(state => state.ui.filters)
-    const visible = FILTERS.is_fight_visible(fight, filters)
-    if (!visible) { return null}
+export default function PlayerNamesFight( {fight} : {fight: Fight} ) {
 
     return (
         <div className={styles.fight}>

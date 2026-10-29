@@ -1,3 +1,4 @@
+import { get_spec } from "./store/specs"
 import { get_spell_display } from "./store/spells"
 import store from "./store/store"
 import type { FilterValues } from "./store/ui"
@@ -61,6 +62,9 @@ function player_has_visible_casts(player: Actor): boolean {
 function is_player_visible(player: Actor, filters: FilterValues) {
 
     if (player.pinned) { return true }
+
+    // players without a known spec are not shown (the boss lane has no spec)
+    if (player.class_slug != "boss" && !get_spec(store.getState(), player.spec_slug)) { return false }
 
     // TODO: is this still used?
     if (filters["role"][player.role] === false) { return false }
