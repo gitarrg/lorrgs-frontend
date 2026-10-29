@@ -11,7 +11,13 @@ Note:
 import Player from "./Player"
 import PlayerRowBackground from "./PlayerRowBackground"
 import filter_logic from "../../filter_logic";
-import { EVENT_APPLY_FILTERS, LINE_HEIGHT } from "./constants";
+import {
+    EVENT_ANCHOR_CHANGED,
+    EVENT_APPLY_FILTERS,
+    EVENT_PHASE_HOVER,
+    EVENT_ZOOM_CHANGE,
+    LINE_HEIGHT
+} from "./constants";
 import type Fight from "../../types/fight";
 import type Actor from "../../types/actor";
 
@@ -34,7 +40,7 @@ export default class PlayerRow {
     // Attributes
     //
 
-    visible(value? :boolean) {
+    visible(value?: boolean) {
 
         if (value !== undefined) {
             this.background.visible(value)
@@ -43,7 +49,7 @@ export default class PlayerRow {
         return this.foreground.visible()
     }
 
-    height() : number {
+    height(): number {
         return this.visible() ? LINE_HEIGHT : 0;
     }
 
@@ -68,11 +74,20 @@ export default class PlayerRow {
     }
 
     handle_event(event_name: string, payload: any) {
-        if (event_name === EVENT_APPLY_FILTERS ) {
+        if (event_name === EVENT_APPLY_FILTERS) {
             this._handle_apply_filters(payload)
             if (!this.visible()) { return }
         }
-        this.background.handle_event(event_name, payload)
+
+        // events that only concern phase markers / the ruler: no need to walk every cast
+        if (
+            event_name === EVENT_PHASE_HOVER ||
+            event_name === EVENT_ANCHOR_CHANGED ||
+            event_name === EVENT_APPLY_FILTERS
+        ) { return }
+
+        // the background only depends on the zoom
+        if (event_name === EVENT_ZOOM_CHANGE) { this.background.handle_event(event_name, payload) }
         this.foreground.handle_event(event_name, payload)
     }
 }
