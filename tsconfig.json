@@ -12,7 +12,7 @@
         "skipLibCheck": true,
         "jsx": "react-jsx", // Support JSX in .tsx files
         "types": ["vite/client"],
-        "moduleResolution": "node"
+        "moduleResolution": "bundler"
     },
 
     "include": [
