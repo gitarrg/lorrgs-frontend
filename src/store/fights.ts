@@ -1,6 +1,7 @@
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { fetch_data, versioned } from '../api'
+import { AUTO_DIFFICULTY } from '../constants'
 import { MODES } from './ui'
 import type { AppDispatch, RootState } from './store'
 import type Actor from '../types/actor';
@@ -264,7 +265,7 @@ async function _load_comp_rankings(
 
 export function load_fights(
     mode: string,
-    { boss_slug, spec_slug = "", difficulty = "mythic", metric = "dps", search = "" }: { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
+    { boss_slug, spec_slug = "", difficulty = AUTO_DIFFICULTY, metric = "dps", search = "" }: { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
 ) {
 
     return async (dispatch: AppDispatch) => {

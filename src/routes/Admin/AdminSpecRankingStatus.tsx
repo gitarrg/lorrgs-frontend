@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { fetch_data, versioned } from "../../api"
+import { AUTO_DIFFICULTY } from "../../constants"
 import Icon from "../../components/shared/Icon"
 import { get_bosses } from "../../store/bosses"
 import { get_player_roles, get_role, get_specs_for_role } from "../../store/roles"
@@ -58,7 +59,7 @@ function Cell({ spec, boss }: { spec: Spec, boss: Boss }) {
 
             ; (async () => {
                 setLoading(true)
-                const data = await fetch_data(url, { difficulty: "mythic" })
+                const data = await fetch_data(url, { difficulty: AUTO_DIFFICULTY })
                 if (cancelled) return
                 if (isFetchError(data)) {
                     setInfo(null)
