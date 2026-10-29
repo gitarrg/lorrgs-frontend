@@ -41,30 +41,12 @@ export default class Player extends Konva.Group {
 
     layout_children() {
 
-        this.casts.forEach(cast => {
+        // Rebuild the child list in one pass instead of moveToTop() per cast (O(n) each).
+        // Casts are sorted by time, so adding them in order fixes overlaps; deaths and resurrections go on top.
+        const visible_casts = this.casts.filter(cast => cast.spell && cast.visible())
 
-            if (cast.spell && cast.visible()) {
-
-                // add cast if its not added yet
-                if (cast.getParent() == undefined) {
-                    this.add(cast)
-                }
-
-                // move one after the other to the top/
-                // assuming they are sorted by time.. this should fix overlaps
-                cast.moveToTop()
-
-            } else { // dont show
-
-                // remove cast if its currently added
-                if (cast.getParent() != undefined) {
-                    cast.remove()
-                }
-            }
-        })
-
-        this.deaths.forEach(event => { this.add(event) })
-        this.resurrections.forEach(event => { this.add(event) })
+        this.removeChildren()
+        this.add(...visible_casts, ...this.deaths, ...this.resurrections)
     }
 
     schedule_cache() {
