@@ -10,10 +10,21 @@
     justify-content: center;
 }
 
+// two equal halves: the gap between the columns always sits at the page center
 .center {
-    gap: 1rem;
-    display: flex;
-	flex-wrap: wrap;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2rem;
+    row-gap: 1rem;
+
+    @media (max-width: 1100px) {
+        grid-template-columns: 1fr;
+
+        .col_left, .col_right {
+            justify-self: center;
+        }
+    }
 }
 
 
@@ -32,7 +43,12 @@
 
 .col_left {
     max-width: 510px;
-    justify-content: space-between;
+    justify-self: end;
+}
+
+.col_right {
+    justify-self: start;
+    min-width: 0;
 }
 
 
