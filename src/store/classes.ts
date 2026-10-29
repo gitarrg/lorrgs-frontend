@@ -1,7 +1,7 @@
 import type Class from "../types/class"
 import { AppDispatch, RootState } from "./store"
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
-import { fetch_data } from "../api"
+import { fetch_data, versioned } from "../api"
 import { sort_spell_types } from "./spells"
 import { ASSETS } from "../constants"
 
@@ -79,7 +79,7 @@ export function load_classes() {
         dispatch({ type: "ui/set_loading", payload: { key: "classes", value: true } })
 
         // Request
-        const repsonce = await fetch_data("/api/classes");
+        const repsonce = await fetch_data(versioned("/classes"));
         dispatch(SLICE.actions.set_classes(repsonce))
 
         dispatch({ type: "ui/set_loading", payload: { key: "classes", value: false } })

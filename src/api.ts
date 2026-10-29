@@ -6,36 +6,42 @@ import { BACKEND_URL } from "./constants"
 const PRINT_REQUEST_TIMES = true
 
 /*
-    Each Game Version is served by its own backend.
-    The chosen one is remembered across reloads and picked up synchronously on startup,
-    so no request is sent to the wrong backend.
+    One backend serves every Game Version: versioned routes live under `/api/{game_version}/...`.
+    The chosen Game Version is remembered across reloads and picked up synchronously on startup.
 */
-const BACKEND_URL_STORAGE_KEY = "lorrgs_backend_url"
+const GAME_VERSION_STORAGE_KEY = "lorrgs_game_version"
+export const DEFAULT_GAME_VERSION = "retail"
 
 
-function read_stored_backend_url(): string | null {
+function read_stored_game_version(): string | null {
     try {
-        return localStorage.getItem(BACKEND_URL_STORAGE_KEY) || null
+        return localStorage.getItem(GAME_VERSION_STORAGE_KEY) || null
     } catch {
         return null // storage can be unavailable (private mode, blocked site data)
     }
 }
 
-let backend_url: string = read_stored_backend_url() || BACKEND_URL
+let game_version_name: string = read_stored_game_version() || DEFAULT_GAME_VERSION
 
 
-/** Base url of the backend we currently talk to. */
-export function get_backend_url(): string {
-    return backend_url
+/** Name of the Game Version we currently request data for. */
+export function get_game_version_name(): string {
+    return game_version_name
 }
 
 
-/** Talk to another backend from now on and remember it. `null` goes back to the default one. */
-export function set_backend_url(url: string | null) {
-    backend_url = url || BACKEND_URL
+/** Request data for another Game Version from now on and remember it. */
+export function set_game_version_name(name: string) {
+    game_version_name = name
     try {
-        url ? localStorage.setItem(BACKEND_URL_STORAGE_KEY, url) : localStorage.removeItem(BACKEND_URL_STORAGE_KEY)
+        localStorage.setItem(GAME_VERSION_STORAGE_KEY, name)
     } catch { /* nothing to remember it with */ }
+}
+
+
+/** Path of a versioned route (roles, classes, specs, spells, zones, bosses, seasons, spec_ranking, comp_ranking). */
+export function versioned(path: string): string {
+    return `/api/${game_version_name}${path}`
 }
 
 
@@ -48,7 +54,7 @@ export async function fetch_data(url: string, params = {}) {
         }
     }
 
-    url = backend_url + url
+    url = BACKEND_URL + url
     const console_key = `request: ${url}`
 
     PRINT_REQUEST_TIMES && console.time(console_key)

@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { createSelector } from 'reselect'
 import type Role from '../types/role'
 import { AppDispatch, RootState } from './store'
-import { fetch_data } from '../api'
+import { fetch_data, versioned } from '../api'
 import { LOGO_URL, ASSETS } from '../constants'
 
 
@@ -97,7 +97,7 @@ export function load_roles() {
         dispatch({ type: "ui/set_loading", payload: { key: "roles", value: true } })
 
         // request
-        let roles_map: { roles: Role[] } = await fetch_data("/api/roles")
+        let roles_map: { roles: Role[] } = await fetch_data(versioned("/roles"))
         let roles = roles_map.roles // take array from dict
         roles.sort((a, b) => (a.id > b.id) ? 1 : -1)
 

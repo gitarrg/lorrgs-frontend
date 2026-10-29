@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { fetch_data } from "../../api"
+import { fetch_data, versioned } from "../../api"
 import Icon from "../../components/shared/Icon"
 import { get_bosses } from "../../store/bosses"
 import { get_player_roles, get_role, get_specs_for_role } from "../../store/roles"
@@ -53,7 +53,7 @@ function Cell({ spec, boss }: { spec: Spec, boss: Boss }) {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        const url = `/api/spec_ranking/${spec.full_name_slug}/${boss.full_name_slug}/info`
+        const url = versioned(`/spec_ranking/${spec.full_name_slug}/${boss.full_name_slug}/info`)
         let cancelled = false
 
             ; (async () => {

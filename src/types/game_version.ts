@@ -1,16 +1,13 @@
 export default interface GameVersion {
 
-    /** unique id (e.g. "retail", "mists", "classic", "forever") */
+    /** unique id (e.g. "retail", "mists", "forever") */
     name: string
 
     /** display name */
     title: string
 
-    /** base url of the backend serving this game version (empty: not reachable from here) */
-    api_url: string
-
-    /** whether the backend we are connected to serves this game version */
-    active: boolean
+    /** Warcraft Logs game version id: a User Report's `game_version` refers to it */
+    wcl_game_version: number
 
     /** show only the selected raid expanded in the navbar (for game versions with many raids). Default: false */
     collapse_raids?: boolean

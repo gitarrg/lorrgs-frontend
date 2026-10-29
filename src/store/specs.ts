@@ -2,7 +2,7 @@ import type Spec from "../types/spec"
 import type { RootState, AppDispatch } from './store'
 import { ASSETS } from '../constants'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { fetch_data } from '../api'
+import { fetch_data, versioned } from '../api'
 import { group_spells_by_type } from './store_utils'
 
 
@@ -100,7 +100,7 @@ export function load_specs() {
         dispatch({ type: "ui/set_loading", payload: { key: "specs", value: true } })
 
         // Request
-        const specs_dict = await fetch_data("/api/specs");
+        const specs_dict = await fetch_data(versioned("/specs"));
         const specs = specs_dict.specs || []
 
         dispatch(SLICE.actions.set_specs(specs))
@@ -116,7 +116,7 @@ export function load_spec_spells(spec_slug: string) {
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: true } })
 
         // Request
-        const spells = await fetch_data(`/api/specs/${spec_slug}/spells`);
+        const spells = await fetch_data(versioned(`/specs/${spec_slug}/spells`));
 
         dispatch(SLICE.actions.set_spec_spells({ spec_slug, spells }))
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })

@@ -1,6 +1,6 @@
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { fetch_data } from '../api'
+import { fetch_data, versioned } from '../api'
 import { MODES } from './ui'
 import type { AppDispatch, RootState } from './store'
 import type Actor from '../types/actor';
@@ -216,7 +216,7 @@ async function _load_spec_rankings(
         metric: metric,
     })
 
-    const url = `/api/spec_ranking/${spec_slug}/${boss_slug}?${query.toString()}`;
+    const url = versioned(`/spec_ranking/${spec_slug}/${boss_slug}?${query.toString()}`);
     const spec_ranking: SpecRanking = await fetch_data(url);
 
     // unpack the fights
@@ -247,7 +247,7 @@ async function _load_comp_rankings(
     boss_slug: string,
     search = ""
 ): Promise<Fight[]> {
-    const url = `/api/comp_ranking/${boss_slug}${search}`;
+    const url = versioned(`/comp_ranking/${boss_slug}${search}`);
     const comp_rankings: CompRanking = await fetch_data(url);
 
     // unpack the fights
