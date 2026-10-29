@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { get_default_boss } from "../../store/bosses"
 import { get_player_roles } from '../../store/roles'
 import { get_spec } from '../../store/specs'
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { useAppSelector } from '../../store/store_hooks'
 import Icon from '../../components/shared/Icon'
 import styles from "./IndexSpecs.module.scss"

@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router"
 import { get_current_game_version, get_game_versions, switch_game_version } from "../../store/game_versions"
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import type GameVersion from "../../types/game_version"

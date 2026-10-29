@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router';
 import { get_spec } from "../../store/specs";
 import { useAppSelector } from '../../store/store_hooks';
 import WebpImg from '../WebpImg';

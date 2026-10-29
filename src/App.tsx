@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router';
 import { createRoot } from "react-dom/client";
 import { Provider } from 'react-redux'
 import { StrictMode, lazy, Suspense } from "react"

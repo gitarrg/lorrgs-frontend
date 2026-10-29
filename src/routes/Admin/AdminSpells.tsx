@@ -1,7 +1,7 @@
 import { get_roles } from "../../store/roles"
 import { get_spec, load_spec_spells } from "../../store/specs"
 import { useAppSelector } from "../../store/store_hooks"
-import { NavLink, Route, Routes, useParams } from "react-router-dom"
+import { NavLink, Route, Routes, useParams } from "react-router"
 import { get_spell } from "../../store/spells";
 import Spec from "../../types/spec";
 import { useDispatch } from 'react-redux'

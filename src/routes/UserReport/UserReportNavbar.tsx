@@ -1,5 +1,5 @@
 import styles from "./UserReportNavbar.module.scss"
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router'
 import { get_report_id } from '../../store/user_reports'
 import { useAppSelector } from '../../store/store_hooks'
 

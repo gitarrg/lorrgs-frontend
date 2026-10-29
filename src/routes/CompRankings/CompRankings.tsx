@@ -1,6 +1,6 @@
 import { useDispatch, batch } from "react-redux";
 import { useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router";
 import { useTitle } from "react-use";
 
 import { get_boss, load_boss_spells } from "../../store/bosses";

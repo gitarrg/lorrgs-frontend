@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router';
 
 import type Boss from "../../types/boss"
 import type Spec from "../../types/spec"

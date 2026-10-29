@@ -5,7 +5,7 @@ import { get_user_report, load_report_overview } from '../../store/user_reports'
 import { load_spec_spells } from '../../store/specs'
 import { useAppDispatch, useAppSelector } from '../../store/store_hooks'
 import { useEffect } from 'react'
-import { useParams, useLocation } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router'
 import { useTitle } from 'react-use'
 import * as ui_store from "../../store/ui"
 import CopyNoteWindow from "../../components/CopyNoteWindow"

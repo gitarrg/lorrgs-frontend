@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import useQuery from "../../hooks/useQuery";
-import { useLocation, NavLink } from 'react-router-dom';
+import { useLocation, NavLink } from 'react-router';
 
 
 

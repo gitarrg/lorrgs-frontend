@@ -1,5 +1,5 @@
 import { DISCORD_LOGIN_URL, DISCORD_CLIENT_ID } from "../../constants"
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import style from "./LoginPage.module.scss"
 import useUser from "./useUser"
 

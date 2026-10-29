@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router';
 
 import type Boss from "../../types/boss"
 import { get_mode } from '../../store/ui';

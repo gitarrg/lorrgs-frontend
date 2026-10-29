@@ -1,5 +1,5 @@
 /* SettingsBar for Comp Reports*/
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import DisplaySettings from '../../components/SettingsBar/DisplaySettings'
 import SettingsBar from '../../components/SettingsBar/SettingsBar'
 import styles from "./CompSettingsBar.module.scss"
