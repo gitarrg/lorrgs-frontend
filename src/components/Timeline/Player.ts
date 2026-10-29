@@ -76,6 +76,14 @@ export default class Player extends Konva.Group {
         return
     }
 
+    /** Events that change how the row looks and therefore need the cache rebuilt. */
+    static REDRAW_EVENTS = new Set([
+        constants.EVENT_SPELL_DISPLAY,
+        constants.EVENT_DISPLAY_SETTINGS,
+        constants.EVENT_SPELL_SELECTED,
+        constants.EVENT_IMAGES_LOADED,
+    ])
+
     //////////////////////////////
     // Events
     //
@@ -97,6 +105,12 @@ export default class Player extends Konva.Group {
         // after cast update, so we can handle the cast visibility in there
         if (event_name === constants.EVENT_SPELL_DISPLAY) { this._handle_spell_display() }
 
-        this.schedule_cache()
+        if (event_name === constants.EVENT_ZOOM_CHANGE) {
+            this.clearCache()
+        }
+
+        if (Player.REDRAW_EVENTS.has(event_name)) {
+            this.schedule_cache()
+        }
     }
 }
