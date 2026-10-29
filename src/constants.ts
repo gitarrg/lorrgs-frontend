@@ -1,7 +1,7 @@
 
 
 export const DEBUG = import.meta.env.VITE_DEBUG
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://forever-api.lorrgs.io"  // tmp
 
 /** Backend base url for a game version */
 //@ts-format-ignore-region
