@@ -174,7 +174,9 @@ const SLICE = createSlice({
                 // of the same spec in a single fight
                 const player_id = fight.players[0]?.source_id || 0
                 const fight_key = `${fight.report_id}/${fight.fight_id}/${player_id}`
-                state.fights_by_id[fight_key] = fight
+
+                // frozen values are better for performance
+                state.fights_by_id[fight_key] = Object.freeze(fight)
                 state.fight_ids.push(fight_key)
             })
             return state
