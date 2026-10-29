@@ -16,11 +16,6 @@ export default class Ruler extends Konva.Group {
     // time in seconds
     duration: number
 
-    // anchor offset in seconds
-    offset: number
-
-
-
     private stage: Stage
     private markers: TimelineMarker[]
     private bbox: Konva.Rect
@@ -97,9 +92,8 @@ export default class Ruler extends Konva.Group {
                 stroke: this.color,
                 strokeWidth: 1,
                 transformsEnabled: "position",
+                ts: t,  // custom: current timestamp
             })
-            tick.ts = t
-
             this.add(tick)
 
             if (big) {
@@ -114,8 +108,8 @@ export default class Ruler extends Konva.Group {
                     fontFamily: "Lato",
                     fill: this.color,
                     transformsEnabled: "position",
+                    ts: t,  // custom: current timestamp
                 })
-                text.ts = t
 
                 if (t == 0) {
                     this.zero_timestamp = text
@@ -150,14 +144,14 @@ export default class Ruler extends Konva.Group {
         // update ticks
         this.find(".tick").forEach((tick, i) => {
             // tick.x(this.tick_distance * i * scale_x);
-            tick.x(tick.ts * scale_x)
+            tick.x(tick.getAttr("ts") * scale_x)
         })
 
         // update timestamps
         this.find(".timestamp").forEach((timestamp, i) => {
             // let x = this.timestamp_distance * i * scale_x
             // x += i == 0 ? 0 : -18;
-            timestamp.x(timestamp.ts * scale_x)
+            timestamp.x(timestamp.getAttr("ts") * scale_x)
         })
 
         this.bottom_line && this.bottom_line.points([this.duration * scale_x * -1, constants.LINE_HEIGHT + 0.5, this.duration * scale_x, constants.LINE_HEIGHT + 0.5])

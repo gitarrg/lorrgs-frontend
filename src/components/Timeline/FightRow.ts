@@ -12,7 +12,6 @@ import Konva from "konva";
 import PhaseMarker from "./PhaseMarker";
 import PlayerRow from "./PlayerRow";
 import type Actor from "../../types/actor";
-import type Boss from "../../types/boss";
 import type Fight from "../../types/fight";
 import type Stage from "./Stage";
 
@@ -70,7 +69,7 @@ export default class FightRow {
         this.layout_children()
     }
 
-    add_row(fight: Fight, player: Actor | Boss) {
+    add_row(fight: Fight, player: Actor) {
         const row = new PlayerRow(fight, player)
         this.rows.push(row)
 

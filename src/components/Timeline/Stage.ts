@@ -239,11 +239,11 @@ export default class Stage extends Konva.Stage {
             row.phases.forEach(phase => {
                 const phase_label = phase._get_text_label()
 
-                if (seen[phase_label]) {
+                if (seen[phase_label ?? ""]) {
                     phase.show_label(false)
                 } else {
                     phase.show_label(true)
-                    seen[phase_label] = true
+                    seen[phase_label ?? ""] = true
                 }
             })
         })

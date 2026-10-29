@@ -4,7 +4,7 @@ import { get_spec } from "../../../store/specs";
 import { get_used_spells_for_type } from "../../../store/spells";
 import { useAppSelector } from "../../../store/store_hooks";
 import ButtonGroup from "../shared/ButtonGroup";
-import SpellButton from "./SpellButton";
+import SpellButton, { get_class_slug } from "./SpellButton";
 import type Boss from "../../../types/boss";
 import type Class from "../../../types/class";
 import type Spec from "../../../types/spec";
@@ -47,7 +47,7 @@ export function SpellTypeGroup({ spell_type }: SpellTypeGroupProps) {
         return null;
     }
 
-    const name_slug = type.class?.name_slug || type.full_name_slug || type.name_slug;
+    const name_slug = get_class_slug(type);
     const className = `wow-${name_slug}`;
 
     return (

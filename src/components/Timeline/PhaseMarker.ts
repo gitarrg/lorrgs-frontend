@@ -8,6 +8,8 @@ import type Phase from "../../types/phase"
 
 export default class PhaseMarker extends EventLine {
 
+    declare event_data: Phase
+
     active: boolean = false
 
     constructor(phase_data: Phase, config: EventLineConfig = {}) {

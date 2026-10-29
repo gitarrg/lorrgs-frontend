@@ -14,5 +14,6 @@ export default interface Phase extends Event {
     /** timestamp */
     ts: number
 
-    name?: string
+    /** display name, eg.: "P2" (set in `_process_fight`) */
+    name: string
 }

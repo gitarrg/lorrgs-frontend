@@ -4,9 +4,7 @@ import PlayerEventLine from "./PlayerEventLine"
 
 export default class Resurrection extends PlayerEventLine {
 
-    get color() {
-        return "#8cff2e"
-    }
+    color = "#8cff2e"
 
     _get_text_label() {
         return "🠝 " + super._get_text_label()
