@@ -6,7 +6,7 @@
     --copynote-format-nsrt-active-color: aqua;
 
     z-index: 99;
-    
+
     display: flex;
     justify-content: center;
     align-items: center;
@@ -146,7 +146,7 @@
     min-width: 25rem;
 
     position: relative;
-    
+
     svg {
         opacity: 0.25;
         position: absolute;
@@ -154,12 +154,12 @@
         bottom: 15px;
         font-size: 1.5rem;
     }
-    
+
     textarea {
         cursor: pointer;
         background: hsl(0 0% 10%);
         color: hsl(0 0% 85%);
-        text-align:left; 
+        text-align:left;
         overflow: hidden !important;
 
         width: 100%;
@@ -169,13 +169,13 @@
         // border: none; // 1px solid #131313;
         overflow: auto;
         outline: none;
-    
+
         -webkit-box-shadow: none;
         -moz-box-shadow: none;
         box-shadow: none;
 
         user-select: all;
-    
+
         resize: none; /*remove the resize handle on the bottom right*/
     }
 
@@ -228,7 +228,7 @@
     a {
         color: hsl(32 70% 55%);
         text-decoration: underline;
-        
+
         &:hover {
             color: hsl(32 80% 65%);
             font-weight: bold;
@@ -266,7 +266,7 @@
         opacity: 0.5;
 
         cursor: pointer;
-        
+
         &:hover {
             opacity: 1.0;
         }

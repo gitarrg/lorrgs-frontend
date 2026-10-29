@@ -1,5 +1,5 @@
 import Actor from "../../types/actor"
-import EventLine from "./EventLine"
+import EventLine, { EventLineConfig } from "./EventLine"
 import type Event from "../../types/event"
 
 
@@ -12,7 +12,7 @@ export default class PlayerEventLine extends EventLine {
     player_data: Actor
 
 
-    constructor(player_data: Actor, event_data: Event, config) {
+    constructor(player_data: Actor, event_data: Event, config?: EventLineConfig) {
         super(event_data, config);
 
         // Attributes

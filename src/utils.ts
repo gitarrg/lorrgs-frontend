@@ -44,10 +44,13 @@ export function time_to_seconds(text: string) {
 /**
  * Formats a number in seconds into a time string with minutes and seconds.
  */
-export function seconds_to_time(seconds: number, { padding = true }) {
-    let text = new Date(seconds * 1000).toISOString().substr(14, 5);
-    if (!padding && text.charAt(0) === '0') { text = text.substring(1); } // remove leading 0
-    return text;
+export function seconds_to_time(seconds: number, { padding = true } = {}) {
+    // minutes keep counting past 59, so an hour reads 60:00 instead of wrapping
+    const total = Math.max(0, Math.floor(seconds))
+    const minutes = Math.floor(total / 60)
+    const text = `${String(minutes).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`
+    if (!padding && text.charAt(0) === '0') { return text.substring(1) } // remove leading 0
+    return text
 }
 
 
@@ -108,7 +111,7 @@ export function group_by<T>(list: T[], key_getter: Function) {
     const result: { [key: string | number]: T[] } = {};
     list.forEach((item) => {
         const key = key_getter(item);
-        result[key] = [...(result[key] || []), item]
+        (result[key] ||= []).push(item)
     });
     return result;
 }
@@ -129,8 +132,8 @@ export async function sleep(duration = 2000) {
 }
 
 
-export function deepMerge(obj1: object, obj2: object): object {
-    const result = { ...obj1 };
+export function deepMerge(obj1: Record<string, any>, obj2: Record<string, any>): object {
+    const result: Record<string, any> = { ...obj1 };
 
     for (let key in obj2) {
         if (obj2.hasOwnProperty(key)) {

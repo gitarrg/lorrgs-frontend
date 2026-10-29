@@ -113,11 +113,14 @@ export function load_game_versions() {
     return async (dispatch: AppDispatch) => {
 
         dispatch({ type: "ui/set_loading", payload: { key: "game_versions", value: true } })
+        try {
 
-        const game_versions = await fetch_game_versions()
+            const game_versions = await fetch_game_versions()
 
-        game_versions && dispatch(SLICE.actions.set_game_versions(game_versions))
-        dispatch({ type: "ui/set_loading", payload: { key: "game_versions", value: false } })
+            game_versions && dispatch(SLICE.actions.set_game_versions(game_versions))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "game_versions", value: false } })
+        }
     }
 }
 

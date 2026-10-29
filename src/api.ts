@@ -3,7 +3,7 @@
 import { BACKEND_URL } from "./constants"
 
 
-const PRINT_REQUEST_TIMES = true
+const PRINT_REQUEST_TIMES = false
 
 /*
     One backend serves every Game Version: versioned routes live under `/api/{game_version}/...`.
@@ -74,7 +74,7 @@ export async function fetch_data(url: string, params = {}) {
     PRINT_REQUEST_TIMES && console.timeEnd(console_key)
 
     if (!response.ok) {
-        const data = await response.json()
+        const data = await response.json().catch(() => null) // e.g. a 502 HTML page
         return {
             "status": response.status,
             "error": data?.detail || response.statusText,

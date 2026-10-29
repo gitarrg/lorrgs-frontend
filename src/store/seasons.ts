@@ -72,11 +72,14 @@ export function load_season(season_slug?: string) {
     return async (dispatch: AppDispatch) => {
 
         dispatch({ type: "ui/set_loading", payload: { key: "season", value: true } })
+        try {
 
-        // Request
-        const season_info = await fetch_versioned(`/seasons/${season_slug}`);
+            // Request
+            const season_info = await fetch_versioned(`/seasons/${season_slug}`);
 
-        season_info && dispatch(SLICE.actions.set_season(season_info))
-        dispatch({ type: "ui/set_loading", payload: { key: "season", value: false } })
+            season_info && dispatch(SLICE.actions.set_season(season_info))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "season", value: false } })
+        }
     }
 }

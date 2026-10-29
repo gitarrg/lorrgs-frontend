@@ -60,7 +60,7 @@ export default function SpecSettings() {
 
     return (<>
         <ButtonGroup name="Boss" className="wow-boss">
-            {bosses.map(name => 
+            {bosses.map(name =>
                 <BossFilterButton key={name} name={name} />
             )}
         </ButtonGroup>

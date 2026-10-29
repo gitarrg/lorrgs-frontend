@@ -33,7 +33,7 @@ export default function SpecRankings() {
 
     ////////////////////////////////////////////////////////////////////////////
     // Hooks
-    let { spec_slug, boss_slug } = useParams<{ spec_slug: string, boss_slug: string }>();
+    let { spec_slug, boss_slug } = useParams() as { spec_slug: string, boss_slug: string }; // required route segments
     const query = useQuery()
     const navigate = useNavigate()
     const zones = useAppSelector(state => get_zones(state))

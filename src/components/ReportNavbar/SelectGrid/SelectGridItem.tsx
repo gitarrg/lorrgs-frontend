@@ -1,6 +1,6 @@
 import styles from "./SelectGrid.module.scss"
 import { useFormContext, useWatch } from 'react-hook-form'
-import { useContext, useEffect } from "react";
+import { type JSX, useContext, useEffect } from "react";
 import { SelectGroupContext } from "./SelectGroup";
 import { SelectGridContext } from "./SelectGrid";
 import useUser from "../../../routes/auth/useUser";

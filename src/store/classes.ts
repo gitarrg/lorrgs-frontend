@@ -77,11 +77,13 @@ export function load_classes() {
 
     return async (dispatch: AppDispatch) => {
         dispatch({ type: "ui/set_loading", payload: { key: "classes", value: true } })
+        try {
 
-        // Request
-        const repsonce = await fetch_versioned("/classes");
-        repsonce && dispatch(SLICE.actions.set_classes(repsonce))
-
-        dispatch({ type: "ui/set_loading", payload: { key: "classes", value: false } })
+            // Request
+            const repsonce = await fetch_versioned("/classes");
+            repsonce && dispatch(SLICE.actions.set_classes(repsonce))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "classes", value: false } })
+        }
     }
 }

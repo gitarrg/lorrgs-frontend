@@ -271,23 +271,26 @@ export function load_fights(
     return async (dispatch: AppDispatch) => {
 
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
+        try {
 
-        // load
-        let fights: Fight[] | null = []
-        switch (mode) {
-            case MODES.SPEC_RANKING:
-                fights = await _load_spec_rankings(spec_slug, boss_slug, difficulty, metric)
-                break;
-            case MODES.COMP_RANKING:
-                fights = await _load_comp_rankings(boss_slug, search)
-                break;
-            default:
-                break;
-        } // switch
+            // load
+            let fights: Fight[] | null = []
+            switch (mode) {
+                case MODES.SPEC_RANKING:
+                    fights = await _load_spec_rankings(spec_slug, boss_slug, difficulty, metric)
+                    break;
+                case MODES.COMP_RANKING:
+                    fights = await _load_comp_rankings(boss_slug, search)
+                    break;
+                default:
+                    break;
+            } // switch
 
-        // set
-        fights && dispatch(set_fights(fights))
-        dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            // set
+            fights && dispatch(set_fights(fights))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+        }
     } // async dispatch
 }
 
@@ -296,16 +299,19 @@ export function load_report_fights(report_id: string, search: string = "") {
 
     return async (dispatch: AppDispatch) => {
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
+        try {
 
-        const url = `/api/user_reports/${report_id}/fights`;
-        const report_data = await fetch_data(url, search)
+            const url = `/api/user_reports/${report_id}/fights`;
+            const report_data = await fetch_data(url, search)
 
-        // insert report id (for urls)
-        report_data.fights?.forEach((fight: Fight) => {
-            fight.report_id = report_id
-        })
+            // insert report id (for urls)
+            report_data.fights?.forEach((fight: Fight) => {
+                fight.report_id = report_id
+            })
 
-        dispatch(set_fights(report_data.fights))
-        dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            dispatch(set_fights(report_data.fights))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+        }
     }
 }

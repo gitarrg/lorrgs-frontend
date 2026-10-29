@@ -74,15 +74,15 @@
     &[data-status="waiting"] {
         --color: hsl(190, 50%, 50%);
     }
-    
+
     &[data-status="in-progress"] {
         --color: hsl(40, 75%, 50%);
     }
-    
+
     &[data-status="done"] {
         --color: hsl(120, 50%, 50%);
     }
     &[data-status="failed"] {
-        --color: hsl(0, 50%, 50%); 
+        --color: hsl(0, 50%, 50%);
     }
 }

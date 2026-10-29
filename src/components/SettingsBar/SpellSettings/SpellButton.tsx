@@ -1,5 +1,4 @@
 import { MouseEvent, useContext, useEffect } from 'react'
-import { useDispatch } from 'react-redux'
 
 import styles from "./SpellButton.module.scss"
 import type Boss from '../../../types/boss'
@@ -7,7 +6,7 @@ import type Class from '../../../types/class'
 import type Spec from '../../../types/spec'
 import { ButtonGroupContext } from '../shared/ButtonGroup'
 import { get_spell, set_spell_visible, get_spell_visible } from '../../../store/spells'
-import { useAppSelector } from '../../../store/store_hooks'
+import { useAppDispatch, useAppSelector } from '../../../store/store_hooks'
 
 
 const TOOLTIP_DYNAMIC_CD = "The displayed Cooldown for this spell is not exact and only shows an estimate."
@@ -34,7 +33,7 @@ export default function SpellButton({spec, spell_id, onClick} : { spec: Spec|Bos
     ////////////////////////////////////////////////////////////////////////////
     // Hooks
     //
-    const dispatch = useDispatch()
+    const dispatch = useAppDispatch()
     const spell = useAppSelector(state => get_spell(state, spell_id))
     const visible = useAppSelector(state => get_spell_visible(state, spell_id))
     const group_context = useContext(ButtonGroupContext)

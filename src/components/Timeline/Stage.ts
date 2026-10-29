@@ -219,7 +219,7 @@ export default class Stage extends Konva.Stage {
      * Updates phase marker headers for each fight.
      * Ensures that each phase is only shown once per boss.
      * Subsequent occurrences of the same phase label are hidden.
-     * 
+     *
      * Note:
      *   for now, this is really only relevant for spec_rankings,
      *   as these use a single boss row + many player rows.

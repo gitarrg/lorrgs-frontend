@@ -188,7 +188,7 @@ export default class Cast extends Konva.Group {
     }
 
     /**
-     * @param cast_data 
+     * @param cast_data
      * @returns Boolean True if a Cast is a Proc
      */
     is_proc(cast_data: CastType) {

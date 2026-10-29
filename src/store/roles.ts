@@ -96,14 +96,17 @@ export function load_roles() {
 
     return async (dispatch: AppDispatch) => {
         dispatch({ type: "ui/set_loading", payload: { key: "roles", value: true } })
+        try {
 
-        // request
-        const roles_map: { roles: Role[] } | null = await fetch_versioned("/roles")
-        if (roles_map) {
-            let roles = roles_map.roles // take array from dict
-            roles.sort((a, b) => (a.id > b.id) ? 1 : -1)
-            dispatch(SLICE.actions.set_roles(roles))
+            // request
+            const roles_map: { roles: Role[] } | null = await fetch_versioned("/roles")
+            if (roles_map) {
+                let roles = roles_map.roles // take array from dict
+                roles.sort((a, b) => (a.id > b.id) ? 1 : -1)
+                dispatch(SLICE.actions.set_roles(roles))
+            }
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "roles", value: false } })
         }
-        dispatch({ type: "ui/set_loading", payload: { key: "roles", value: false } })
     }
 }

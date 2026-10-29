@@ -87,7 +87,7 @@ export interface FilterValues {
     class: { [key: string]: boolean }
 
     /** Filter by Region */
-    region: { [key: string]: boolean }
+    region?: { [key: string]: boolean }
 
     // Hide Player Rows if all spells are hiden.
     hide_empty_rows: boolean
@@ -169,7 +169,6 @@ const INITIAL_STATE: UiSliceState = {
         log_date: { from: null, to: null },
 
         hide_empty_rows: false,
-        spells: {},
     },
 
     tooltip: {
@@ -179,6 +178,7 @@ const INITIAL_STATE: UiSliceState = {
 
     show_copynote: false,
     copynote_player: null,
+    copynote_fight: null,
 }
 
 

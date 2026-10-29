@@ -75,7 +75,7 @@ function Button({ region }: { region: Region }) {
 
 
 /**
- * 
+ *
  *
  * @returns {ReactComponent}
  */

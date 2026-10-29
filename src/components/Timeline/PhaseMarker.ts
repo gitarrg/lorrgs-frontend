@@ -2,6 +2,8 @@ import { deepMerge } from "../../utils"
 import * as constants from "./constants"
 import EventLine, { EventLineConfig } from "./EventLine"
 import Stage from "./Stage"
+import type Konva from "konva"
+import type Phase from "../../types/phase"
 
 
 export default class PhaseMarker extends EventLine {

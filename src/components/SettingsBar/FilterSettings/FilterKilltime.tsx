@@ -1,4 +1,4 @@
-import { useDispatch } from 'react-redux'
+import { useAppDispatch } from '../../../store/store_hooks'
 import { set_filters } from '../../../store/ui'
 import ButtonGroup from '../shared/ButtonGroup'
 import DurationInputGroup from "../../shared/DurationInputGroup"
@@ -13,7 +13,7 @@ import styles from "./FilterKilltime.module.scss"
  */
 export default function FilterKilltimeGroup() {
 
-    const dispatch = useDispatch()
+    const dispatch = useAppDispatch()
 
     // Callback when values get changed
     function onChange({min, max}: {min: number, max: number}) {
@@ -22,7 +22,7 @@ export default function FilterKilltimeGroup() {
 
     // Render
     return (
-        <ButtonGroup name="Killtime" side="right">
+        <ButtonGroup name="Killtime">
             <DurationInputGroup onChange={onChange} className={styles.killtime_group} />
         </ButtonGroup>
     )

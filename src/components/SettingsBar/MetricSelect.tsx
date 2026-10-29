@@ -78,7 +78,7 @@ export default function MetricSelect() {
 
     return (
         <DropdownMenu button={button}>
-            {role?.metrics.map(metric => 
+            {role?.metrics.map(metric =>
                 <MetricMenuOption key={metric} metric_name={metric} />
             )}
         </DropdownMenu>

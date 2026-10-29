@@ -28,7 +28,7 @@ export default function UserReport() {
 
     ////////////////////////////////////////////////////////////////////////////
     // Hooks
-    const { report_id } = useParams<{report_id: string}>();
+    const { report_id } = useParams() as { report_id: string }; // required route segment
     const { search } = useLocation();
 
     const dispatch = useAppDispatch()

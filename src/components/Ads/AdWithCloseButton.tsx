@@ -7,8 +7,8 @@ import styles from "./Ads.module.scss"
 
 
 const useMutationObserver = (
-    ref,
-    callback,
+    ref: React.RefObject<Element | null>,
+    callback: MutationCallback,
     options = {
         characterData: true,
         childList: true,

@@ -29,7 +29,7 @@ function create_spell_button(name_slug: string, spec: Spec | Boss | Class, spell
 }
 
 export function SpellTypeGroup({ spell_type }: SpellTypeGroupProps) {
-    
+
     const type = get_spell_type(spell_type);
     const used_spells = useAppSelector(state => get_used_spells_for_type(state, spell_type));
     const filters = useAppSelector((state) => state.ui.filters);

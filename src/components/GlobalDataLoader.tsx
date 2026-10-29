@@ -11,7 +11,7 @@ import { useEffect } from "react";
 export default function GlobalDataLoader() {
     const dispatch = useAppDispatch();
 
-    
+
     const season = useAppSelector(get_season);
     const game_version = useAppSelector(get_current_game_version);
 

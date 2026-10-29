@@ -4,7 +4,7 @@ import { ReactNode, useRef } from 'react'
 
 export default function DropdownMenu({button, children} : {button: ReactNode, children: ReactNode}) {
 
-    const ref = useRef(null);
+    const ref = useRef<HTMLDivElement>(null);
     const [menuState, toggleMenu] = useMenuState();
 
     const callbacks = {

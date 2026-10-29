@@ -14,6 +14,7 @@ import PlayerRow from "./PlayerRow";
 import type Actor from "../../types/actor";
 import type Boss from "../../types/boss";
 import type Fight from "../../types/fight";
+import type Stage from "./Stage";
 
 
 export default class FightRow {

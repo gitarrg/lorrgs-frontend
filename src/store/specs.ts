@@ -98,11 +98,14 @@ export function load_specs() {
 
     return async (dispatch: AppDispatch) => {
         dispatch({ type: "ui/set_loading", payload: { key: "specs", value: true } })
+        try {
 
-        // Request
-        const specs_dict = await fetch_versioned("/specs");
-        specs_dict && dispatch(SLICE.actions.set_specs(specs_dict.specs || []))
-        dispatch({ type: "ui/set_loading", payload: { key: "specs", value: false } })
+            // Request
+            const specs_dict = await fetch_versioned("/specs");
+            specs_dict && dispatch(SLICE.actions.set_specs(specs_dict.specs || []))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "specs", value: false } })
+        }
     }
 }
 
@@ -112,11 +115,14 @@ export function load_spec_spells(spec_slug: string) {
     return async (dispatch: AppDispatch) => {
         const load_key = `specs/${spec_slug}`
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: true } })
+        try {
 
-        // Request
-        const spells = await fetch_versioned(`/specs/${spec_slug}/spells`);
+            // Request
+            const spells = await fetch_versioned(`/specs/${spec_slug}/spells`);
 
-        spells && dispatch(SLICE.actions.set_spec_spells({ spec_slug, spells }))
-        dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
+            spells && dispatch(SLICE.actions.set_spec_spells({ spec_slug, spells }))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
+        }
     }
 }

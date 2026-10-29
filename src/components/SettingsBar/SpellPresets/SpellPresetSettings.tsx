@@ -128,7 +128,7 @@ export function SpellPresetSettings() {
 
     return (
         <ButtonGroup name="Spell Selections">
-            {DEFAULT_SELECTIONS.map(selection => 
+            {DEFAULT_SELECTIONS.map(selection =>
                 <Button key={selection.name} selection={selection} />
             )}
         </ButtonGroup>

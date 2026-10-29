@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { shallowEqual } from "react-redux"
 import { fetch_data, versioned } from "../../api"
 import { AUTO_DIFFICULTY } from "../../constants"
 import Icon from "../../components/shared/Icon"
@@ -151,7 +152,7 @@ function SpecRow({ spec }: { spec: Spec }) {
 
 
 function RoleGroup({ role }: { role: Role }) {
-    const specs = useAppSelector((state) => get_specs_for_role(state, role.code))
+    const specs = useAppSelector((state) => get_specs_for_role(state, role.code), shallowEqual)
     return (
         <>
             {specs.map((spec) => (

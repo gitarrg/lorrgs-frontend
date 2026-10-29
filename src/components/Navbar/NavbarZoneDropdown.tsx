@@ -1,3 +1,4 @@
+import { shallowEqual } from 'react-redux';
 import { get_boss } from '../../store/bosses';
 import { useAppSelector } from '../../store/store_hooks';
 import type RaidZone from "../../types/raid_zone";
@@ -12,7 +13,7 @@ import WebpImg from '../WebpImg';
 */
 export default function NavbarZoneDropdown({ zone }: { zone: RaidZone }) {
 
-    const bosses = useAppSelector(state => zone.bosses.map(name => get_boss(state, name)))
+    const bosses = useAppSelector(state => zone.bosses.map(name => get_boss(state, name)), shallowEqual)
     const first_boss = bosses[0]
     if (!first_boss) return null
 

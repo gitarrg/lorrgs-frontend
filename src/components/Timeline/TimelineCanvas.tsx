@@ -41,7 +41,6 @@ export default function TimelineCanvas() {
     }, [mode]);
 
     useEffect(() => {
-        console.log("creating canvas", is_loading);
         if (is_loading) {
             return;
         } // not ready yet

@@ -1,4 +1,4 @@
-import { useDispatch, batch } from "react-redux";
+import { batch } from "react-redux";
 import { useEffect } from "react";
 import { useParams, useLocation } from "react-router";
 import { useTitle } from "react-use";
@@ -6,7 +6,7 @@ import { useTitle } from "react-use";
 import { get_boss, load_boss_spells } from "../../store/bosses";
 import { load_fights } from "../../store/fights";
 import { load_spec_spells } from "../../store/specs";
-import { useAppSelector } from "../../store/store_hooks";
+import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import * as ui_store from "../../store/ui";
 import CompRankingsHeader from "./CompRankingsHeader";
 import CompSettingsBar from "./CompSettingsBar";
@@ -19,8 +19,8 @@ import TimelineCanvas from "../../components/Timeline/TimelineCanvas";
 export default function CompRankings() {
     ////////////////////////////////////////////////////////////////////////////
     // Hooks
-    const { boss_slug } = useParams<{ boss_slug: string }>();
-    const dispatch = useDispatch();
+    const { boss_slug } = useParams() as { boss_slug: string }; // required route segment
+    const dispatch = useAppDispatch();
     const { search } = useLocation();
     const is_loading = useAppSelector((state) => ui_store.get_is_loading(state));
     const boss = useAppSelector((state) => get_boss(state, boss_slug));

@@ -14,6 +14,10 @@ export default interface Actor {
     name: string
     spec_slug: string
     class_slug: string
+    // also sent by the API (player summary)
+    class: string
+    spec: string
+    role: string
     total: number
     deaths: Event[]
     resurrects: Event[]
