@@ -1,3 +1,4 @@
+import { memo } from "react";
 import NavbarBossGroup from "./NavbarBossGroup";
 import NavbarSpecGroup from "./NavbarSpecGroup";
 import NavbarDifficulty from "./NavbarDifficulty";
@@ -8,7 +9,8 @@ import styles from "./Navbar.module.scss";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export default function Navbar() {
+/** memoized: takes no props, so the page's re-renders (loading flags, spell loads) don't reach it */
+function Navbar() {
     const mode: string = useAppSelector((state) => state.ui.mode);
     const has_fixed_difficulty = useAppSelector((state) => !!get_boss(state)?.difficulty);
 
@@ -22,3 +24,5 @@ export default function Navbar() {
         </div>
     );
 }
+
+export default memo(Navbar)

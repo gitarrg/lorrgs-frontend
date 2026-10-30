@@ -14,8 +14,8 @@ export default function NavbarSpecRoleButton({ role } : { role: Role} ) {
 
 
     // check if the current spec is inside this role
-    const current_spec = useAppSelector(state => get_spec(state));
-    const has_active_child = current_spec && role.specs.find(spec => spec === current_spec.full_name_slug);
+    const current_spec_slug = useAppSelector(state => get_spec(state)?.full_name_slug);
+    const has_active_child = role.specs.includes(current_spec_slug ?? "");
 
     // only mount the dropdown while hovered: it holds ~10 spec buttons per role,
     // which would otherwise re-render with every navbar update

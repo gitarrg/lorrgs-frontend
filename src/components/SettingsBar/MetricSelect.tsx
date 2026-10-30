@@ -73,8 +73,7 @@ export default function MetricSelect() {
 
     const metric = useAppSelector(get_metric)
     const button = <MetricIcon metric_name={metric} />
-    const spec = useAppSelector(get_spec)
-    const role = useAppSelector(state => get_role(state, spec?.role))
+    const role = useAppSelector(state => get_role(state, get_spec(state)?.role))
 
     return (
         <DropdownMenu button={button}>

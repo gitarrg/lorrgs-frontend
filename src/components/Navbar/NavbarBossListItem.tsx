@@ -12,11 +12,11 @@ import WebpImg from '../WebpImg';
 export default function NavbarBossListItem({ boss }: { boss: Boss }) {
 
     const mode = useAppSelector(get_mode)
-    const spec = useAppSelector(state => get_spec(state))
+    const spec_slug = useAppSelector(state => get_spec(state)?.full_name_slug)
     const { search } = useLocation();  // preserve query string
 
     return (
-        <NavLink to={`${get_link(mode, boss, spec)}${search}`}>
+        <NavLink to={`${get_link(mode, boss, spec_slug)}${search}`}>
             <WebpImg className="icon-m wow-border-boss rounded" src={boss.icon_path} alt={boss.full_name} />
             <span>{boss.full_name}</span>
         </NavLink>

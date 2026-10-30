@@ -1,4 +1,5 @@
 /* SettingsBar for Reports */
+import { memo } from "react";
 import DisplaySettings from '../../components/SettingsBar/DisplaySettings'
 import FilterSettings from '../../components/SettingsBar/FilterSettings/FilterSettings'
 import SettingsBar from '../../components/SettingsBar/SettingsBar'
@@ -7,7 +8,8 @@ import SpellSettings from '../../components/SettingsBar/SpellSettings/SpellSetti
 import { Tab, TabGroup, TabMenu } from "../../components/TabMenu"
 
 
-export default function ReportSettingsBar() {
+/** memoized: takes no props, so the page's re-renders (loading flags, spell loads) don't reach it */
+function ReportSettingsBar() {
 
     return (
         <SettingsBar>
@@ -35,3 +37,5 @@ export default function ReportSettingsBar() {
         </SettingsBar>
     )
 }
+
+export default memo(ReportSettingsBar)
