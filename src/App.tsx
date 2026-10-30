@@ -3,7 +3,6 @@ import { createRoot } from "react-dom/client";
 import { Provider } from 'react-redux'
 import { StrictMode, lazy, Suspense } from "react"
 import { HelmetProvider } from "react-helmet-async";
-import AdSenseScriptTag from "./components/Ads/AdSenseScriptTag";
 import data_store from "./store/store"
 import Footer from "./components/Footer/Footer";
 import GlobalDataLoader from "./components/GlobalDataLoader";
@@ -41,7 +40,6 @@ function App() {
 
                     <GlobalDataLoader />
                     <UserProvider />
-                    <AdSenseScriptTag />
 
                     <main className="flex-grow-1">
 
