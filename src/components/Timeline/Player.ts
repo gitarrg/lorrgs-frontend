@@ -5,6 +5,7 @@ import Konva from "konva"
 import Resurrection from "./Resurrection"
 import type Actor from "../../types/actor"
 import type PlayerRow from "./PlayerRow"
+import type Stage from "./Stage"
 
 
 export default class Player extends Konva.Group {
@@ -49,17 +50,31 @@ export default class Player extends Konva.Group {
         this.add(...visible_casts, ...this.deaths, ...this.resurrections)
     }
 
+    /** Drop the cache now and let the stage rebuild it once the browser is idle. */
     schedule_cache() {
-
         this.clearCache() // clear to make sure we update (even if eg: all children are hidden)
-        if (this.hasChildren()) {
-            this.cache() // TODO: add throttle?
-        }
-        return
+
+        const stage = this.getStage() as Stage | null
+        stage?.request_cache(this) // not on a stage: nothing to draw, nothing to cache
+    }
+
+    /**
+     * Widest cache we build, in device pixels. Konva allocates four canvases per cache,
+     * so wide ones (when zoomed in) cost a lot of memory and can hit the browser's canvas size limits.
+     * Wider rows are drawn uncached.
+     */
+    static MAX_CACHE_WIDTH = 4096
+
+    update_cache() {
+        this.clearCache()
+        if (!this.hasChildren()) { return }
+        if (this.clipWidth() * Konva.pixelRatio > Player.MAX_CACHE_WIDTH) { return }
+        this.cache()
     }
 
     /** Events that change how the row looks and therefore need the cache rebuilt. */
     static REDRAW_EVENTS = new Set([
+        constants.EVENT_ZOOM_CHANGE,
         constants.EVENT_SPELL_DISPLAY,
         constants.EVENT_DISPLAY_SETTINGS,
         constants.EVENT_SPELL_SELECTED,
@@ -86,10 +101,6 @@ export default class Player extends Konva.Group {
 
         // after cast update, so we can handle the cast visibility in there
         if (event_name === constants.EVENT_SPELL_DISPLAY) { this._handle_spell_display() }
-
-        if (event_name === constants.EVENT_ZOOM_CHANGE) {
-            this.clearCache()
-        }
 
         if (Player.REDRAW_EVENTS.has(event_name)) {
             this.schedule_cache()

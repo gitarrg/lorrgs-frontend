@@ -2,6 +2,7 @@ import * as constants from "./constants";
 import Stage from "./Stage";
 import TimelineTooltip from "./TimelineTooltip";
 import { get_fights } from "../../store/fights";
+import type Fight from "../../types/fight";
 import { get_is_loading } from "../../store/ui";
 import { useAppSelector } from "../../store/store_hooks";
 import { useRef, useEffect } from "react";
@@ -12,6 +13,7 @@ export default function TimelineCanvas() {
     //
     const ref = useRef<HTMLDivElement>(null); // container div for the canvas
     const stage_ref = useRef<Stage>(null); // canvas itself
+    const stage_fights = useRef<Fight[]>(null); // fights the stage was last built with
 
     // state vars
     const mode = useAppSelector((state) => state.ui.mode);
@@ -44,6 +46,8 @@ export default function TimelineCanvas() {
         if (is_loading) {
             return;
         } // not ready yet
+        if (fights === stage_fights.current) { return } // only a loading flag changed: no need to rebuild
+        stage_fights.current = fights
         stage_ref.current!.set_fights(fights);
 
         // initial values

@@ -1,5 +1,6 @@
 
 import Konva from "konva"
+import type { Context } from "konva/lib/Context"
 
 import * as constants from "./constants"
 import store from "./../../store/store"
@@ -67,26 +68,69 @@ function create_cast_icon(spell: Spell) {
 }
 
 
-function create_cast_text(cast: Cast) {
-    return new Konva.Text({
-        name: "cast_text",
-        text: toMMSS(cast.timestamp),
-        x: 27,
-        y: 0,
-        fontSize: 14,
+const CAST_TEXT_FONT = "14px Lato"
+const CAST_TEXT_FONT_BOLD = "bold 14px Lato"
 
-        height: constants.LINE_HEIGHT,
-        verticalAlign: 'middle',
+/** widths of already measured texts (only filled once the font is loaded, the fallback font has other widths) */
+const TEXT_WIDTHS: { [text: string]: number } = {}
+let measure_context: CanvasRenderingContext2D | null = null
 
-        fontFamily: "Lato",
-        fill: "white",
-        listening: false,
-        transformsEnabled: "position",
-    })
+function measure_text(text: string) {
+    if (TEXT_WIDTHS[text] !== undefined) { return TEXT_WIDTHS[text] }
+
+    if (!measure_context) {
+        measure_context = document.createElement("canvas").getContext("2d")!
+        measure_context.font = CAST_TEXT_FONT
+    }
+    const width = measure_context.measureText(text).width
+
+    if (document.fonts?.check(CAST_TEXT_FONT) ?? true) { TEXT_WIDTHS[text] = width }
+    return width
+}
+
+
+/**
+ * A single line of text, vertically centered in the row. Looks the same as a Konva.Text,
+ * but cheaper to create: a Konva.Text measures itself and registers ~10 listeners, which adds up over hundreds of casts.
+ */
+class CastText extends Konva.Shape {
+
+    text: string
+    private bold = false
+
+    constructor(text: string) {
+        super({
+            name: "cast_text",
+            x: 27,
+            y: 0,
+            width: measure_text(text),
+            height: constants.LINE_HEIGHT,
+            fill: "white",
+            listening: false,
+            transformsEnabled: "position",
+            perfectDrawEnabled: false,
+        })
+        this.text = text
+    }
+
+    set_bold(bold: boolean) {
+        this.bold = bold
+    }
+
+    _sceneFunc(context: Context) {
+        context.setAttr("font", this.bold ? CAST_TEXT_FONT_BOLD : CAST_TEXT_FONT)
+        context.setAttr("textBaseline", "middle")
+        context.setAttr("textAlign", "left")
+        context.setAttr("fillStyle", this.fill())
+        context.fillText(this.text, 0, this.height() / 2)
+    }
 }
 
 
 export default class Cast extends Konva.Group {
+
+    /** name of the invisible box that receives the mouse events (handled by the Stage) */
+    static MOUSE_BBOX_NAME = "cast_bbox"
 
     spell_id: number
     timestamp: number
@@ -99,7 +143,7 @@ export default class Cast extends Konva.Group {
     cast_cooldown?: Konva.Rect
     cast_duration?: Konva.Rect
     cast_icon?: Konva.Image
-    cast_text?: Konva.Text
+    cast_text?: CastText
     mouse_event_bbox?: Konva.Rect
 
     tooltip_content?: string
@@ -144,8 +188,8 @@ export default class Cast extends Konva.Group {
         this.cast_icon = create_cast_icon(this.spell)
         this.cast_icon && this.add(this.cast_icon)
 
-        this.cast_text = create_cast_text(this)
-        this.cast_text && this.add(this.cast_text)
+        this.cast_text = new CastText(toMMSS(this.timestamp))
+        this.add(this.cast_text)
 
         // Dim procs
         if ( this.is_proc(cast_data) )
@@ -158,6 +202,7 @@ export default class Cast extends Konva.Group {
         // invisible box for mouse events
         // (some casts might not have a duration-bar to use)
         this.mouse_event_bbox = new Konva.Rect({
+            name: Cast.MOUSE_BBOX_NAME,
             width: this.cast_text.width() + 3,
             height: constants.LINE_HEIGHT-1,
             listening: true,
@@ -168,13 +213,6 @@ export default class Cast extends Konva.Group {
         show = (show === undefined) ? this.spell.show : show
         this.visible(show)
         this.y(1); // for the background stroke
-
-        ////////////////////////////
-        // Setup Events
-        //
-        this.mouse_event_bbox.on('mousedown', (e) => this.handle_mousedown(e));
-        this.mouse_event_bbox.on('mouseover', () => {this.hover(true)});
-        this.mouse_event_bbox.on('mouseout', () => {this.hover(false)});
 
         // prepare the tooltip content, as it doesn't change
         this.tooltip_content = `${this.spell.name}`
@@ -213,7 +251,7 @@ export default class Cast extends Konva.Group {
         if (!stage) { return}
 
         // default state
-        this.cast_text?.fontStyle("normal");
+        this.cast_text?.set_bold(false)
         this.cast_text?.fill("white");
         this.cast_duration?.opacity(0.5)
         this.cast_cooldown?.opacity(0.1)
@@ -223,7 +261,7 @@ export default class Cast extends Konva.Group {
 
         if (stage.has_selection) {
             if (this.selected) {
-                this.cast_text?.fontStyle("bold");
+                this.cast_text?.set_bold(true)
                 this.cast_duration?.opacity(0.85)
                 this.cast_cooldown?.opacity(0.4)
             } else {

@@ -5,12 +5,33 @@ import Ruler from "./Ruler"
 import * as constants from "./constants";
 import FightRow from "./FightRow";
 import type Fight from "../../types/fight";
-import { IMAGES } from "./Cast";
+import Cast, { IMAGES } from "./Cast";
+import type Player from "./Player";
 import { MODES } from "../../store/ui";
 
 
 // for performance
 Konva.autoDrawEnabled = false;
+
+
+/** Run `callback` once the browser is idle. `has_time()` tells if there is idle time left to continue. */
+function on_idle(callback: (has_time: () => boolean) => void) {
+    const SLICE_MS = 10 // keep each slice short, so input never waits long
+
+    if (window.requestIdleCallback) {
+        window.requestIdleCallback((deadline) => {
+            const end = performance.now() + SLICE_MS
+            callback(() => performance.now() < end && (deadline.didTimeout || deadline.timeRemaining() > 1))
+        }, { timeout: 1000 })
+        return
+    }
+
+    // no requestIdleCallback (Safari)
+    setTimeout(() => {
+        const end = performance.now() + SLICE_MS
+        callback(() => performance.now() < end)
+    }, 0)
+}
 
 
 export default class Stage extends Konva.Stage {
@@ -41,6 +62,17 @@ export default class Stage extends Konva.Stage {
     /** Duration of the longest fight. Used to set things such as the the Length of the Ruler and overall width. */
     longest_fight = 0
 
+    /** Players whose cache needs rebuilding. Done in small slices while the browser is idle (see `_update_caches`). */
+    private uncached_players = new Set<Player>()
+    private cache_work_scheduled = false
+
+    /** True while spell icons are still loading: caching now would be thrown away once they are in. */
+    private images_pending = false
+
+    /** Wait this long after the last zoom step before caching: every further step would throw the caches away again. */
+    static ZOOM_SETTLE_MS = 300
+    private zoomed_at = 0
+
 
     constructor(options: StageConfig) {
         super(options);
@@ -62,6 +94,7 @@ export default class Stage extends Konva.Stage {
 
         this.main_layer = new Konva.Layer()
         this.add(this.main_layer);
+        this.main_layer.on("mouseover mouseout mousedown", (event) => this._handle_cast_mouse_event(event))
 
         this.overlay_layer = new Konva.Layer()
         this.add(this.overlay_layer);
@@ -114,9 +147,71 @@ export default class Stage extends Konva.Stage {
         this.height(y + 1) // 1 extra to show the border
     }
 
+    /**
+     * Rebuild a player's cache once the browser is idle.
+     * Until then the player is drawn uncached: it looks the same, drawing is just slower.
+     * (so several events in a row only cache once, and caching never blocks the first draw)
+     */
+    request_cache(player: Player) {
+        this.uncached_players.add(player)
+        this._schedule_cache_work()
+    }
+
+    _schedule_cache_work() {
+        if (this.cache_work_scheduled || this.images_pending) { return }
+        if (this.uncached_players.size === 0) { return }
+
+        this.cache_work_scheduled = true
+        on_idle((has_time) => {
+            this.cache_work_scheduled = false
+            this._update_caches(has_time)
+        })
+    }
+
+    _update_caches(has_time: () => boolean) {
+        if (this.images_pending) { return } // caching now would be thrown away once they are in
+
+        const settle_ms = this.zoomed_at + Stage.ZOOM_SETTLE_MS - performance.now()
+        if (settle_ms > 0) {
+            this.cache_work_scheduled = true
+            setTimeout(() => {
+                this.cache_work_scheduled = false
+                this._schedule_cache_work()
+            }, settle_ms)
+            return
+        }
+
+        let updated = false
+        for (const player of this.uncached_players) {
+            if (!has_time()) { break }
+            if (!player.isVisible()) { continue } // hidden: cache once it is shown again (see `_handle_apply_filters`)
+
+            player.update_cache()
+            this.uncached_players.delete(player)
+            updated = true
+        }
+
+        if (updated) { this.main_layer.batchDraw() }
+
+        // more visible players left: continue in the next idle period
+        for (const player of this.uncached_players) {
+            if (player.isVisible()) { return this._schedule_cache_work() }
+        }
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // STANDARD EVENTS
     //
+
+    /** One listener for all casts, instead of three on each of them. */
+    _handle_cast_mouse_event(event: Konva.KonvaEventObject<MouseEvent>) {
+        if (event.target.name() !== Cast.MOUSE_BBOX_NAME) { return }
+        const cast = event.target.getParent() as Cast
+
+        if (event.type === "mouseover") { cast.hover(true) }
+        if (event.type === "mouseout") { cast.hover(false) }
+        if (event.type === "mousedown") { cast.handle_mousedown(event) }
+    }
 
     contextmenu(event: Konva.KonvaEventObject<MouseEvent>) {
         event.evt.preventDefault();
@@ -171,6 +266,7 @@ export default class Stage extends Konva.Stage {
 
         ////////////////////////////////////
         // update scale
+        this.zoomed_at = performance.now()
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
     }
 
@@ -192,11 +288,13 @@ export default class Stage extends Konva.Stage {
             return
         }
         // update now
+        this.images_pending = false
         this.handle_event(constants.EVENT_IMAGES_LOADED)
     }
 
     _handle_apply_filters() {
         this.layout_children()
+        this._schedule_cache_work() // players that just became visible might still need their cache
     }
 
     handle_event(event_name: string, payload?: any) {
@@ -262,19 +360,24 @@ export default class Stage extends Konva.Stage {
 
         this.longest_fight = 0
         this.rows = []
+        this.uncached_players.clear()
+        this.images_pending = true // until EVENT_CHECK_IMAGES_LOADED below says otherwise
 
         // create fresh instances
         new_fights.forEach((fight) => {
             const row = new FightRow(fight)
-            this.back_layer.add(row.background)
-            this.main_layer.add(row.foreground)
-            this.overlay_layer2.add(row.overlay)
             this.longest_fight = Math.max(this.longest_fight, row.duration)
-
             this.rows.push(row)
         })
 
+        // resize before adding the rows: Konva redraws every layer on resize, and the new rows aren't cached yet
         this.layout_children()
+
+        this.rows.forEach(row => {
+            this.back_layer.add(row.background)
+            this.main_layer.add(row.foreground)
+            this.overlay_layer2.add(row.overlay)
+        })
 
         this.ruler.update_duration(this.longest_fight)
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
