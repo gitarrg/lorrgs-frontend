@@ -77,25 +77,17 @@ function Button({selection} : {selection: SpellSelection}) {
     const group_context = useContext(ButtonGroupContext)
 
 
-    // Handle Simple Click
-    function onClick() {
-        setSelected(!selected)
-    }
-
-    // Handle Group Header Click
-    useEffect(() => {
-        if (group_context.source !== "group") { return}
-        setSelected(group_context.active)
-    }, [group_context.active])
-
-    // Handle "selection"-state --> spell disply
-    useEffect(() => {
+    // Apply the "selection"-state --> spell display.
+    // Only called on actual toggles: running this on mount would
+    // override the spells' default visibility (eg.: "Everything" shows all spells)
+    function apply_selection(visible: boolean) {
+        setSelected(visible)
 
         // tags
         selection.tags?.forEach(tag => {
             dispatch(set_spell_tag_visible({
                 tag: tag,
-                visible: selected
+                visible: visible
             }))
         });
 
@@ -103,11 +95,21 @@ function Button({selection} : {selection: SpellSelection}) {
         selection.spell_ids?.forEach(spell_id => {
             dispatch(set_spell_visible({
                 spell_id: spell_id,
-                visible: selected
+                visible: visible
             }))
         });
+    }
 
-    }, [selected])
+    // Handle Simple Click
+    function onClick() {
+        apply_selection(!selected)
+    }
+
+    // Handle Group Header Click
+    useEffect(() => {
+        if (group_context.source !== "group") { return}
+        apply_selection(group_context.active)
+    }, [group_context.active])
 
     ////////////////////////
     // Render
