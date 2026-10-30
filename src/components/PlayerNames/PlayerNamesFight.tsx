@@ -1,3 +1,4 @@
+import { memo } from "react";
 import styles from "./PlayerName.module.scss"
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
@@ -22,7 +23,8 @@ function create_players(fight: Fight) {
 
 
 
-export default function PlayerNamesFight( {fight} : {fight: Fight} ) {
+/** memoized: the list re-renders on every spell toggle, but a fight's names only change with the fight */
+function PlayerNamesFight( {fight} : {fight: Fight} ) {
 
     return (
         <div className={styles.fight}>
@@ -34,3 +36,5 @@ export default function PlayerNamesFight( {fight} : {fight: Fight} ) {
         </div>
     )
 }
+
+export default memo(PlayerNamesFight)
