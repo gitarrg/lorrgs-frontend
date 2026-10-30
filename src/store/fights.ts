@@ -265,6 +265,13 @@ async function _load_comp_rankings(
 }
 
 
+/**
+ * Every fights request gets a number. Only the latest one may store its fights and end the loading state,
+ * so a slow earlier response (eg.: from the previous spec/boss) can't overwrite the current page.
+ */
+let latest_fights_request = 0
+
+
 export function load_fights(
     mode: string,
     { boss_slug, spec_slug = "", difficulty = AUTO_DIFFICULTY, metric = "dps", search = "" }: { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
@@ -272,6 +279,7 @@ export function load_fights(
 
     return async (dispatch: AppDispatch) => {
 
+        const request = ++latest_fights_request
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
         try {
 
@@ -289,9 +297,12 @@ export function load_fights(
             } // switch
 
             // set
+            if (request != latest_fights_request) { return } // outdated
             fights && dispatch(set_fights(fights))
         } finally {
-            dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            if (request == latest_fights_request) {
+                dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            }
         }
     } // async dispatch
 }
@@ -300,6 +311,7 @@ export function load_fights(
 export function load_report_fights(report_id: string, search: string = "") {
 
     return async (dispatch: AppDispatch) => {
+        const request = ++latest_fights_request
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
         try {
 
@@ -311,9 +323,12 @@ export function load_report_fights(report_id: string, search: string = "") {
                 fight.report_id = report_id
             })
 
+            if (request != latest_fights_request) { return } // outdated
             dispatch(set_fights(report_data.fights))
         } finally {
-            dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            if (request == latest_fights_request) {
+                dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            }
         }
     }
 }

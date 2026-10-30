@@ -2,7 +2,7 @@ import type Spec from "../types/spec"
 import type { RootState, AppDispatch } from './store'
 import { ASSETS } from '../constants'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { fetch_versioned } from '../api'
+import { fetch_versioned, get_game_version_name } from '../api'
 import { group_spells_by_type } from './store_utils'
 
 
@@ -112,8 +112,9 @@ export function load_specs() {
 
 export function load_spec_spells(spec_slug: string) {
 
-    return async (dispatch: AppDispatch) => {
-        const load_key = `specs/${spec_slug}`
+    return async (dispatch: AppDispatch, getState: () => RootState) => {
+        const load_key = `specs/${get_game_version_name()}/${spec_slug}`
+        if (getState().ui._loading[load_key]) { return } // already on its way
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: true } })
         try {
 

@@ -2,7 +2,7 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit'
 import type Boss from "../types/boss"
 import type { AppDispatch, RootState } from './store'
-import { fetch_versioned } from '../api'
+import { fetch_versioned, get_game_version_name } from '../api'
 import { group_spells_by_type } from './store_utils'
 import { ASSETS } from '../constants'
 import type RaidZone from '../types/raid_zone'
@@ -162,9 +162,10 @@ export function load_bosses(zone_id: number) {
  */
 export function load_boss_spells(boss_slug: string) {
 
-    return async (dispatch: AppDispatch) => {
+    return async (dispatch: AppDispatch, getState: () => RootState) => {
 
-        const load_key = `boss/${boss_slug}`
+        const load_key = `boss/${get_game_version_name()}/${boss_slug}`
+        if (getState().ui._loading[load_key]) { return } // already on its way
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: true } })
         try {
 

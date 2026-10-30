@@ -84,13 +84,15 @@ export default function SpecRankings() {
         dispatch(load_boss_spells(boss.full_name_slug))
     }, [boss])
 
-    // load fights
+    // load fights, once the spells of spec and boss are in
+    // (depends on flags instead of the spec/boss objects: those get replaced whenever their spells are set again)
+    const spec_spells_loaded = !!spec?.spells_by_type
+    const boss_spells_loaded = !!boss?.spells_by_type
     useEffect(() => {
-        if (!spec?.spells_by_type) { return }
-        if (!boss?.spells_by_type) { return }
+        if (!spec_spells_loaded || !boss_spells_loaded) { return }
         if (!metric) { return }
         dispatch(load_fights(mode, { spec_slug, boss_slug, difficulty, metric }))
-    }, [spec, boss, difficulty, metric])
+    }, [spec_slug, boss_slug, spec_spells_loaded, boss_spells_loaded, difficulty, metric])
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -115,8 +117,6 @@ export default function SpecRankings() {
                 <PlayerNamesList />
                 <TimelineCanvas />
             </div>
-
-            {/* <StickyFooterAd /> */}
         </div>
     );
 }
