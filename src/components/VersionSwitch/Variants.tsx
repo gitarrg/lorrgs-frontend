@@ -4,6 +4,10 @@ import styles from "./VersionSwitch.module.scss"
 import { useVersionSwitch } from "./useVersionSwitch"
 
 
+/** feature flag: the switcher is hidden until we're ready to roll it out */
+const SHOW_VERSION_SWITCH = false
+
+
 function Tabs() {
     const { versions, current, switch_to } = useVersionSwitch()
     const [hovered, set_hovered] = useState<string | null>(null)
@@ -41,7 +45,7 @@ function Tabs() {
 export function VersionTabs({ children }: { children: ReactNode }) {
     return (
         <div className={`${styles.home_row} mt-1`}>
-            <Tabs />
+            {SHOW_VERSION_SWITCH && <Tabs />}
             <div className="d-flex justify-content-end">{children}</div>
         </div>
     )
@@ -50,6 +54,7 @@ export function VersionTabs({ children }: { children: ReactNode }) {
 
 /** User report: tabs centered over the header row, without affecting its layout (parent must be `position: relative`). */
 export function VersionTabsCentered() {
+    if (!SHOW_VERSION_SWITCH) { return null }
     return (
         <div className={styles.tabs_centered}>
             <Tabs />
@@ -61,6 +66,7 @@ export function VersionTabsCentered() {
 /** Spec rankings: the home tab bar, hidden until hovered (a colored sliver stays visible). Sits in the page layout, so it scrolls with the page. */
 export function VersionTabsHidden() {
     const { current } = useVersionSwitch()
+    if (!SHOW_VERSION_SWITCH) { return null }
     if (!current) { return null }  // Game Versions not loaded yet
     return (
         <div className={styles.hidden_tabs}>
