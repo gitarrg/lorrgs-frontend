@@ -6,14 +6,14 @@
 */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { get_metric } from "../../store/ui";
 import { get_spec } from "../../store/specs";
 import { get_talent_tree, load_talent_tree } from "../../store/talent_trees";
-import { kFormatter } from "../../utils";
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import styles from "./TalentCard.module.scss";
 import TalentTreeGraph from "./TalentTreeGraph";
+import WebpImg from "../WebpImg";
 import type Actor from "../../types/actor";
+import type Fight from "../../types/fight";
 
 
 const MARGIN = 16  // to the edges of the viewport
@@ -43,9 +43,8 @@ function TalentCardBody({ player }: { player: Actor }) {
 }
 
 
-export default function TalentCard({ player, anchor }: { player: Actor, anchor: DOMRect }) {
+export default function TalentCard({ fight, player, anchor }: { fight: Fight, player: Actor, anchor: DOMRect }) {
 
-    const metric = useAppSelector(get_metric)
     const spec = useAppSelector(state => get_spec(state, player.spec_slug))
     const ref = useRef<HTMLDivElement>(null)
     const [position, set_position] = useState<{ left: number, top: number } | null>(null)
@@ -74,12 +73,14 @@ export default function TalentCard({ player, anchor }: { player: Actor, anchor: 
     return createPortal(
         <div
             ref={ref}
-            className={`${styles.card} wow-${spec?.class.name_slug}`}
+            className={`${styles.card} p-2 bg-dark rounded border wow-${spec?.class.name_slug}`}
             style={position ? position : { visibility: "hidden" }}
         >
             <header className={styles.header}>
+                {spec && <WebpImg className={styles.icon} src={spec.icon_path} />}
                 <span className={styles.name}>{player.name}</span>
-                {!!player.total && <span className={styles.total}>{kFormatter(player.total)} {metric.toUpperCase()}</span>}
+                {fight.region && <span className="text-muted">({fight.region})</span>}
+                {fight.start_time && <span className={`${styles.date} text-muted`}>{new Date(fight.start_time).toLocaleDateString()}</span>}
             </header>
             <TalentCardBody player={player} />
         </div>,
