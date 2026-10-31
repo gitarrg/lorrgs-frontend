@@ -1,0 +1,160 @@
+
+.wrap {
+    --talent-with: #5ad17a;
+    --talent-without: #f0605a;
+
+    position: relative;
+}
+
+.icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 28px;
+    padding: 0 0.5rem;
+
+    color: #8d93a1;
+    background-color: #3a3a3a;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+
+    &:hover {
+        color: #e4e6ea;
+    }
+}
+
+.active {
+    color: #e4e6ea;
+    border-color: var(--talent-with);
+}
+
+.badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    padding: 0 4px;
+
+    color: #15171c;
+    background: var(--talent-with);
+    border-radius: 999px;
+    font-size: 11px;
+}
+
+
+/********************************
+        Menu
+*********************************/
+.menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 1050;
+    width: min(860px, calc(100vw - 32px));
+    padding: 0.75rem;
+
+    display: grid;
+    gap: 0.5rem;
+
+    background: #1d2027;
+    border: 1px solid #333845;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+    color: #e4e6ea;
+}
+
+@media (max-width: 760px) {
+    .menu {
+        position: fixed;
+        top: 80px;
+        left: 16px;
+        right: 16px;
+        width: auto;
+        max-height: calc(100vh - 100px);
+        overflow: auto;
+    }
+}
+
+.status {
+    min-height: 18px;
+    font-size: 12px;
+}
+
+.note {
+    color: #8d93a1;
+    font-size: 12px;
+}
+
+.selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 1px 2px 1px 8px;
+    border: 1px solid;
+    border-radius: 4px;
+    background: #252932;
+    font-size: 12px;
+
+    button {
+        padding: 0 4px;
+        color: inherit;
+        background: none;
+        border: 0;
+    }
+}
+
+.with { color: var(--talent-with); }
+.without { color: var(--talent-without); }
+
+.link {
+    padding: 0;
+    color: #8d93a1;
+    background: none;
+    border: 0;
+    font-size: 12px;
+    text-decoration: underline;
+}
+
+
+/********************************
+        Tree
+*********************************/
+.tree {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #15171c;
+    border-radius: 0.25rem;
+
+    text {
+        fill: #5c6270;
+        font-size: 9px;
+    }
+}
+
+.edge {
+    stroke: #333845;
+    stroke-width: 1;
+}
+
+.dot {
+    cursor: pointer;
+
+    &:hover {
+        stroke: #e4e6ea;
+        stroke-width: 1.5;
+    }
+}
+
+.cross {
+    stroke: #15171c;
+    stroke-width: 1.5;
+    pointer-events: none;
+}

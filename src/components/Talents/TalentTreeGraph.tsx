@@ -12,12 +12,12 @@ const PADDING = 6
 const RADIUS = 3
 
 
-type Panel = { label: string, width: number, nodes: TalentNode[] }
-type Point = [number, number]
+export type Panel = { label: string, width: number, nodes: TalentNode[] }
+export type Point = [number, number]
 
 
 /** Nodes a player can spend points in (no hidden nodes, no hero tree selection). */
-function is_drawn(node: TalentNode) {
+export function is_drawn(node: TalentNode) {
     return node.max_ranks > 0 && node.type != "hero_selection"
 }
 
@@ -31,9 +31,9 @@ function player_hero_tree(tree: TalentTree, talents: Talents) {
 
 
 /** Fit each panel's nodes into its box, side by side, keeping the aspect ratio of the tree. */
-function layout(panels: Panel[]) {
+export function layout(panels: Panel[], [total_width, total_height]: Point = [WIDTH, HEIGHT]) {
     const total = panels.reduce((sum, panel) => sum + panel.width, 0)
-    const unit = (WIDTH - GAP * (panels.length - 1)) / total
+    const unit = (total_width - GAP * (panels.length - 1)) / total
     const positions: { [node_id: number]: Point } = {}
     const labels: { x: number, label: string }[] = []
 
@@ -48,7 +48,7 @@ function layout(panels: Panel[]) {
             const [min_x, min_y] = [Math.min(...xs), Math.min(...ys)]
             const [span_x, span_y] = [Math.max(...xs) - min_x, Math.max(...ys) - min_y]
             const inner_w = width - 2 * PADDING
-            const inner_h = HEIGHT - LABEL_HEIGHT - 2 * PADDING
+            const inner_h = total_height - LABEL_HEIGHT - 2 * PADDING
             const scale = Math.min(inner_w / Math.max(1, span_x), inner_h / Math.max(1, span_y))
             const offset_x = x0 + PADDING + (inner_w - span_x * scale) / 2
             const offset_y = LABEL_HEIGHT + PADDING

@@ -1,3 +1,4 @@
+import { fight_matches_talents } from "./components/Talents/talent_filter"
 import { get_spec } from "./store/specs"
 import { get_spell_display } from "./store/spells"
 import store from "./store/store"
@@ -39,6 +40,8 @@ function is_fight_visible(fight: Fight, filters: FilterValues) {
         if (from && fight_ms < get_date_floor_ms(from)) { return false }
         if (to && fight_ms > get_date_ceil_ms(to)) { return false }
     }
+
+    if (!fight_matches_talents(fight, filters.talents)) { return false }
 
     const has_boss = fight.boss && is_player_visible(fight.boss, filters)
     return has_boss || fight.players.some(player => is_player_visible(player, filters))

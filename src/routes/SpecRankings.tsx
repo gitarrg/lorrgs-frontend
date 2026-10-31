@@ -18,6 +18,7 @@ import { VersionTabsHidden } from '../components/VersionSwitch/Variants'
 import TimelineCanvas from "./../components/Timeline/TimelineCanvas"
 import type Spec from '../types/spec'
 import useQuery from "../hooks/useQuery"
+import { URL_PARAM as TALENTS_PARAM, parse_talent_filter } from "../components/Talents/talent_filter"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Component
@@ -43,6 +44,7 @@ export default function SpecRankings() {
     // zones with a single ranked difficulty ignore the url param and use `auto`
     const difficulty = boss?.difficulty ? AUTO_DIFFICULTY : (query.get("difficulty") || DEFAULT_DIFFICULTY)
     const metric = query.get("metric") || spec_metric(spec)
+    const talents_param = query.get(TALENTS_PARAM) || ""
 
     const mode = ui_store.MODES.SPEC_RANKING
 
@@ -66,6 +68,9 @@ export default function SpecRankings() {
     useEffect(() => { dispatch(ui_store.set_spec_slug(spec_slug)) }, [spec_slug])
     useEffect(() => { dispatch(ui_store.set_difficulty(difficulty)) }, [difficulty])
     useEffect(() => { dispatch(ui_store.set_metric(metric)) }, [metric])
+    useEffect(() => { dispatch(ui_store.set_filters({ talents: parse_talent_filter(talents_param) })) }, [talents_param])
+    // the other pages have no talent filter
+    useEffect(() => () => { dispatch(ui_store.set_filters({ talents: {} })) }, [])
 
     useEffect(() => {
         if (!spec) { return }
