@@ -10,7 +10,6 @@ import { load_fights } from "../store/fights"
 import { useAppDispatch, useAppSelector } from '../store/store_hooks'
 import * as ui_store from "../store/ui"
 import CopyNoteWindow from "../components/CopyNoteWindow"
-import LoadingOverlay from "./../components/shared/LoadingOverlay"
 import Navbar from "./../components/Navbar/Navbar"
 import PlayerNamesList from "./../components/PlayerNames/PlayerNamesList"
 import SpecRankingsHeader from './SpecRankings/SpecRankingsHeader'
@@ -38,17 +37,13 @@ export default function SpecRankings() {
     const navigate = useNavigate()
     const zones = useAppSelector(state => get_zones(state))
     const dispatch = useAppDispatch()
-    const is_loading = useAppSelector(state => ui_store.get_is_loading(state))
     const boss = useAppSelector(state => get_boss(state, boss_slug))
     const spec = useAppSelector(state => get_spec(state, spec_slug))
-    // if (!boss_slug || !spec_slug) { return null }
-    // if (!spec || !boss) { return null }
 
     // zones with a single ranked difficulty ignore the url param and use `auto`
     const difficulty = boss?.difficulty ? AUTO_DIFFICULTY : (query.get("difficulty") || DEFAULT_DIFFICULTY)
     const metric = query.get("metric") || spec_metric(spec)
 
-    // const
     const mode = ui_store.MODES.SPEC_RANKING
 
     ////////////////////////////////////////////////////////////////////////////
@@ -107,13 +102,10 @@ export default function SpecRankings() {
                 <Navbar />
             </div>
 
-            <div className={`${is_loading ? "loading_trans" : ""}`}>
-                <SpecSettingsBar />
-            </div>
-            {is_loading && <LoadingOverlay />}
-            {<CopyNoteWindow />}
+            <SpecSettingsBar />
+            <CopyNoteWindow />
 
-            <div className={`p-2 bg-dark rounded border d-flex ${is_loading ? "loading_trans" : ""}`}>
+            <div className="p-2 bg-dark rounded border d-flex">
                 <PlayerNamesList />
                 <TimelineCanvas />
             </div>
