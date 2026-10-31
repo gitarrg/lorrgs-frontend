@@ -50,19 +50,16 @@ export default function TalentFilter() {
     const { counts, with_talents, without_talents } = useTalentCounts()
 
     const ref = useRef<HTMLDivElement>(null)
-    const close_timer = useRef<number>(undefined)
     const [open, set_open] = useState(false)
     const [pinned, set_pinned] = useState(false)
-    const [hovered, set_hovered] = useState<number | null>(null)
 
     useEffect(() => {
         spec_slug && dispatch(load_talent_tree(spec_slug))
     }, [spec_slug])
 
     const close = () => {
-        set_open(true)
+        set_open(false)
         set_pinned(false)
-        set_hovered(null)
     }
 
     useEffect(() => {
@@ -78,8 +75,6 @@ export default function TalentFilter() {
             document.removeEventListener("pointerdown", on_pointer_down)
         }
     }, [open])
-
-    useEffect(() => () => window.clearTimeout(close_timer.current), [])
 
     ////////////////////////////////////////////////////////////////////////////
     // Vars
@@ -116,33 +111,21 @@ export default function TalentFilter() {
 
     function on_pointer_enter(event: React.PointerEvent) {
         if (event.pointerType != "mouse") { return }
-        window.clearTimeout(close_timer.current)
         set_open(true)
     }
 
     function on_pointer_leave(event: React.PointerEvent) {
         if (event.pointerType != "mouse" || pinned) { return }
-        close_timer.current = window.setTimeout(close, CLOSE_DELAY)
+        close()
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Render
-    const status = hovered
-        ? <>
-            <b>{name(hovered)}</b>{" "}
-            <span className={styles.note}>
-                {Math.round(share(hovered) * 100)}% of listed fights
-                {talent_filter[hovered] && ` · only ${talent_filter[hovered]}`}
-            </span>
-        </>
-        : null
-
     let tree_content = <TalentFilterTree
         tree={tree!}
         talent_filter={talent_filter}
         share={share}
         on_click={entry_id => set_talent_filter(cycle_talent(talent_filter, entry_id))}
-        on_hover={set_hovered}
     />
     if (tree === undefined) { tree_content = <div className={styles.note}>Loading talents...</div> }
     if (tree === null) { tree_content = <div className={styles.note}>No talent tree for this spec</div> }
@@ -165,7 +148,6 @@ export default function TalentFilter() {
                     className={`${styles.menu} bg-dark rounded border`}
                 >
                     {tree_content}
-                    <div className={styles.status}>{status}</div>
 
                     <div className={styles.selection}>
                         {selected.map(([entry_id, mode]) => (

@@ -7,6 +7,8 @@ export interface TalentEntry {
     id: number
     name: string
     spell_id: number
+    /** icon filename, eg.: "spell_nature_rejuvenation.jpg". Empty if unknown */
+    icon: string
     index: number
 }
 
