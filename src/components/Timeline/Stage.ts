@@ -208,8 +208,8 @@ export default class Stage extends Konva.Stage {
 
     /** One listener for all casts, instead of three on each of them. */
     _handle_cast_mouse_event(event: Konva.KonvaEventObject<MouseEvent>) {
-        if (event.target.name() !== Cast.MOUSE_BBOX_NAME) { return }
-        const cast = event.target.getParent() as Cast
+        if (!(event.target instanceof Cast)) { return }
+        const cast = event.target
 
         if (event.type === "mouseover") { cast.hover(true) }
         if (event.type === "mouseout") { cast.hover(false) }
