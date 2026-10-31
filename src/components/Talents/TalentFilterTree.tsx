@@ -11,6 +11,7 @@ import styles from "./TalentFilter.module.scss";
 const WIDTH = 800
 const HEIGHT = 450
 const RADIUS = 10
+const UNSELECTED_OPACITY = 0.5
 const PADDING = RADIUS * 1.5 + 2  // choice nodes are split into two dots, which reach further out
 
 
@@ -23,7 +24,7 @@ type Props = {
 }
 
 
-/** The whole tree of a spec (class | hero trees | spec), with one clickable dot per talent: choice nodes are split. */
+/** The whole tree of a spec (class | hero trees | spec), with one clickable dot (the talent icon) per talent: choice nodes are split. */
 export default function TalentFilterTree({ tree, talent_filter, share, on_click }: Props) {
 
     const [hovered, set_hovered] = useState<{ entry: TalentEntry, x: number, y: number } | null>(null)
@@ -69,27 +70,30 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click 
                         const cx = multi ? pos[0] + (i ? r + 0.5 : -r - 0.5) : pos[0]
                         const cy = pos[1]
                         const mode = talent_filter[entry.id]
-
-                        const alpha = (0.3 + 0.7 * share(entry.id)) * 100
-
-                        const fill = mode == "with" ? "var(--talent-with)"
-                            : mode == "without" ? "var(--talent-without)"
-                                : `hsl(0, 0%, ${alpha.toFixed(0)}%)`
+                        const brightness = 0.3 + 0.7 * share(entry.id)
 
                         return (
                             <g key={entry.id}>
+                                <clipPath id={`clip-${entry.id}`}><circle cx={cx} cy={cy} r={r} /></clipPath>
+                                <circle cx={cx} cy={cy} r={r} fill="hsl(0, 0%, 10%)" />
+                                {entry.icon && <image
+                                    href={`${ASSETS}/images/spells/${entry.icon}`}
+                                    x={cx - r} y={cy - r} width={2 * r} height={2 * r}
+                                    clipPath={`url(#clip-${entry.id})`}
+                                    // unselected: greyed out, dimmed by how few fights take it, and low contrast
+                                    style={mode ? undefined : { filter: `grayscale(1) brightness(${brightness})`, opacity: UNSELECTED_OPACITY }}
+                                    pointerEvents="none"
+                                />}
                                 <circle
                                     className={styles.dot}
                                     cx={cx} cy={cy} r={r}
-                                    fill={fill}
+                                    fill="transparent"
+                                    stroke={mode ? `var(--talent-${mode})` : "hsl(0, 0%, 30%)"}
+                                    strokeWidth={1}
                                     onClick={() => on_click(entry.id)}
                                     onPointerEnter={() => set_hovered({ entry, x: cx, y: cy })}
                                     onPointerLeave={() => set_hovered(null)}
                                 />
-                                {mode == "without" && <path
-                                    className={styles.cross}
-                                    d={`M${cx - r * 0.6} ${cy - r * 0.6}L${cx + r * 0.6} ${cy + r * 0.6}M${cx + r * 0.6} ${cy - r * 0.6}L${cx - r * 0.6} ${cy + r * 0.6}`}
-                                />}
                             </g>
                         )
                     })
