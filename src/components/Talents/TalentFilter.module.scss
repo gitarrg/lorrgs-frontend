@@ -109,6 +109,9 @@
 
     &.locked { cursor: default; }
 }
+// halves of a choice pill: round on the outer end only
+.hit_left { border-radius: 50% 0 0 50%; }
+.hit_right { border-radius: 0 50% 50% 0; }
 
 
 .note {

@@ -122,6 +122,16 @@ export default function TalentFilter() {
         }, { replace: true })
     }
 
+    /** choice nodes only allow one of their entries: picking one drops the other */
+    function on_tree_click(entry_id: number) {
+        const next = cycle_talent(talent_filter, entry_id)
+        if (!talent_filter[entry_id]) {
+            const node = tree?.nodes.find(node => node.entries.some(entry => entry.id == entry_id))
+            node?.entries.forEach(entry => { if (entry.id != entry_id) { delete next[entry.id] } })
+        }
+        set_talent_filter(next)
+    }
+
     function remove_talent(entry_id: number) {
         const next = { ...talent_filter }
         delete next[entry_id]
@@ -154,7 +164,7 @@ export default function TalentFilter() {
         spec={spec}
         talent_filter={talent_filter}
         share={share}
-        on_click={entry_id => set_talent_filter(cycle_talent(talent_filter, entry_id))}
+        on_click={on_tree_click}
         on_clear={remove_talent}
     />
     if (tree === undefined) { tree_content = <div className={styles.note}>Loading talents...</div> }
@@ -162,7 +172,7 @@ export default function TalentFilter() {
 
     const info = <>
         <b>Click</b> once to <span className={styles.with}>include</span>,&nbsp;
-        <b>double click</b> to <span className={styles.without}>exclude</span>,&nbsp;
+        <b>click twice</b> to <span className={styles.without}>exclude</span>,&nbsp;
         <b>right click</b> to <span className={styles.clear}>clear</span>
     </>
 

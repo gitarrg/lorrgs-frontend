@@ -305,10 +305,8 @@
     border: 1px solid hsl(0 0% 25%);
     border-radius: 4px;
     color: inherit;
-    font-family: monospace;
     cursor: pointer;
     text-align: left;
-
     &:hover {
         border-color: hsl(0 0% 50%);
     }
@@ -320,6 +318,13 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    opacity: 0.5;
+    font-family: monospace;
+
+    &:hover {
+        opacity: 1;
+    }
+
 }
 
 .talent_copy_icon {
@@ -337,7 +342,6 @@
     align-items: center;
     gap: 0.35rem;
     padding: 0.2rem 0.55rem;
-    font-size: 0.85rem;
     font-weight: 600;
     line-height: 1.2;
     white-space: nowrap;

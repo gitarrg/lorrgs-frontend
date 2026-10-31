@@ -14,7 +14,8 @@ const HEIGHT = 450
 const RADIUS = 12
 const VIEW_Y = -10  // room for the labels
 const VIEW_HEIGHT = HEIGHT - VIEW_Y
-const PADDING = RADIUS * 1.5 + 2  // choice nodes are split into two dots, which reach further out
+const HALF_WIDTH = RADIUS * 1.5  // one half of a choice pill: thinner than a full dot
+const PADDING = HALF_WIDTH + 2  // choice nodes are a pill of two halves, which reaches further out
 
 
 type Props = {
@@ -26,6 +27,15 @@ type Props = {
     on_click: (entry_id: number) => void
     /** right click */
     on_clear: (entry_id: number) => void
+}
+
+
+type Side = "left" | "right"
+
+/** outline of one half of a choice pill: the outer end is round, the inner edge (at `x`, the pill's center) is flat */
+function half_path(x: number, y: number, r: number, side: Side): string {
+    const [end, sweep] = side == "left" ? [x - HALF_WIDTH + r, 0] : [x + HALF_WIDTH - r, 1]
+    return `M${x} ${y - r} H${end} A${r} ${r} 0 0 ${sweep} ${end} ${y + r} H${x} Z`
 }
 
 
@@ -65,7 +75,7 @@ function ShareTooltip({ spec, share }: { spec: Spec, share: number }) {
 }
 
 
-/** The whole tree of a spec (class | hero trees | spec), with one clickable dot (the talent icon) per talent: choice nodes are split. */
+/** The whole tree of a spec (class | hero trees | spec), with one clickable dot (the talent icon) per talent: choice nodes are a pill with one half per option. */
 export default function TalentFilterTree({ tree, spec, talent_filter, share, on_click, on_clear }: Props) {
 
     const [hovered, set_hovered] = useState<TalentEntry | null>(null)
@@ -86,7 +96,7 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
     useEffect(() => { (window as any).$WowheadPower?.refreshLinks?.() }, [tree])
 
     // one link per dot, on top of the svg (wowhead's tooltips attach to links)
-    const dots: { entry: TalentEntry, cx: number, cy: number, r: number, locked: boolean }[] = []
+    const dots: { entry: TalentEntry, cx: number, cy: number, r: number, w: number, locked: boolean, side?: Side }[] = []
 
     return (
         <div className={styles.tree_wrap}>
@@ -119,7 +129,9 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
                     const multi = node.entries.length > 1
                     const r = RADIUS
                     return node.entries.map((entry, i) => {
-                        const cx = multi ? pos[0] + (i ? r + 0.5 : -r - 0.5) : pos[0]
+                        const side: Side | undefined = multi ? (i ? "right" : "left") : undefined
+                        const w = side ? HALF_WIDTH : 2 * r
+                        const cx = side ? pos[0] + (side == "right" ? w / 2 : -w / 2) : pos[0]
                         const cy = pos[1]
                         const mode = talent_filter[entry.id]
 
@@ -127,33 +139,39 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
                         const percent = Math.round(share(entry.id) * 100)
                         const locked = !mode && (percent == 0 || percent == 100)
                         const state = mode ?? (locked ? "fixed" : "varies")
-                        dots.push({ entry, cx, cy, r, locked })
+                        dots.push({ entry, cx, cy, r, w, locked, side })
 
                         return (
                             <g key={entry.id} className={`${styles.node} ${styles[`node_${state}`]}`}>
-                                <circle className={styles.bg} cx={cx} cy={cy} r={r} />
+                                {side
+                                    ? <path className={styles.bg} d={half_path(pos[0], cy, r, side)} />
+                                    : <circle className={styles.bg} cx={cx} cy={cy} r={r} />}
+                                {side && <clipPath id={`talent-clip-${entry.id}`}><path d={half_path(pos[0], cy, r, side)} /></clipPath>}
                                 {entry.icon && <image
                                     className={styles.icon_image}
                                     href={`${ASSETS}/images/spells/${entry.icon}`}
-                                    x={cx - r} y={cy - r} width={2 * r} height={2 * r}
-                                    clipPath="url(#talent-clip)"
+                                    x={cx - w / 2} y={cy - r} width={w} height={2 * r}
+                                    preserveAspectRatio="xMidYMid slice"
+                                    clipPath={side ? `url(#talent-clip-${entry.id})` : "url(#talent-clip)"}
                                 />}
-                                <circle className={styles.ring} cx={cx} cy={cy} r={r} />
+                                {side
+                                    ? <path className={styles.ring} d={half_path(pos[0], cy, r, side)} />
+                                    : <circle className={styles.ring} cx={cx} cy={cy} r={r} />}
                             </g>
                         )
                     })
                 })}
             </svg>
 
-            {dots.map(({ entry, cx, cy, r, locked }) => (
+            {dots.map(({ entry, cx, cy, r, w, locked, side }) => (
                 <a
                     key={entry.id}
                     href=""
-                    className={`${styles.hit} ${locked ? styles.locked : ""}`}
+                    className={`${styles.hit} ${side ? styles[`hit_${side}`] : ""} ${locked ? styles.locked : ""}`}
                     data-wowhead={`spell=${entry.spell_id}`}
                     style={{
-                        left: `${(cx - r) / WIDTH * 100}%`, top: `${(cy - r - VIEW_Y) / VIEW_HEIGHT * 100}%`,
-                        width: `${2 * r / WIDTH * 100}%`, height: `${2 * r / VIEW_HEIGHT * 100}%`,
+                        left: `${(cx - w / 2) / WIDTH * 100}%`, top: `${(cy - r - VIEW_Y) / VIEW_HEIGHT * 100}%`,
+                        width: `${w / WIDTH * 100}%`, height: `${2 * r / VIEW_HEIGHT * 100}%`,
                     }}
                     onClick={event => { event.preventDefault(); locked || on_click(entry.id) }}
                     onContextMenu={event => { event.preventDefault(); on_clear(entry.id) }}
