@@ -10,12 +10,17 @@ const GAP = 4
 const LABEL_HEIGHT = 24
 const PADDING = 6
 const RADIUS = 4
+export const HERO_WIDTH = 0.55
 
 
 export type Panel = {
     label?: string,
     width: number,
     nodes: TalentNode[]
+    /** Panels sharing a column are stacked on top of each other, each taking `1 / rows` of the height (default: own column, full height). */
+    column?: number
+    row?: number
+    rows?: number
 }
 export type Point = [number, number]
 
@@ -26,44 +31,60 @@ export function is_drawn(node: TalentNode) {
 }
 
 
-/** The hero tree the player picked: the one their talents are in (or the first one, without talents). */
-function player_hero_tree(tree: TalentTree, talents: Talents) {
-    const hero_nodes = tree.nodes.filter(node => node.hero_tree)
-    const taken = hero_nodes.find(node => node.entries.some(entry => talents[entry.id]))
-    return (taken || hero_nodes[0])?.hero_tree || ""
+/** The hero trees of a spec, in a stable order: the slot of a tree (top, bottom) is the same in every graph. */
+export function hero_tree_names(nodes: TalentNode[]) {
+    return [...new Set(nodes.map(node => node.hero_tree).filter(Boolean))] as string[]
 }
 
 
-/** Fit each panel's nodes into its box, side by side, keeping the aspect ratio of the tree. */
-export function layout(panels: Panel[], [total_width, total_height]: Point = [WIDTH, HEIGHT]) {
-    const total = panels.reduce((sum, panel) => sum + panel.width, 0)
-    const unit = (total_width - GAP * (panels.length - 1)) / total
+/** Fit each panel's nodes into its box, side by side (or stacked, within a column), keeping the aspect ratio of the tree. */
+export function layout(panels: Panel[], [total_width, total_height]: Point = [WIDTH, HEIGHT], padding = PADDING) {
+    const column_of = (panel: Panel, i: number) => panel.column ?? -i - 1
+    const columns = new Map<number, number>()  // column -> width
+    panels.forEach((panel, i) => {
+        const column = column_of(panel, i)
+        columns.set(column, Math.max(columns.get(column) || 0, panel.width))
+    })
+
+    const total = [...columns.values()].reduce((sum, width) => sum + width, 0)
+    const unit = (total_width - GAP * (columns.size - 1)) / total
     const positions: { [node_id: number]: Point } = {}
-    const labels: { x: number, label: string }[] = []
+    const labels: { x: number, y: number, label: string }[] = []
 
-    let x0 = 0
-    for (const panel of panels) {
-        const width = unit * panel.width
-        if (panel.label) {
-            labels.push({ x: x0 + width / 2, label: panel.label })
-        }
-
-        if (panel.nodes.length) {
-            const xs = panel.nodes.map(node => node.x)
-            const ys = panel.nodes.map(node => node.y)
-            const [min_x, min_y] = [Math.min(...xs), Math.min(...ys)]
-            const [span_x, span_y] = [Math.max(...xs) - min_x, Math.max(...ys) - min_y]
-            const inner_w = width - 2 * PADDING
-            const inner_h = total_height - LABEL_HEIGHT - 2 * PADDING
-            const scale = Math.min(inner_w / Math.max(1, span_x), inner_h / Math.max(1, span_y))
-            const offset_x = x0 + PADDING + (inner_w - span_x * scale) / 2
-            const offset_y = LABEL_HEIGHT + PADDING
-            for (const node of panel.nodes) {
-                positions[node.id] = [offset_x + (node.x - min_x) * scale, offset_y + (node.y - min_y) * scale]
-            }
-        }
-        x0 += width + GAP
+    const x0s = new Map<number, number>()
+    let x = 0
+    for (const [column, width] of columns) {
+        x0s.set(column, x)
+        x += unit * width + GAP
     }
+
+    panels.forEach((panel, i) => {
+        const column = column_of(panel, i)
+        const x0 = x0s.get(column)!
+        const width = unit * columns.get(column)!
+
+        const rows = panel.rows || 1
+        const row_height = (total_height - GAP * (rows - 1)) / rows
+        const y0 = (panel.row || 0) * (row_height + GAP)
+
+        if (panel.label) {
+            labels.push({ x: x0 + width / 2, y: y0 + 10, label: panel.label })
+        }
+        if (!panel.nodes.length) { return }
+
+        const xs = panel.nodes.map(node => node.x)
+        const ys = panel.nodes.map(node => node.y)
+        const [min_x, min_y] = [Math.min(...xs), Math.min(...ys)]
+        const [span_x, span_y] = [Math.max(...xs) - min_x, Math.max(...ys) - min_y]
+        const inner_w = width - 2 * padding
+        const inner_h = row_height - LABEL_HEIGHT - 2 * padding
+        const scale = Math.min(inner_w / Math.max(1, span_x), inner_h / Math.max(1, span_y))
+        const offset_x = x0 + padding + (inner_w - span_x * scale) / 2
+        const offset_y = y0 + LABEL_HEIGHT + padding
+        for (const node of panel.nodes) {
+            positions[node.id] = [offset_x + (node.x - min_x) * scale, offset_y + (node.y - min_y) * scale]
+        }
+    })
     return { positions, labels }
 }
 
@@ -84,15 +105,19 @@ function NodeShape({ node, pos, rank }: { node: TalentNode, pos: Point, rank: nu
 }
 
 
-/** The class, hero and spec tree of one player, side by side. Entries unknown to the tree are ignored. */
+/** The class, hero and spec tree of one player, side by side (the hero trees stacked). Entries unknown to the tree are ignored. */
 function TalentTreeGraph({ tree, talents }: { tree: TalentTree, talents: Talents }) {
 
     const nodes = tree.nodes.filter(is_drawn)
-    const hero_tree = player_hero_tree(tree, talents)
+    // all hero trees, in the same slots as in the filter: the greyed out ones help the eye to orient itself
+    const hero_trees = hero_tree_names(nodes)
 
     const { positions, labels } = layout([
         { label: "class", width: 1, nodes: nodes.filter(node => node.tree == "class") },
-        { label: hero_tree, width: 0.55, nodes: nodes.filter(node => node.hero_tree && node.hero_tree == hero_tree) },
+        ...hero_trees.map((hero_tree, row) => ({
+            label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
+            nodes: nodes.filter(node => node.hero_tree == hero_tree),
+        })),
         { label: "spec", width: 1, nodes: nodes.filter(node => node.tree == "spec") },
     ])
 
@@ -100,7 +125,7 @@ function TalentTreeGraph({ tree, talents }: { tree: TalentTree, talents: Talents
 
     return (
         <svg className={styles.graph} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="talent tree">
-            {labels.map(({ x, label }) => <text key={x} x={x} y={10} textAnchor="middle">{label}</text>)}
+            {labels.map(({ x, y, label }) => <text key={`${x}-${y}`} x={x} y={y} textAnchor="middle">{label}</text>)}
 
             {tree.edges.map(([a, b], i) => {
                 const [pa, pb] = [positions[a], positions[b]]

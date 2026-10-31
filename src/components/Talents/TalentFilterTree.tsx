@@ -4,13 +4,14 @@ import type { TalentEntry } from "../../types/talent_tree";
 import type { TalentFilter } from "../../store/ui";
 import { ASSETS } from "../../constants";
 import WebpImg from "../WebpImg";
-import { is_drawn, layout } from "./TalentTreeGraph";
+import { HERO_WIDTH, hero_tree_names, is_drawn, layout } from "./TalentTreeGraph";
 import styles from "./TalentFilter.module.scss";
 
 
-const WIDTH = 640
-const HEIGHT = 300
-const RADIUS = 5
+const WIDTH = 800
+const HEIGHT = 450
+const RADIUS = 10
+const PADDING = RADIUS * 1.5 + 2  // choice nodes are split into two dots, which reach further out
 
 
 type Props = {
@@ -28,20 +29,23 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click 
     const [hovered, set_hovered] = useState<{ entry: TalentEntry, x: number, y: number } | null>(null)
 
     const nodes = tree.nodes.filter(is_drawn)
-    const hero_trees = [...new Set(nodes.map(node => node.hero_tree).filter(Boolean))] as string[]
+    const hero_trees = hero_tree_names(nodes)
 
     const { positions, labels } = layout([
         { label: "class", width: 1, nodes: nodes.filter(node => node.tree == "class") },
-        ...hero_trees.map(hero_tree => ({ label: hero_tree, width: 0.5, nodes: nodes.filter(node => node.hero_tree == hero_tree) })),
+        ...hero_trees.map((hero_tree, row) => ({
+            label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
+            nodes: nodes.filter(node => node.hero_tree == hero_tree),
+        })),
         { label: "spec", width: 1, nodes: nodes.filter(node => node.tree == "spec") },
-    ], [WIDTH, HEIGHT])
+    ], [WIDTH, HEIGHT], PADDING)
 
     const hovered_icon = hovered?.entry.icon && `${ASSETS}/images/spells/${hovered.entry.icon}`
 
     return (
         <div className={styles.tree_wrap}>
             <svg className={styles.tree} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="talent filter tree">
-                {labels.map(({ x, label }) => <text key={x} x={x} y={10} textAnchor="middle">{label}</text>)}
+                {labels.map(({ x, y, label }) => <text key={`${x}-${y}`} x={x} y={y} textAnchor="middle">{label}</text>)}
 
                 {/* Lines */}
                 {tree.edges.map(([a, b], i) => {

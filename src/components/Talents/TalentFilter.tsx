@@ -3,7 +3,7 @@
 
     Hovering opens the menu, clicking pins it open. Esc or clicking outside closes it.
 */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { get_fights } from "../../store/fights";
 import { get_talent_tree, load_talent_tree } from "../../store/talent_trees";
@@ -16,6 +16,7 @@ import WebpImg from "../WebpImg";
 import { ASSETS } from "../../constants";
 
 
+const VIEWPORT_MARGIN = 16  // px
 const CLOSE_DELAY = 250  // ms, to move the mouse from the icon into the menu
 
 
@@ -50,6 +51,7 @@ export default function TalentFilter() {
     const { counts, with_talents, without_talents } = useTalentCounts()
 
     const ref = useRef<HTMLDivElement>(null)
+    const menu_ref = useRef<HTMLDivElement>(null)
     const [open, set_open] = useState(false)
     const [pinned, set_pinned] = useState(false)
     const close_timer = useRef<number>(undefined)
@@ -61,8 +63,25 @@ export default function TalentFilter() {
         spec_slug && dispatch(load_talent_tree(spec_slug))
     }, [spec_slug])
 
+    // the menu is right-aligned to the icon, which isn't at the right edge of the page: shift it back into the viewport
+    useLayoutEffect(() => {
+        const menu = menu_ref.current
+        if (!open || !menu) { return }
+        const fit = () => {
+            menu.style.transform = ""
+            const rect = menu.getBoundingClientRect()
+            const shift = rect.left < VIEWPORT_MARGIN
+                ? VIEWPORT_MARGIN - rect.left
+                : Math.min(0, window.innerWidth - VIEWPORT_MARGIN - rect.right)
+            if (shift) { menu.style.transform = `translateX(${shift}px)` }
+        }
+        fit()
+        window.addEventListener("resize", fit)
+        return () => window.removeEventListener("resize", fit)
+    }, [open, tree])
+
     const close = () => {
-        set_open(false)
+        // set_open(false)
         set_pinned(false)
     }
 
@@ -157,6 +176,7 @@ export default function TalentFilter() {
                 {selected.length > 0 && <span className={styles.badge}>{selected.length}</span>}
                 {selected.length == 0 && <span className={`${styles.badge} ${styles.new}`}>new</span>}
                 {open && <div
+                    ref={menu_ref}
                     className={`${styles.menu} bg-dark rounded border`}
                 >
                     {tree_content}
