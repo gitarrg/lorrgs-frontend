@@ -1,0 +1,78 @@
+
+.card {
+    position: fixed;
+    z-index: 1050;
+    width: min(460px, calc(100vw - 32px));
+    padding: 0.75rem;
+
+    display: grid;
+    gap: 0.5rem;
+
+    background: #1d2027;
+    border: 1px solid #333845;
+    border-radius: 0.375rem;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+
+    color: #e4e6ea; // the class color is only for the name and the taken talents
+    pointer-events: none;
+}
+
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.name {
+    color: var(--wow-color);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.total {
+    color: #8d93a1;
+    font-variant-numeric: tabular-nums;
+}
+
+.note {
+    color: #8d93a1;
+    font-size: small;
+}
+
+
+/********************************
+        Tree Graph
+*********************************/
+.graph {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: #15171c;
+    border-radius: 0.25rem;
+
+    text {
+        fill: #5c6270;
+        font-size: 9px;
+    }
+}
+
+.edge {
+    stroke: #333845;
+    stroke-width: 1;
+}
+
+.taken {
+    fill: var(--wow-color);
+}
+
+.partial {
+    fill: var(--wow-color);
+    opacity: 0.5;
+}
+
+.untaken {
+    fill: #2a2e38;
+}

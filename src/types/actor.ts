@@ -1,5 +1,6 @@
 import type Cast from "./cast";
 import type Event from "./event";
+import type { Talents } from "./talent_tree";
 
 
 export default interface Actor {
@@ -31,6 +32,8 @@ export default interface Actor {
     // spec ranking
     pinned?: boolean
     rank?: number
+    /** Retail only. Missing for players loaded before Talents were stored */
+    talents?: Talents
 }
 
 /** Assign per-spell cast counters on the actor (mutates and returns the same object). */

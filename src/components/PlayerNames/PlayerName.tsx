@@ -4,7 +4,8 @@ import { get_role } from "../../store/roles";
 import { get_spec } from "../../store/specs";
 import { kFormatter } from "../../utils";
 import { MODES } from "../../store/ui";
-import { MouseEvent } from 'react'
+import { MouseEvent, PointerEvent, useEffect, useRef, useState } from 'react'
+import { get_has_talents } from "../../store/game_versions";
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import { WCL_URL } from "../../constants";
 import * as ui_store from "../../store/ui"
@@ -13,6 +14,7 @@ import styles from "./PlayerName.module.scss";
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 import WebpImg from "../WebpImg";
+import TalentCard from "../Talents/TalentCard";
 
 const MAX_CHAR_NAME = 6;
 
@@ -82,6 +84,52 @@ export function BossName({ fight, boss }: { fight: Fight; boss: Actor }) {
     );
 }
 
+/**
+ * Open the Talent Card on hover, or with a tap on touch devices (a second tap follows the link).
+ * Leaving the name, scrolling or clicking elsewhere closes it.
+ */
+function useTalentCard(enabled: boolean) {
+    const ref = useRef<HTMLDivElement>(null)
+    const pointer_type = useRef("mouse")
+    const [anchor, set_anchor] = useState<DOMRect | null>(null)
+
+    const open = () => ref.current && set_anchor(ref.current.getBoundingClientRect())
+    const close = () => set_anchor(null)
+
+    useEffect(() => {
+        if (!anchor) { return }
+        const on_pointer_down = (event: globalThis.PointerEvent) => {
+            if (!ref.current?.contains(event.target as Node)) { close() }
+        }
+        window.addEventListener("scroll", close, { capture: true, passive: true })
+        document.addEventListener("pointerdown", on_pointer_down)
+        return () => {
+            window.removeEventListener("scroll", close, { capture: true })
+            document.removeEventListener("pointerdown", on_pointer_down)
+        }
+    }, [anchor])
+
+    if (!enabled) {
+        return { anchor: null, props: {}, on_click: undefined }
+    }
+
+    return {
+        anchor,
+        props: {
+            ref,
+            onPointerDown: (event: PointerEvent) => { pointer_type.current = event.pointerType },
+            onPointerEnter: (event: PointerEvent) => { event.pointerType == "mouse" && open() },
+            onPointerLeave: (event: PointerEvent) => { event.pointerType == "mouse" && close() },
+        },
+        on_click: (event: MouseEvent) => {
+            if (event.defaultPrevented || pointer_type.current == "mouse" || anchor) { return }
+            event.preventDefault()
+            open()
+        },
+    }
+}
+
+
 export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     ///////////////////
     // hooks
@@ -93,6 +141,9 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     const role = useAppSelector((state) => get_role(state, spec?.role ?? ""));
     const mode_spec = mode == MODES.SPEC_RANKING;
     const mode_comp = mode == MODES.COMP_RANKING;
+    const has_talents = useAppSelector(get_has_talents);
+    const show_talents = mode_spec && has_talents;
+    const talent_card = useTalentCard(show_talents);
 
     ///////////////////
     // apply filters
@@ -118,8 +169,9 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     ///////////////////
     // render
     return (
-        <div className={`${styles.player_name} ${className}`}>
-            <a target="_blank" href={report_url}>
+        <div className={`${styles.player_name} ${className}`} {...talent_card.props}>
+            {talent_card.anchor && <TalentCard player={player} anchor={talent_card.anchor} />}
+            <a target="_blank" href={report_url} onClick={talent_card.on_click}>
                 {mode_comp && role?.icon_path && <img className={styles.icon} src={role.icon_path}></img>}
                 <WebpImg className={styles.icon} src={spec.icon_path} />
 
