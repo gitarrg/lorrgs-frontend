@@ -16,8 +16,8 @@ import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 
 
-const MARGIN = 16  // to the edges of the viewport
-const OFFSET = 6   // to the name
+const MARGIN = 40  // to the edges of the viewport
+const OFFSET = -10   // to the name
 
 
 function TalentCardBody({ player }: { player: Actor }) {

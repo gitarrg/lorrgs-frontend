@@ -6,13 +6,17 @@ import styles from "./TalentCard.module.scss";
 
 const WIDTH = 436
 const HEIGHT = 184
-const GAP = 10
-const LABEL_HEIGHT = 16
+const GAP = 4
+const LABEL_HEIGHT = 24
 const PADDING = 6
-const RADIUS = 3
+const RADIUS = 4
 
 
-export type Panel = { label: string, width: number, nodes: TalentNode[] }
+export type Panel = {
+    label?: string,
+    width: number,
+    nodes: TalentNode[]
+}
 export type Point = [number, number]
 
 
@@ -40,7 +44,9 @@ export function layout(panels: Panel[], [total_width, total_height]: Point = [WI
     let x0 = 0
     for (const panel of panels) {
         const width = unit * panel.width
-        labels.push({ x: x0 + width / 2, label: panel.label })
+        if (panel.label) {
+            labels.push({ x: x0 + width / 2, label: panel.label })
+        }
 
         if (panel.nodes.length) {
             const xs = panel.nodes.map(node => node.x)

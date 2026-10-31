@@ -35,10 +35,16 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click,
         <svg className={styles.tree} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="talent filter tree">
             {labels.map(({ x, label }) => <text key={x} x={x} y={10} textAnchor="middle">{label}</text>)}
 
+            {/* Lines */}
             {tree.edges.map(([a, b], i) => {
                 const [pa, pb] = [positions[a], positions[b]]
                 if (!pa || !pb) { return null }
-                return <line key={i} className={styles.edge} x1={pa[0]} y1={pa[1]} x2={pb[0]} y2={pb[1]} />
+                return <line
+                    key={i}
+                    className={styles.edge}
+                    x1={pa[0]} y1={pa[1]}
+                    x2={pb[0]} y2={pb[1]}
+                />
             })}
 
             {nodes.map(node => {
@@ -51,9 +57,13 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click,
                     const cx = multi ? pos[0] + (i ? r + 0.5 : -r - 0.5) : pos[0]
                     const cy = pos[1]
                     const mode = talent_filter[entry.id]
+
+                    const alpha = (0.3 + 0.7 * share(entry.id)) * 100
+
                     const fill = mode == "with" ? "var(--talent-with)"
                         : mode == "without" ? "var(--talent-without)"
-                        : `rgba(228, 230, 234, ${(0.12 + 0.7 * share(entry.id)).toFixed(2)})`
+                            : `hsl(0, 0%, ${alpha.toFixed(0)}%)`
+
                     return (
                         <g key={entry.id}>
                             <circle

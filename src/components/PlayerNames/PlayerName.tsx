@@ -170,7 +170,15 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     // render
     return (
         <div className={`${styles.player_name} ${className}`} {...talent_card.props}>
-            {talent_card.anchor && <TalentCard fight={fight} player={player} anchor={talent_card.anchor} />}
+
+            {talent_card.anchor &&
+                <TalentCard
+                    fight={fight}
+                    player={player}
+                    anchor={talent_card.anchor}
+                />
+            }
+
             <a target="_blank" href={report_url} onClick={talent_card.on_click}>
                 {mode_comp && role?.icon_path && <img className={styles.icon} src={role.icon_path}></img>}
                 <WebpImg className={styles.icon} src={spec.icon_path} />

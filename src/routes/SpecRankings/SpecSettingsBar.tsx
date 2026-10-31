@@ -21,8 +21,8 @@ function SpecSettingsBar() {
             {/* spacer to push filter settings to the right side */}
             <div className="ml-auto"></div>
 
+            {has_talents && <TalentFilter />}{/*   only for spec rankings */}
             <FilterSettings />
-            {has_talents && <TalentFilter />}
         </SettingsBar>
     )
 }

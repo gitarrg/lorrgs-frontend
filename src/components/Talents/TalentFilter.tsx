@@ -12,24 +12,11 @@ import type { TalentFilter as TalentFilterValues } from "../../store/ui";
 import { URL_PARAM, cycle_talent, format_talent_filter, get_fight_talents } from "./talent_filter";
 import TalentFilterTree from "./TalentFilterTree";
 import styles from "./TalentFilter.module.scss";
+import WebpImg from "../WebpImg";
+import { ASSETS } from "../../constants";
 
 
 const CLOSE_DELAY = 250  // ms, to move the mouse from the icon into the menu
-
-
-function TalentIcon() {
-    return (
-        <svg width="26" height="22" viewBox="0 0 26 22" aria-hidden="true">
-            <g stroke="currentColor" fill="none" strokeWidth="1.4">
-                <path d="M13 4v5M13 9l-7 6M13 9l7 6M13 9v6" />
-                <circle cx="13" cy="3" r="2.2" fill="currentColor" />
-                <circle cx="6" cy="17" r="2.2" />
-                <circle cx="20" cy="17" r="2.2" />
-                <circle cx="13" cy="17" r="2.2" fill="currentColor" />
-            </g>
-        </svg>
-    )
-}
 
 
 /** How many of the loaded fights take each talent */
@@ -73,7 +60,7 @@ export default function TalentFilter() {
     }, [spec_slug])
 
     const close = () => {
-        set_open(false)
+        set_open(true)
         set_pinned(false)
         set_hovered(null)
     }
@@ -148,7 +135,7 @@ export default function TalentFilter() {
                 {talent_filter[hovered] && ` · only ${talent_filter[hovered]}`}
             </span>
         </>
-        : <span className={styles.note}>Click a talent: only with → only without → off. Brightness = how many listed fights take it.</span>
+        : null
 
     let tree_content = <TalentFilterTree
         tree={tree!}
@@ -162,42 +149,53 @@ export default function TalentFilter() {
 
     return (
         <div>
-            <small>Talents</small>
-            <div className="bg-dark p-1 rounded border">
-                <div ref={ref} className={styles.wrap} onPointerEnter={on_pointer_enter} onPointerLeave={on_pointer_leave}>
-                    <button
-                        className={`${styles.icon} ${selected.length ? styles.active : ""}`}
-                        onClick={on_icon_click}
-                        aria-expanded={open}
-                        aria-label="Talent filter"
-                    >
-                        <TalentIcon />
-                        {selected.length > 0 && <span className={styles.badge}>{selected.length}</span>}
-                    </button>
+            <div
+                ref={ref}
+                className={styles.wrap}
+                onPointerEnter={on_pointer_enter}
+                onPointerLeave={on_pointer_leave}
+            >
+                <WebpImg
+                    className={`button icon-m rounded border ${selected.length ? styles.active : ""}`}
+                    onClick={on_icon_click}
+                    src={`${ASSETS}/images/spells/ability_marksmanship.jpg`}
+                />
+                {selected.length > 0 && <span className={styles.badge}>{selected.length}</span>}
+                {open && <div
+                    className={`${styles.menu} bg-dark rounded border`}
+                >
+                    {tree_content}
+                    <div className={styles.status}>{status}</div>
 
-                    {open && <div className={styles.menu}>
-                        {tree_content}
-                        <div className={styles.status}>{status}</div>
+                    <div className={styles.selection}>
+                        {selected.map(([entry_id, mode]) => (
+                            <span key={entry_id} className={`${styles.chip} ${styles[mode]}`}>
+                                <button onClick={() => set_talent_filter(cycle_talent(talent_filter, entry_id))}>
+                                    {name(entry_id)}
+                                </button>
+                                <button onClick={() => remove_talent(entry_id)} aria-label="Remove">×</button>
+                            </span>
+                        ))}
 
-                        <div className={styles.selection}>
-                            {selected.map(([entry_id, mode]) => (
-                                <span key={entry_id} className={`${styles.chip} ${styles[mode]}`}>
-                                    <button onClick={() => set_talent_filter(cycle_talent(talent_filter, entry_id))}>
-                                        {mode} {name(entry_id)}
-                                    </button>
-                                    <button onClick={() => remove_talent(entry_id)} aria-label="Remove">×</button>
-                                </span>
-                            ))}
-                            {selected.length > 0 && <button className={styles.link} onClick={() => set_talent_filter({})}>Clear</button>}
-                            {selected.length == 0 && <span className={styles.note}>No talents selected.</span>}
-                        </div>
+                        {/* clear button */}
+                        {selected.length > 0 && <button
+                            className={styles.link}
+                            onClick={() => set_talent_filter({})}
+                        >
+                            Clear
+                        </button>}
 
-                        {selected.length > 0 && without_talents > 0 &&
-                            <div className={styles.note}>{without_talents} fights without talent data hidden</div>
-                        }
-                    </div>}
+                        {selected.length == 0 && <span className={styles.note}>No talents selected.</span>}
+                    </div>
+
+                    {selected.length > 0 && without_talents > 0 &&
+                        <div className={styles.note}>{without_talents} fights without talent data hidden</div>
+                    }
                 </div>
+                }
             </div>
+
+
         </div>
     )
 }
