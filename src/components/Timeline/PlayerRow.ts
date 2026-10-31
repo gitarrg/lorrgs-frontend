@@ -25,6 +25,7 @@ import type Actor from "../../types/actor";
 export default class PlayerRow {
 
     duration: number
+    fight: Fight
     foreground: Player
     background: PlayerRowBackground
 
@@ -32,6 +33,7 @@ export default class PlayerRow {
     _pending_events: Map<string, any> = new Map()
 
     constructor(fight: Fight, player: Actor) {
+        this.fight = fight
         this.duration = Math.ceil(fight.duration / 1000); // ms to s
 
         // Groups
@@ -72,7 +74,7 @@ export default class PlayerRow {
     //
 
     _handle_apply_filters(filters: any) {
-        const visible = filter_logic.is_player_visible(this.foreground.player_data, filters)
+        const visible = filter_logic.is_player_visible(this.foreground.player_data, filters, this.fight)
         this.visible(visible)
     }
 

@@ -17,9 +17,8 @@ function get_date_ceil_ms(date_str: string): number {
 }
 
 
-function is_fight_visible(fight: Fight, filters: FilterValues) {
-
-    if (fight.pinned) { return true }
+/** The filters on the fight itself (kill time, region, date, talents). */
+function fight_matches_filters(fight: Fight, filters: FilterValues) {
 
     let fight_duration = fight.duration / 1000  // ms to s
     if (filters.killtime.min && filters.killtime.min > fight_duration) { return false }
@@ -41,10 +40,18 @@ function is_fight_visible(fight: Fight, filters: FilterValues) {
         if (to && fight_ms > get_date_ceil_ms(to)) { return false }
     }
 
-    if (!fight_matches_talents(fight, filters.talents)) { return false }
+    return fight_matches_talents(fight, filters.talents)
+}
+
+
+function is_fight_visible(fight: Fight, filters: FilterValues) {
+
+    // the first fight stays (for its boss), but its players still follow the fight filters
+    if (fight.pinned) { return true }
+    if (!fight_matches_filters(fight, filters)) { return false }
 
     const has_boss = fight.boss && is_player_visible(fight.boss, filters)
-    return has_boss || fight.players.some(player => is_player_visible(player, filters))
+    return has_boss || fight.players.some(player => is_player_visible(player, filters, fight))
 }
 
 
@@ -62,9 +69,11 @@ function player_has_visible_casts(player: Actor): boolean {
     )
 }
 
-function is_player_visible(player: Actor, filters: FilterValues) {
+/** `fight`: the fight of a player, to apply the fight filters to the players of a pinned fight. */
+function is_player_visible(player: Actor, filters: FilterValues, fight?: Fight) {
 
     if (player.pinned) { return true }
+    if (fight && player.class_slug != "boss" && !fight_matches_filters(fight, filters)) { return false }
 
     // players without a known spec are not shown (the boss lane has no spec)
     if (player.class_slug != "boss" && !get_spec(store.getState(), player.spec_slug)) { return false }

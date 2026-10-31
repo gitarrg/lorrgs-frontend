@@ -136,7 +136,7 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     const mode = useAppSelector((state) => state.ui.mode);
     // a boolean, so the row only re-renders when it gets shown or hidden.
     // (also depends on spell_display: with "hide empty rows", rows without visible casts are hidden)
-    const visible = useAppSelector((state) => FILTERS.is_player_visible(player, state.ui.filters));
+    const visible = useAppSelector((state) => FILTERS.is_player_visible(player, state.ui.filters, fight));
     const spec = useAppSelector((state) => get_spec(state, player.spec_slug));
     const role = useAppSelector((state) => get_role(state, spec?.role ?? ""));
     const mode_spec = mode == MODES.SPEC_RANKING;

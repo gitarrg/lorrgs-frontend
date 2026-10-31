@@ -43,7 +43,6 @@ function ShareTooltip({ spec, share }: { spec: Spec, share: number }) {
                 el.style.display = ""
                 el.style.left = `${rect.left}px`
                 el.style.top = `${rect.bottom + 2}px`
-                // el.style.minWidth = `${rect.width}px`
             } else if (el) {
                 el.style.display = "none"
             }
@@ -69,7 +68,7 @@ function ShareTooltip({ spec, share }: { spec: Spec, share: number }) {
 /** The whole tree of a spec (class | hero trees | spec), with one clickable dot (the talent icon) per talent: choice nodes are split. */
 export default function TalentFilterTree({ tree, spec, talent_filter, share, on_click, on_clear }: Props) {
 
-    const [hovered, set_hovered] = useState<{ entry: TalentEntry, x: number, y: number } | null>(null)
+    const [hovered, set_hovered] = useState<TalentEntry | null>(null)
 
     const nodes = tree.nodes.filter(is_drawn)
     const hero_trees = hero_tree_names(nodes)
@@ -93,6 +92,8 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
         <div className={styles.tree_wrap}>
 
             <svg className={styles.tree} viewBox={`0 ${VIEW_Y} ${WIDTH} ${VIEW_HEIGHT}`} role="img" aria-label="talent filter tree">
+
+                <clipPath id="talent-clip" clipPathUnits="objectBoundingBox"><circle cx={0.5} cy={0.5} r={0.5} /></clipPath>
 
                 {/* Labels */}
                 {labels.map(({ x, y, label }) =>
@@ -128,16 +129,14 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
                         const state = mode ?? (locked ? "fixed" : "varies")
                         dots.push({ entry, cx, cy, r, locked })
 
-                        const hover = hovered?.entry.id == entry.id && !locked
                         return (
-                            <g key={entry.id} className={`${styles.node} ${styles[`node_${state}`]} ${hover ? styles.hovered : ""}`}>
-                                <clipPath id={`clip-${entry.id}`}><circle cx={cx} cy={cy} r={r} /></clipPath>
+                            <g key={entry.id} className={`${styles.node} ${styles[`node_${state}`]}`}>
                                 <circle className={styles.bg} cx={cx} cy={cy} r={r} />
                                 {entry.icon && <image
                                     className={styles.icon_image}
                                     href={`${ASSETS}/images/spells/${entry.icon}`}
                                     x={cx - r} y={cy - r} width={2 * r} height={2 * r}
-                                    clipPath={`url(#clip-${entry.id})`}
+                                    clipPath="url(#talent-clip)"
                                 />}
                                 <circle className={styles.ring} cx={cx} cy={cy} r={r} />
                             </g>
@@ -158,11 +157,11 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
                     }}
                     onClick={event => { event.preventDefault(); locked || on_click(entry.id) }}
                     onContextMenu={event => { event.preventDefault(); on_clear(entry.id) }}
-                    onPointerEnter={() => set_hovered({ entry, x: cx, y: cy })}
+                    onPointerEnter={() => set_hovered(entry)}
                     onPointerLeave={() => set_hovered(null)}
                 />
             ))}
-            {hovered && <ShareTooltip spec={spec} share={share(hovered.entry.id)} />}
+            {hovered && <ShareTooltip spec={spec} share={share(hovered.id)} />}
         </div>
     )
 }

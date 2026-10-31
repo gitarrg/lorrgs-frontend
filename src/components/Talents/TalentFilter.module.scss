@@ -31,7 +31,6 @@
     position: absolute;
     top: -6px;
     right: -6px;
-    /* min-width: 18px; */
     padding: 0 4px;
 
     color: #15171c;
@@ -84,23 +83,6 @@
     }
 }
 
-.tooltip {
-    white-space: pre;
-    // color: white;
-
-    padding: 0.4rem;
-    border-radius: .3rem;
-    text-align: center;
-    width: max-content;
-    background: var(--tooltip-color);
-
-    b {
-        color: red;
-        // color: var(--wow-color);
-    }
-
-}
-
 // attached below the wowhead tooltip (rendered into the body)
 .share {
     position: fixed;
@@ -127,9 +109,6 @@
 
     &.locked { cursor: default; }
 }
-
-
-
 
 
 .note {
@@ -215,13 +194,13 @@ button.with, button.without {
 
 // one dot of the filter tree: `node_<state>` is with / without (selected) or fixed / varies (not selected)
 .node {
-    .bg { fill: hsl(0, 0%, 10%); }
+    pointer-events: none;
+
+    .bg { fill: var(--bg-dark); }
     .ring {
-        fill: transparent;
-        pointer-events: none;
+        fill: none;
         stroke-width: 1;
     }
-    .icon_image { pointer-events: none; }
 }
 
 .node_with .ring { stroke: var(--talent-with); }
@@ -230,20 +209,17 @@ button.with, button.without {
 // taken by no one / everyone: nothing to filter by
 .node_fixed {
     .icon_image {
-        filter: grayscale(1) blur(0.25px);
-        opacity: 0.1;
+        filter: grayscale(1) brightness(0.75) blur(0.5px);
+        opacity: 0.2;
     }
-    .ring {
-        stroke: hsl(0, 0%, 30%);
-        stroke-width: 0.5;
-    }
+    .ring { stroke: hsl(0, 0%, 30%); }
 }
 
 // taken by some
 .node_varies {
     .icon_image {
         filter: grayscale(1);
-        opacity: 0.5;
+        opacity: 0.75;
     }
     .ring {
         stroke: hsl(0, 0%, 50%);
