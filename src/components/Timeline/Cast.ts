@@ -290,11 +290,15 @@ export default class Cast extends Konva.Group {
         this.cast_duration?.width(this._duration * scale_x)
     }
 
+    /** @returns true if the cast was shown or hidden */
     _handle_spell_display(payload: { [key: number]: boolean }) {
         const visible = payload[this.spell_id] !== false
         const was_visible = this.visible()
+        if (visible === was_visible) { return false }
+
         this.visible(visible)
-        if (visible && !was_visible) { this.update_style() }
+        if (visible) { this.update_style() }
+        return true
     }
 
     _handle_spell_selected(payload: number[]) {
@@ -303,8 +307,6 @@ export default class Cast extends Konva.Group {
     }
 
     handle_event(event_name: string, payload: any) {
-
-        if (event_name === constants.EVENT_SPELL_DISPLAY) {this._handle_spell_display(payload)}
 
         // FIXME: this causes issues when you unhide a spell, where it does not have the latest events applied.
         // if (!this.visible()) { return} // no need to process the following events

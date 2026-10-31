@@ -7,7 +7,7 @@ import FightRow from "./FightRow";
 import type Fight from "../../types/fight";
 import Cast, { IMAGES } from "./Cast";
 import type Player from "./Player";
-import { MODES } from "../../store/ui";
+import { MODES, type FilterValues } from "../../store/ui";
 
 
 // for performance
@@ -51,6 +51,9 @@ export default class Stage extends Konva.Stage {
 
     anchor_ts: number = 0
     anchor_name: string = "pull"
+
+    /** filters last applied (see `EVENT_APPLY_FILTERS`) */
+    private applied_filters?: FilterValues
 
     private rows: FightRow[] = []
     back_layer: Konva.Layer
@@ -292,7 +295,8 @@ export default class Stage extends Konva.Stage {
         this.handle_event(constants.EVENT_IMAGES_LOADED)
     }
 
-    _handle_apply_filters() {
+    _handle_apply_filters(filters: FilterValues) {
+        this.applied_filters = filters
         this.layout_children()
         this._schedule_cache_work() // players that just became visible might still need their cache
     }
@@ -306,10 +310,20 @@ export default class Stage extends Konva.Stage {
         this.ruler.handle_event(event_name, payload)
         this.rows.forEach(row => row.handle_event(event_name, payload))
 
-        if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters() }
+        if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters(payload) }
 
-        this.batchDraw() // for now, just assume we need to redraw after every event
+        // with "hide empty rows", rows whose casts are all hidden now must hide too
+        if (event_name === constants.EVENT_SPELL_DISPLAY && this.applied_filters?.hide_empty_rows) {
+            this.handle_event(constants.EVENT_APPLY_FILTERS, this.applied_filters)
+        }
+
+        // these only change casts: redraw just their layer (every redrawn layer is a full-size canvas)
+        if (Stage.CAST_EVENTS.has(event_name)) { this.main_layer.batchDraw() }
+        else { this.batchDraw() } // for now, just assume we need to redraw after every other event
     }
+
+    /** Events that only change casts (all on the main layer). */
+    static CAST_EVENTS = new Set([constants.EVENT_SPELL_DISPLAY, constants.EVENT_SPELL_SELECTED])
 
     ////////////////////////////////////////////////////////////////////////////
 

@@ -69,11 +69,10 @@ export default function TimelineCanvas() {
         stage_ref.current!.handle_event(constants.EVENT_SPELL_SELECTED, selected_spells);
     }, [selected_spells]);
 
+    // (spell display changes re-apply the filters inside the stage, when needed)
     useEffect(() => {
         stage_ref.current!.handle_event(constants.EVENT_APPLY_FILTERS, filters);
-
-        // including "spell_display" because rows might be hidden when all casts are hidden
-    }, [filters, spell_display]);
+    }, [filters]);
 
     //////////////////////////////////////
     // Render
