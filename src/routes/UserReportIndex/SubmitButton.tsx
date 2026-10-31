@@ -45,7 +45,7 @@ export function SubmitButton() {
     ////////////////////////////////
     // Callbacks
     //
-    async function submit(form_data) {
+    async function submit(form_data: Record<string, any>) {
 
         set_loading(true);
 

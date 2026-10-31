@@ -17,11 +17,11 @@
     &:hover {
         border-color: white;
         background-color: hsl(0, 0%, 30%);
-        
+
         .label_pull, .label_duration {
             display: none;
         }
-        
+
         .label_percent, .label_time {
             display: initial;
         }

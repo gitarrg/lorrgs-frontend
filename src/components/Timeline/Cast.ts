@@ -1,5 +1,6 @@
 
 import Konva from "konva"
+import type { Context } from "konva/lib/Context"
 
 import * as constants from "./constants"
 import store from "./../../store/store"
@@ -11,82 +12,51 @@ import type Stage from "./Stage"
 /** simple cache to reuse existing images */
 export const IMAGES: {[key: number]: HTMLImageElement} = {}
 
-
-function create_cast_cooldown(spell: Spell) {
-    if (!spell.cooldown) { return }
-    return new Konva.Rect({
-    name: "cast_cooldown",
-        width: spell.cooldown * constants.DEFAULT_ZOOM,
-        height: constants.LINE_HEIGHT-1,
-        fill: spell.color,
-        opacity: 0.1,
-        listening: false,
-        transformsEnabled: "none",
-        perfectDrawEnabled: false,
-    })
-}
-
-
-function create_cast_duration(spell: Spell, duration=0) {
-    if (!duration) { return }
-
-    return new Konva.Rect({
-        name: "cast_duration",
-        width: duration  * constants.DEFAULT_ZOOM,
-        height: constants.LINE_HEIGHT-1,
-        fill: spell.color,
-        listening: true,  // the fake bbox might be smaller
-        opacity: 0.5,
-        transformsEnabled: "none",
-        perfectDrawEnabled: false,
-    })
-}
-
-function create_cast_icon(spell: Spell) {
-
-    // simple cache to reuse existing images
+function get_image(spell: Spell) {
     if (IMAGES[spell.spell_id] === undefined) {
         IMAGES[spell.spell_id] = new Image()
         IMAGES[spell.spell_id].src = spell.icon_path
     }
-
-    // create the konva image
-    return new Konva.Image({
-        name: "cast_icon",
-        image: IMAGES[spell.spell_id],
-        listening: false,
-        x: 3.5, // padding
-        y: 3.5, // padding
-        width: 20,
-        height: 20,
-        stroke: "black",
-        strokeWidth: 1,
-        transformsEnabled: "position",
-        perfectDrawEnabled: false,
-    })
+    return IMAGES[spell.spell_id]
 }
 
 
-function create_cast_text(cast: Cast) {
-    return new Konva.Text({
-        name: "cast_text",
-        text: toMMSS(cast.timestamp),
-        x: 27,
-        y: 0,
-        fontSize: 14,
+// Layout of a cast
+const BAR_HEIGHT = constants.LINE_HEIGHT - 1
+const ICON_X = 3.5 // padding
+const ICON_SIZE = 20
+const TEXT_X = 27
 
-        height: constants.LINE_HEIGHT,
-        verticalAlign: 'middle',
+/** extra width of the hit area past the end of the text */
+const TEXT_PADDING = 3
 
-        fontFamily: "Lato",
-        fill: "white",
-        listening: false,
-        transformsEnabled: "position",
-    })
+
+const CAST_TEXT_FONT = "14px Lato"
+const CAST_TEXT_FONT_BOLD = "bold 14px Lato"
+
+/** widths of already measured texts (only filled once the font is loaded, the fallback font has other widths) */
+const TEXT_WIDTHS: { [text: string]: number } = {}
+let measure_context: CanvasRenderingContext2D | null = null
+
+function measure_text(text: string) {
+    if (TEXT_WIDTHS[text] !== undefined) { return TEXT_WIDTHS[text] }
+
+    if (!measure_context) {
+        measure_context = document.createElement("canvas").getContext("2d")!
+        measure_context.font = CAST_TEXT_FONT
+    }
+    const width = measure_context.measureText(text).width
+
+    if (document.fonts?.check(CAST_TEXT_FONT) ?? true) { TEXT_WIDTHS[text] = width }
+    return width
 }
 
 
-export default class Cast extends Konva.Group {
+/**
+ * A single cast: cooldown bar, duration bar, icon and cast time, drawn by one shape.
+ * (one node instead of six: Konva's per-node setup dominated building the timeline)
+ */
+export default class Cast extends Konva.Shape {
 
     spell_id: number
     timestamp: number
@@ -96,25 +66,42 @@ export default class Cast extends Konva.Group {
     hovering: boolean
     selected: boolean
 
-    cast_cooldown?: Konva.Rect
-    cast_duration?: Konva.Rect
-    cast_icon?: Konva.Image
-    cast_text?: Konva.Text
-    mouse_event_bbox?: Konva.Rect
-
     tooltip_content?: string
 
     // default opacity (might be different for procs)
     _default_opacity: number = 1.0
 
+    /** pixels per second */
+    private scale_x = constants.DEFAULT_ZOOM
+
+    private image?: HTMLImageElement
+    private text = ""
+    private text_width = 0
+    private has_cooldown = false
+
+    // which parts are shown (see `_handle_display_settings`)
+    private show_icon = true
+    private show_text = true
+    private show_cooldown = true
+    private show_duration = true
+
+    // style of the parts (see `update_style`)
+    private cooldown_opacity = 0.1
+    private duration_opacity = 0.5
+    private icon_opacity = 1.0
+    private icon_stroke = true
+    private text_bold = false
+    private text_fill = "white"
+
 
     constructor(cast_data: CastType) {
-        super()
-
-        // Kova Attrs
-        this.listening(true)
-        this.transformsEnabled("position")
-        this.name("Cast")
+        super({
+            name: "Cast",
+            y: 1, // for the background stroke
+            listening: true,
+            transformsEnabled: "position",
+            perfectDrawEnabled: false,
+        })
 
         // get redux store
         const state = store.getState()
@@ -132,49 +119,22 @@ export default class Cast extends Konva.Group {
         // guess we are done here
         if (!this.spell) { return }
 
-        ////////////////////////////
-        // create elements
-        //
-        this.cast_cooldown = create_cast_cooldown(this.spell)
-        this.cast_cooldown && this.add(this.cast_cooldown)
-
-        this.cast_duration = create_cast_duration(this.spell, this._duration)
-        this.cast_duration && this.add(this.cast_duration)
-
-        this.cast_icon = create_cast_icon(this.spell)
-        this.cast_icon && this.add(this.cast_icon)
-
-        this.cast_text = create_cast_text(this)
-        this.cast_text && this.add(this.cast_text)
+        this.image = get_image(this.spell)
+        this.text = toMMSS(this.timestamp)
+        this.text_width = measure_text(this.text)
+        this.has_cooldown = !!this.spell.cooldown
 
         // Dim procs
         if ( this.is_proc(cast_data) )
         {
             this._default_opacity = 0.5
             this.opacity(this._default_opacity)
-            this.cast_cooldown?.remove()
+            this.has_cooldown = false
         }
-
-        // invisible box for mouse events
-        // (some casts might not have a duration-bar to use)
-        this.mouse_event_bbox = new Konva.Rect({
-            width: this.cast_text.width() + 3,
-            height: constants.LINE_HEIGHT-1,
-            listening: true,
-        });
-        this.add(this.mouse_event_bbox)
 
         let show = state.spells.spell_display[this.spell_id]
         show = (show === undefined) ? this.spell.show : show
         this.visible(show)
-        this.y(1); // for the background stroke
-
-        ////////////////////////////
-        // Setup Events
-        //
-        this.mouse_event_bbox.on('mousedown', (e) => this.handle_mousedown(e));
-        this.mouse_event_bbox.on('mouseover', () => {this.hover(true)});
-        this.mouse_event_bbox.on('mouseout', () => {this.hover(false)});
 
         // prepare the tooltip content, as it doesn't change
         this.tooltip_content = `${this.spell.name}`
@@ -188,7 +148,7 @@ export default class Cast extends Konva.Group {
     }
 
     /**
-     * @param cast_data 
+     * @param cast_data
      * @returns Boolean True if a Cast is a Proc
      */
     is_proc(cast_data: CastType) {
@@ -205,6 +165,61 @@ export default class Cast extends Konva.Group {
         return (Math.abs(cast_data.d - reg_duration) > 3)
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Drawing
+    //
+
+    _sceneFunc(context: Context) {
+        const alpha = context._context.globalAlpha // the cast's own opacity, set by Konva
+
+        if (this.show_cooldown && this.has_cooldown) {
+            context.setAttr("globalAlpha", alpha * this.cooldown_opacity)
+            context.setAttr("fillStyle", this.spell.color)
+            context.fillRect(0, 0, this.spell.cooldown * this.scale_x, BAR_HEIGHT)
+        }
+
+        if (this.show_duration && this._duration) {
+            context.setAttr("globalAlpha", alpha * this.duration_opacity)
+            context.setAttr("fillStyle", this.spell.color)
+            context.fillRect(0, 0, this._duration * this.scale_x, BAR_HEIGHT)
+        }
+
+        if (this.show_icon) {
+            context.setAttr("globalAlpha", alpha * this.icon_opacity)
+            if (this.icon_stroke) {
+                context.setAttr("lineWidth", 1)
+                context.setAttr("strokeStyle", "black")
+                context.strokeRect(ICON_X, ICON_X, ICON_SIZE, ICON_SIZE)
+            }
+            if (this.image?.complete && this.image.naturalWidth) {
+                context.drawImage(this.image, ICON_X, ICON_X, ICON_SIZE, ICON_SIZE)
+            }
+        }
+
+        if (this.show_text) {
+            context.setAttr("globalAlpha", alpha)
+            context.setAttr("font", this.text_bold ? CAST_TEXT_FONT_BOLD : CAST_TEXT_FONT)
+            context.setAttr("textBaseline", "middle")
+            context.setAttr("textAlign", "left")
+            context.setAttr("fillStyle", this.text_fill)
+            context.fillText(this.text, TEXT_X, constants.LINE_HEIGHT / 2)
+        }
+    }
+
+    /** The area that receives mouse events: the visible label parts, else the duration bar. */
+    _hitFunc(context: Context) {
+        let width = 0
+        if (this.show_text) { width = TEXT_X + this.text_width + TEXT_PADDING }
+        else if (this.show_icon) { width = TEXT_X }
+        else if (this.show_duration) { width = this._duration * this.scale_x }
+        if (!width) { return }
+
+        // with the icon hidden, the text starts at the same place
+        const x = (this.show_icon || !this.show_text) ? 0 : TEXT_X
+        context.setAttr("fillStyle", this.colorKey)
+        context.fillRect(x, 0, width - x, BAR_HEIGHT)
+    }
+
     update_style() {
 
         if (!this.visible()) { return;}
@@ -213,24 +228,24 @@ export default class Cast extends Konva.Group {
         if (!stage) { return}
 
         // default state
-        this.cast_text?.fontStyle("normal");
-        this.cast_text?.fill("white");
-        this.cast_duration?.opacity(0.5)
-        this.cast_cooldown?.opacity(0.1)
-        this.cast_icon?.opacity(1.0)
-        this.cast_icon?.strokeWidth(1)
+        this.text_bold = false
+        this.text_fill = "white"
+        this.duration_opacity = 0.5
+        this.cooldown_opacity = 0.1
+        this.icon_opacity = 1.0
+        this.icon_stroke = true
         this.opacity(this._default_opacity)
 
         if (stage.has_selection) {
             if (this.selected) {
-                this.cast_text?.fontStyle("bold");
-                this.cast_duration?.opacity(0.85)
-                this.cast_cooldown?.opacity(0.4)
+                this.text_bold = true
+                this.duration_opacity = 0.85
+                this.cooldown_opacity = 0.4
             } else {
                 this.opacity(.5)
-                this.cast_text?.fill("#ccc")
-                this.cast_icon?.opacity(0.5)
-                this.cast_icon?.strokeWidth(0)
+                this.text_fill = "#ccc"
+                this.icon_opacity = 0.5
+                this.icon_stroke = false
             }
         }
     }
@@ -240,21 +255,26 @@ export default class Cast extends Konva.Group {
     //
 
     _handle_display_settings(settings: { [key: string]: boolean}) {
-        this.cast_icon?.visible(settings.show_casticon)
-        this.cast_text?.visible(settings.show_casttime)
-        this.cast_cooldown?.visible(settings.show_cooldown)
-        this.cast_duration?.visible(settings.show_duration)
+        this.show_icon = settings.show_casticon
+        this.show_text = settings.show_casttime
+        this.show_cooldown = settings.show_cooldown
+        this.show_duration = settings.show_duration
     }
 
     _handle_zoom_change(scale_x: number) {
         this.x(scale_x * this.timestamp)
-        this.cast_cooldown?.width(this.spell.cooldown * scale_x)
-        this.cast_duration?.width(this._duration * scale_x)
+        this.scale_x = scale_x
     }
 
+    /** @returns true if the cast was shown or hidden */
     _handle_spell_display(payload: { [key: number]: boolean }) {
         const visible = payload[this.spell_id] !== false
+        const was_visible = this.visible()
+        if (visible === was_visible) { return false }
+
         this.visible(visible)
+        if (visible) { this.update_style() }
+        return true
     }
 
     _handle_spell_selected(payload: number[]) {
@@ -263,8 +283,6 @@ export default class Cast extends Konva.Group {
     }
 
     handle_event(event_name: string, payload: any) {
-
-        if (event_name === constants.EVENT_SPELL_DISPLAY) {this._handle_spell_display(payload)}
 
         // FIXME: this causes issues when you unhide a spell, where it does not have the latest events applied.
         // if (!this.visible()) { return} // no need to process the following events
@@ -295,7 +313,7 @@ export default class Cast extends Konva.Group {
         position.x += container_position.x
         position.y += container_position.y
 
-        position.x += this.cast_icon ? (this.cast_icon.x() + (this.cast_icon.width() / 2)) : 0 // center above the icon
+        position.x += ICON_X + (ICON_SIZE / 2) // center above the icon
         store.dispatch({
             type: constants.EVENT_SHOW_TOOLTIP,
             payload: {

@@ -1,10 +1,10 @@
 import { ControlledMenu, useMenuState } from '@szhsin/react-menu';
-import { ReactNode, useRef } from 'react'
+import { ReactNode, RefObject, useRef } from 'react'
 
 
 export default function DropdownMenu({button, children} : {button: ReactNode, children: ReactNode}) {
 
-    const ref = useRef(null);
+    const ref = useRef<HTMLDivElement>(null);
     const [menuState, toggleMenu] = useMenuState();
 
     const callbacks = {
@@ -22,7 +22,7 @@ export default function DropdownMenu({button, children} : {button: ReactNode, ch
             </div>
 
             {/* Menu Content */}
-            <ControlledMenu {...callbacks} {...menuState} anchorRef={ref}>
+            <ControlledMenu {...callbacks} {...menuState} anchorRef={ref as RefObject<HTMLDivElement>}> {/* react-menu still expects the pre React 19 RefObject type */}
                 {children}
             </ControlledMenu>
         </div>

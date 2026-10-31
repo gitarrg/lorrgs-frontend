@@ -12,8 +12,8 @@ import Konva from "konva";
 import PhaseMarker from "./PhaseMarker";
 import PlayerRow from "./PlayerRow";
 import type Actor from "../../types/actor";
-import type Boss from "../../types/boss";
 import type Fight from "../../types/fight";
+import type Stage from "./Stage";
 
 
 export default class FightRow {
@@ -24,6 +24,9 @@ export default class FightRow {
     duration: number
     _visible: boolean
     _fight_data: Fight
+
+    // latest payload per event received while hidden
+    _pending_events: Map<string, any> = new Map()
 
     // Timestamp of the current anchor (in milliseconds)
     anchor_offset: number = 0
@@ -69,7 +72,7 @@ export default class FightRow {
         this.layout_children()
     }
 
-    add_row(fight: Fight, player: Actor | Boss) {
+    add_row(fight: Fight, player: Actor) {
         const row = new PlayerRow(fight, player)
         this.rows.push(row)
 
@@ -114,14 +117,15 @@ export default class FightRow {
 
         if (value !== undefined) {
             this._visible = value
-            this.rows.forEach(row => row.visible(value))
-            this.phases.forEach(item => item.visible(value))
-            this.killtime_text.visible(value)
+            this.foreground.visible(value)
+            this.background.visible(value)
+            this.overlay.visible(value)
         }
         return this._visible
     }
 
     height(): number {
+        if (!this._visible) { return 0 }
         const heights = this.rows.map(row => row.height())
         return heights.reduce((a, b) => a + b, 0)
     }
@@ -187,11 +191,28 @@ export default class FightRow {
         this.layout_children()
     }
 
+    _replay_pending_events() {
+        const pending = this._pending_events
+        this._pending_events = new Map()
+        pending.forEach((payload, event_name) => this.handle_event(event_name, payload))
+    }
+
     handle_event(event_name: string, payload: any) {
 
         // apply filters to the fight itself (before processing children)
-        if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_pre(payload) }
-        if (!this.visible()) { return }
+        if (event_name === constants.EVENT_APPLY_FILTERS) {
+            this._handle_apply_filters_pre(payload)
+            if (this.visible()) { this._replay_pending_events() }
+        }
+
+        // hidden: remember the latest payload and replay once visible again
+        if (!this.visible()) {
+            if (event_name !== constants.EVENT_APPLY_FILTERS && event_name !== constants.EVENT_PHASE_HOVER) {
+                this._pending_events.delete(event_name)
+                this._pending_events.set(event_name, payload)
+            }
+            return
+        }
 
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         if (event_name === constants.EVENT_ANCHOR_CHANGED) { this.handle_anchor_changed(payload) }

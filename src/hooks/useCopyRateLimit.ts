@@ -29,7 +29,9 @@ function getEntries(): UsageEntry[] {
 
 
 function save(entries: UsageEntry[]) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    } catch { /* storage blocked or full: nothing to persist to */ }
 }
 
 

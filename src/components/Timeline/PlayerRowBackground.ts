@@ -38,6 +38,5 @@ export default class PlayerRowBackground extends Konva.Group {
 
     handle_event(event_name: string, payload: any) {
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload)}
-        this.width() && this.cache()
     }
 }

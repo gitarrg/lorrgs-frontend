@@ -1,6 +1,7 @@
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { fetch_data } from '../api'
+import { fetch_data, fetch_versioned } from '../api'
+import { AUTO_DIFFICULTY } from '../constants'
 import { MODES } from './ui'
 import type { AppDispatch, RootState } from './store'
 import type Actor from '../types/actor';
@@ -173,7 +174,9 @@ const SLICE = createSlice({
                 // of the same spec in a single fight
                 const player_id = fight.players[0]?.source_id || 0
                 const fight_key = `${fight.report_id}/${fight.fight_id}/${player_id}`
-                state.fights_by_id[fight_key] = fight
+
+                // frozen values are better for performance
+                state.fights_by_id[fight_key] = Object.freeze(fight)
                 state.fight_ids.push(fight_key)
             })
             return state
@@ -209,15 +212,15 @@ async function _load_spec_rankings(
     boss_slug: string,
     difficulty: string,
     metric: string = ""
-): Promise<Fight[]> {
+): Promise<Fight[] | null> {
 
     const query = new URLSearchParams({
         difficulty: difficulty,
         metric: metric,
     })
 
-    const url = `/api/spec_ranking/${spec_slug}/${boss_slug}?${query.toString()}`;
-    const spec_ranking: SpecRanking = await fetch_data(url);
+    const spec_ranking: SpecRanking | null = await fetch_versioned(`/spec_ranking/${spec_slug}/${boss_slug}?${query.toString()}`);
+    if (!spec_ranking) { return null }  // Game Version changed meanwhile
 
     // unpack the fights
     let fights: Fight[] = []
@@ -225,7 +228,7 @@ async function _load_spec_rankings(
         report.fights?.forEach(fight => {
             fight.report_id = report.report_id
             fight.start_time = fight.start_time ?? report.start_time
-            fight.difficulty = fight.difficulty ?? get_difficulty_id(difficulty);
+            fight.difficulty = fight.difficulty ?? get_difficulty_id(spec_ranking.difficulty);
             fight.region = report.region
             fights.push(fight)
             // insert ranking data
@@ -246,9 +249,9 @@ async function _load_spec_rankings(
 async function _load_comp_rankings(
     boss_slug: string,
     search = ""
-): Promise<Fight[]> {
-    const url = `/api/comp_ranking/${boss_slug}${search}`;
-    const comp_rankings: CompRanking = await fetch_data(url);
+): Promise<Fight[] | null> {
+    const comp_rankings: CompRanking | null = await fetch_versioned(`/comp_ranking/${boss_slug}${search}`);
+    if (!comp_rankings) { return null }  // Game Version changed meanwhile
 
     // unpack the fights
     let fights: Fight[] = []
@@ -262,31 +265,45 @@ async function _load_comp_rankings(
 }
 
 
+/**
+ * Every fights request gets a number. Only the latest one may store its fights and end the loading state,
+ * so a slow earlier response (eg.: from the previous spec/boss) can't overwrite the current page.
+ */
+let latest_fights_request = 0
+
+
 export function load_fights(
     mode: string,
-    { boss_slug, spec_slug = "", difficulty = "mythic", metric = "dps", search = "" }: { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
+    { boss_slug, spec_slug = "", difficulty = AUTO_DIFFICULTY, metric = "dps", search = "" }: { boss_slug: string, spec_slug?: string, difficulty?: string, metric?: string, search?: string }
 ) {
 
     return async (dispatch: AppDispatch) => {
 
+        const request = ++latest_fights_request
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
+        try {
 
-        // load
-        let fights: Fight[] = []
-        switch (mode) {
-            case MODES.SPEC_RANKING:
-                fights = await _load_spec_rankings(spec_slug, boss_slug, difficulty, metric)
-                break;
-            case MODES.COMP_RANKING:
-                fights = await _load_comp_rankings(boss_slug, search)
-                break;
-            default:
-                break;
-        } // switch
+            // load
+            let fights: Fight[] | null = []
+            switch (mode) {
+                case MODES.SPEC_RANKING:
+                    fights = await _load_spec_rankings(spec_slug, boss_slug, difficulty, metric)
+                    break;
+                case MODES.COMP_RANKING:
+                    fights = await _load_comp_rankings(boss_slug, search)
+                    break;
+                default:
+                    break;
+            } // switch
 
-        // set
-        dispatch(set_fights(fights))
-        dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            // set
+            if (request != latest_fights_request) { return } // outdated
+            fights && dispatch(set_fights(fights))
+        } finally {
+            if (request == latest_fights_request) {
+                dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            }
+        }
     } // async dispatch
 }
 
@@ -294,17 +311,24 @@ export function load_fights(
 export function load_report_fights(report_id: string, search: string = "") {
 
     return async (dispatch: AppDispatch) => {
+        const request = ++latest_fights_request
         dispatch({ type: "ui/set_loading", payload: { key: "fights", value: true } })
+        try {
 
-        const url = `/api/user_reports/${report_id}/fights`;
-        const report_data = await fetch_data(url, search)
+            const url = `/api/user_reports/${report_id}/fights`;
+            const report_data = await fetch_data(url, search)
 
-        // insert report id (for urls)
-        report_data.fights?.forEach((fight: Fight) => {
-            fight.report_id = report_id
-        })
+            // insert report id (for urls)
+            report_data.fights?.forEach((fight: Fight) => {
+                fight.report_id = report_id
+            })
 
-        dispatch(set_fights(report_data.fights))
-        dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            if (request != latest_fights_request) { return } // outdated
+            dispatch(set_fights(report_data.fights))
+        } finally {
+            if (request == latest_fights_request) {
+                dispatch({ type: "ui/set_loading", payload: { key: "fights", value: false } })
+            }
+        }
     }
 }

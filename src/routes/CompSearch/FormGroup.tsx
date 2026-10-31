@@ -1,4 +1,4 @@
-
+import type { JSX } from "react"
 
 
 export default function FormGroup({name, className="", children} : {name: string, className?: string, children?: JSX.Element[] | JSX.Element}) {

@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import LorrgsLogo from "../assets/LorrgsLogo"
 import styles from "./HeaderLogo.module.scss"
 

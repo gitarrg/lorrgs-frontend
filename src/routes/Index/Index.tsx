@@ -3,6 +3,7 @@ import IndexLinks from './IndexLinks'
 import IndexSpecs from './IndexSpecs'
 import IndexUserReport from "./IndexUserReport"
 import LoginButton from "../auth/LoginButton"
+import { VersionTabs } from "../../components/VersionSwitch/Variants"
 import styles from "./Index.module.scss"
 import { useTitle } from 'react-use'
 
@@ -48,9 +49,9 @@ export default function Index() {
 
     return <>
 
-        <div className="mt-1 d-flex justify-content-end">
+        <VersionTabs>
             <LoginButton />
-        </div>
+        </VersionTabs>
 
         <div className={`${styles.container} mt-4`}>
             <div className={`${styles.center}`}>

@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 import CompPreview, { CompCountMap } from "../../components/CompPreview"
 import HeaderLogo from '../../components/HeaderLogo';

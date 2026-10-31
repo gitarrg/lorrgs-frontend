@@ -2,7 +2,6 @@ import { defineConfig, loadEnv } from 'vite';
 import { execSync } from 'child_process';
 
 // Plugins
-import { visualizer } from "rollup-plugin-visualizer";
 import { VitePluginRadar } from 'vite-plugin-radar'
 import react from '@vitejs/plugin-react';
 
@@ -37,7 +36,7 @@ export default defineConfig(({ mode }) => {
     return {
 
         build: {
-            target: "es2015",
+            target: "es2020",
             outDir: "build",
 
             rollupOptions: {
@@ -49,7 +48,7 @@ export default defineConfig(({ mode }) => {
                         if (id.includes('/node_modules/konva')) {
                             return "vendor__konva";
                         }
-                        if (id.includes('/node_modules/react')) {
+                        if (/\/node_modules\/(react|react-dom|scheduler)\//.test(id)) {
                             return "vendor__react"
                         }
 
@@ -78,13 +77,9 @@ export default defineConfig(({ mode }) => {
                 },
             }),
 
-            // rollup-plugin-visualizer
-            // needs to be the last plugin in the list
-            visualizer({
-                open: false,
-            }),
-
         ], // end: plugins
+
+        envPrefix: ["VITE_", "LORRGS_"],
 
         define: {
             "GIT_COMMIT_HASH": JSON.stringify(commitHash),

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useDispatch } from 'react-redux'
+import { useAppDispatch } from '../../../store/store_hooks'
 
 import { set_filters } from '../../../store/ui'
 import ButtonGroup from '../shared/ButtonGroup'
@@ -7,7 +7,7 @@ import styles from './FilterDateRange.module.scss'
 
 
 export default function FilterDateRangeGroup() {
-    const dispatch = useDispatch()
+    const dispatch = useAppDispatch()
     const [from, setFrom] = useState<string>("")
     const [to, setTo] = useState<string>("")
 

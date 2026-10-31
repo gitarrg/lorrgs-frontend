@@ -1,10 +1,9 @@
 import { get_roles } from "../../store/roles"
 import { get_spec, load_spec_spells } from "../../store/specs"
-import { useAppSelector } from "../../store/store_hooks"
-import { NavLink, Route, Routes, useParams } from "react-router-dom"
-import { get_spell } from "../../store/spells";
+import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
+import { NavLink, Route, Routes, useParams } from "react-router"
+import { get_spell, sort_spell_types } from "../../store/spells";
 import Spec from "../../types/spec";
-import { useDispatch } from 'react-redux'
 import { get_is_loading } from "../../store/ui";
 
 import styles from "./AdminSpells.module.scss"
@@ -95,7 +94,7 @@ function SpellDisplay() {
 
     const { spec_slug } = useParams<{ spec_slug: string }>()
     const spec = useAppSelector((state) => get_spec(state, spec_slug ?? ""))
-    const dispatch = useDispatch()
+    const dispatch = useAppDispatch()
     const is_loading = useAppSelector(state => get_is_loading(state))
 
     if (!spec_slug || !spec) {

@@ -2,7 +2,7 @@ import type Spec from "../types/spec"
 import type { RootState, AppDispatch } from './store'
 import { ASSETS } from '../constants'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { fetch_data } from '../api'
+import { fetch_versioned, get_game_version_name } from '../api'
 import { group_spells_by_type } from './store_utils'
 
 
@@ -98,27 +98,32 @@ export function load_specs() {
 
     return async (dispatch: AppDispatch) => {
         dispatch({ type: "ui/set_loading", payload: { key: "specs", value: true } })
+        try {
 
-        // Request
-        const specs_dict = await fetch_data("/api/specs");
-        const specs = specs_dict.specs || []
-
-        dispatch(SLICE.actions.set_specs(specs))
-        dispatch({ type: "ui/set_loading", payload: { key: "specs", value: false } })
+            // Request
+            const specs_dict = await fetch_versioned("/specs");
+            specs_dict && dispatch(SLICE.actions.set_specs(specs_dict.specs || []))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "specs", value: false } })
+        }
     }
 }
 
 
 export function load_spec_spells(spec_slug: string) {
 
-    return async (dispatch: AppDispatch) => {
-        const load_key = `specs/${spec_slug}`
+    return async (dispatch: AppDispatch, getState: () => RootState) => {
+        const load_key = `specs/${get_game_version_name()}/${spec_slug}`
+        if (getState().ui._loading[load_key]) { return } // already on its way
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: true } })
+        try {
 
-        // Request
-        const spells = await fetch_data(`/api/specs/${spec_slug}/spells`);
+            // Request
+            const spells = await fetch_versioned(`/specs/${spec_slug}/spells`);
 
-        dispatch(SLICE.actions.set_spec_spells({ spec_slug, spells }))
-        dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
+            spells && dispatch(SLICE.actions.set_spec_spells({ spec_slug, spells }))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
+        }
     }
 }

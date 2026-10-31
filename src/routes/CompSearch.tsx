@@ -1,6 +1,6 @@
 /* Page/Form to search for specific Comps*/
 import { useTitle } from "react-use";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useForm, FormProvider } from "react-hook-form";
 
 import BossSelect from "./CompSearch/BossSelect";

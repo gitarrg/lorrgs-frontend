@@ -47,7 +47,10 @@ export function TabTitle({index, children} : {index: number, children : ReactNod
 }
 
 
-export function Tab({index, icon, children} : {index?: number, title: ReactNode, icon?: ReactNode, children : ReactNode}) {
+export type TabProps = {index?: number, title: ReactNode, icon?: ReactNode, children : ReactNode}
+
+
+export function Tab({index, icon, children} : TabProps) {
 
     const context = useContext(TabGroupContext)
     const selected = context.active_tabs[index || 0]
@@ -58,7 +61,7 @@ export function Tab({index, icon, children} : {index?: number, title: ReactNode,
 
 
 /** a sub-group of Tabs */
-export function TabGroup({children, initial_tab=0} : {children : ReactElement[], initial_tab?: number}) {
+export function TabGroup({children, initial_tab=0} : {children : ReactElement<TabProps>[], initial_tab?: number}) {
 
 
     const initial_state = {...DEFAULT_CONTEXT, active_tabs: {[initial_tab]: true}}

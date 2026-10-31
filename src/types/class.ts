@@ -13,9 +13,6 @@ export default interface Class {
     /** Maps full_name_slug → Blizzard spec id (null for synthetic specs). */
     spec_ids?: number[]
 
-    // just to silence some TS errors
-    class?: any
-
     // class color (incuding the #)
     color: string
 

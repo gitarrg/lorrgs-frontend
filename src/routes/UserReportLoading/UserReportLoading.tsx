@@ -1,6 +1,6 @@
 import styles from "./UserReportLoading.module.scss"
 import { FaCircleNotch } from "react-icons/fa";
-import { Fragment, useEffect, useState } from "react";
+import { type JSX, Fragment, useEffect, useState } from "react";
 import { PATREON_LINK } from "../../constants";
 import { fetch_data } from "../../api";
 import { useNavigate, useLocation } from "react-router";
@@ -139,7 +139,7 @@ export default function UserReportLoading() {
                     <TaskItems items={ task_info.items } />
                 </div>
 
-                { queue == "free" && 
+                { queue == "free" &&
                     <div className={styles.advert + " bg-dark mt-4 p-2 border rounded wow-border-druid"}>
                         <span>
                             Become a <a href={PATREON_LINK} target="_blank" className="wow-legendary"><strong>Patreon</strong></a> and get acces to the premium queue!

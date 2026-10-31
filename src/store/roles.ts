@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { createSelector } from 'reselect'
 import type Role from '../types/role'
 import { AppDispatch, RootState } from './store'
-import { fetch_data } from '../api'
+import { fetch_versioned } from '../api'
 import { LOGO_URL, ASSETS } from '../constants'
 
 
@@ -19,7 +19,7 @@ export const get_player_roles = createSelector(
     get_roles,
     (roles_map) => {
         const roles = Object.values(roles_map)
-        return roles.filter(role => role.id < 1000)
+        return roles.filter(role => role.playable)
     }
 )
 
@@ -53,6 +53,7 @@ function create_placeholder_role(name: string, num_specs: number) {
         specs: specs,
         spec_ids: [],
         metrics: [],
+        playable: true,
         icon_path: LOGO_URL,
     }
 }
@@ -95,13 +96,17 @@ export function load_roles() {
 
     return async (dispatch: AppDispatch) => {
         dispatch({ type: "ui/set_loading", payload: { key: "roles", value: true } })
+        try {
 
-        // request
-        let roles_map: { roles: Role[] } = await fetch_data("/api/roles")
-        let roles = roles_map.roles // take array from dict
-        roles.sort((a, b) => (a.id > b.id) ? 1 : -1)
-
-        dispatch(SLICE.actions.set_roles(roles))
-        dispatch({ type: "ui/set_loading", payload: { key: "roles", value: false } })
+            // request
+            const roles_map: { roles: Role[] } | null = await fetch_versioned("/roles")
+            if (roles_map) {
+                let roles = roles_map.roles // take array from dict
+                roles.sort((a, b) => (a.id > b.id) ? 1 : -1)
+                dispatch(SLICE.actions.set_roles(roles))
+            }
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "roles", value: false } })
+        }
     }
 }

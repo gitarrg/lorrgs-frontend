@@ -59,8 +59,10 @@ export const get_spell_types = (state: RootState) =>
 /**
  * Returns spells by a specific type.
  */
+const NO_SPELL_IDS: number[] = [] // stable reference, so selectors built on this don't see a "new" value each call
+
 export function get_spells_for_type(state: RootState, spell_type: string) {
-    return state.spells.spells_by_type[spell_type] || []
+    return state.spells.spells_by_type[spell_type] || NO_SPELL_IDS
 }
 
 
@@ -191,11 +193,11 @@ export function sort_spell_types(spell_types: string[]) {
 function _add_spells_to_state(state: SpellSliceState, new_spells: SpellDict) {
 
     new_spells = process_spells(new_spells)
-    state.all_spells = { ...state.all_spells, ...new_spells }
+    Object.assign(state.all_spells, new_spells)
 
     state.spells_by_type = {} // reset the list
     Object.values(state.all_spells).forEach(spell => {
-        state.spells_by_type[spell.spell_type] = [...(state.spells_by_type[spell.spell_type] || []), spell.spell_id]
+        (state.spells_by_type[spell.spell_type] ||= []).push(spell.spell_id)
 
         const prev = state.spell_display[spell.spell_id]
         state.spell_display[spell.spell_id] = (prev === undefined) ? spell.show : prev // keep prev. value

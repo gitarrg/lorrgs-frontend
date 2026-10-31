@@ -55,7 +55,7 @@ function CopyAsNoteButton({ fight, player }: { fight: Fight, player: Actor }) {
 export function BossName({ fight, boss }: { fight: Fight; boss: Actor }) {
     ///////////////////
     // hooks
-    const filters = useAppSelector((state) => state.ui.filters);
+    const visible = useAppSelector((state) => FILTERS.is_player_visible(boss, state.ui.filters));
     const boss_type = useAppSelector((state) => get_boss(state, boss.boss_slug));
 
     ///////////////////
@@ -66,7 +66,7 @@ export function BossName({ fight, boss }: { fight: Fight; boss: Actor }) {
     if (!boss_type) {
         return null;
     }
-    if (!FILTERS.is_player_visible(boss, filters)) {
+    if (!visible) {
         return null;
     }
 
@@ -86,14 +86,13 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     ///////////////////
     // hooks
     const mode = useAppSelector((state) => state.ui.mode);
-    const filters = useAppSelector((state) => state.ui.filters);
+    // a boolean, so the row only re-renders when it gets shown or hidden.
+    // (also depends on spell_display: with "hide empty rows", rows without visible casts are hidden)
+    const visible = useAppSelector((state) => FILTERS.is_player_visible(player, state.ui.filters));
     const spec = useAppSelector((state) => get_spec(state, player.spec_slug));
-    const role = useAppSelector((state) => get_role(state, spec.role));
+    const role = useAppSelector((state) => get_role(state, spec?.role ?? ""));
     const mode_spec = mode == MODES.SPEC_RANKING;
     const mode_comp = mode == MODES.COMP_RANKING;
-
-    // including "spell_display" because rows might be hidden when all casts are hidden
-    const spell_display = useAppSelector((state) => state.spells.spell_display);
 
     ///////////////////
     // apply filters
@@ -103,7 +102,7 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     if (!spec) {
         return null;
     }
-    if (!FILTERS.is_player_visible(player, filters)) {
+    if (!visible) {
         return null;
     }
 
@@ -121,13 +120,13 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     return (
         <div className={`${styles.player_name} ${className}`}>
             <a target="_blank" href={report_url}>
-                {mode_comp && <img className={styles.icon} src={role.icon_path}></img>}
+                {mode_comp && role?.icon_path && <img className={styles.icon} src={role.icon_path}></img>}
                 <WebpImg className={styles.icon} src={spec.icon_path} />
 
                 <span className={styles.name}>{player.name.substring(0, MAX_CHAR_NAME)}</span>
                 <span className={styles.copy}><CopyAsNoteButton fight={fight} player={player} /></span>
-                {mode_spec && player.rank && <span className={styles.rank}>#{player.rank}</span>}
-                {player.total && <span className={styles.total}>{kFormatter(player.total)}</span>}
+                {mode_spec && !!player.rank && <span className={styles.rank}>#{player.rank}</span>}
+                {!!player.total && <span className={styles.total}>{kFormatter(player.total)}</span>}
             </a>
         </div>
     );

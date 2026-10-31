@@ -168,7 +168,7 @@ function get_note_nsrt(
 
 /**
  * Get formatted note text based on current selection
- * 
+ *
  * @param name - The name of the player
  * @param dynamic - Whether to use dynamic timers
  * @param noteFormat - The format of the note

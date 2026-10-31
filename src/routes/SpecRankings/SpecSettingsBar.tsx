@@ -1,10 +1,12 @@
+import { memo } from "react";
 import DisplaySettings from '../../components/SettingsBar/DisplaySettings'
 import FilterSettings from '../../components/SettingsBar/FilterSettings/FilterSettings'
 import SettingsBar from '../../components/SettingsBar/SettingsBar'
 import SpellSettings from '../../components/SettingsBar/SpellSettings/SpellSettings'
 
 
-export default function SpecSettingsBar() {
+/** memoized: takes no props, so the page's re-renders (loading flags, spell loads) don't reach it */
+function SpecSettingsBar() {
 
     // Render
     return (
@@ -18,3 +20,5 @@ export default function SpecSettingsBar() {
         </SettingsBar>
     )
 }
+
+export default memo(SpecSettingsBar)

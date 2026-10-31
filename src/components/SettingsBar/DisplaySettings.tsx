@@ -2,8 +2,7 @@ import { FaClock, FaHourglass, FaImage, FaSkull, FaStream } from 'react-icons/fa
 import { IoFlagSharp } from 'react-icons/io5';
 import { ReactNode, useContext, useEffect } from 'react'
 import { update_settings } from '../../store/ui'
-import { useAppSelector } from '../../store/store_hooks'
-import { useDispatch } from 'react-redux'
+import { useAppDispatch, useAppSelector } from '../../store/store_hooks'
 import ButtonGroup, { ButtonGroupContext } from './shared/ButtonGroup'
 import MetricSelect from "./MetricSelect"
 import styles from "./DisplaySettings.module.scss";
@@ -16,7 +15,7 @@ function Button({attr_name, children, tooltip=""} : {attr_name: string, children
     // Hooks
     //
     const attr_value = useAppSelector(state => state.ui.settings[attr_name])
-    const dispatch = useDispatch()
+    const dispatch = useAppDispatch()
     const group_context = useContext(ButtonGroupContext)
 
     function onClick() {

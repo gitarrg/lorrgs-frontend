@@ -1,10 +1,10 @@
 import { useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router'
 import { useTitle } from 'react-use'
 
 /* local imports */
-import { DEFAULT_DIFFICULTY } from '../constants'
-import { get_boss, load_boss_spells } from '../store/bosses'
+import { AUTO_DIFFICULTY, DEFAULT_DIFFICULTY } from '../constants'
+import { get_boss, get_zones, load_boss_spells } from '../store/bosses'
 import { get_spec, load_spec_spells } from '../store/specs'
 import { load_fights } from "../store/fights"
 import { useAppDispatch, useAppSelector } from '../store/store_hooks'
@@ -15,6 +15,7 @@ import Navbar from "./../components/Navbar/Navbar"
 import PlayerNamesList from "./../components/PlayerNames/PlayerNamesList"
 import SpecRankingsHeader from './SpecRankings/SpecRankingsHeader'
 import SpecSettingsBar from './SpecRankings/SpecSettingsBar'
+import { VersionTabsHidden } from '../components/VersionSwitch/Variants'
 import TimelineCanvas from "./../components/Timeline/TimelineCanvas"
 import type Spec from '../types/spec'
 import useQuery from "../hooks/useQuery"
@@ -32,8 +33,10 @@ export default function SpecRankings() {
 
     ////////////////////////////////////////////////////////////////////////////
     // Hooks
-    let { spec_slug, boss_slug } = useParams<{ spec_slug: string, boss_slug: string }>();
+    let { spec_slug, boss_slug } = useParams() as { spec_slug: string, boss_slug: string }; // required route segments
     const query = useQuery()
+    const navigate = useNavigate()
+    const zones = useAppSelector(state => get_zones(state))
     const dispatch = useAppDispatch()
     const is_loading = useAppSelector(state => ui_store.get_is_loading(state))
     const boss = useAppSelector(state => get_boss(state, boss_slug))
@@ -41,7 +44,8 @@ export default function SpecRankings() {
     // if (!boss_slug || !spec_slug) { return null }
     // if (!spec || !boss) { return null }
 
-    const difficulty = query.get("difficulty") || DEFAULT_DIFFICULTY
+    // zones with a single ranked difficulty ignore the url param and use `auto`
+    const difficulty = boss?.difficulty ? AUTO_DIFFICULTY : (query.get("difficulty") || DEFAULT_DIFFICULTY)
     const metric = query.get("metric") || spec_metric(spec)
 
     // const
@@ -52,12 +56,21 @@ export default function SpecRankings() {
     //
     useTitle(`Lorrgs: ${spec?.full_name || "..."} vs. ${boss?.full_name || "..."}`)
 
+    // `random` (after switching game version): keep the spec, pick any boss of the new version
+    useEffect(() => {
+        if (boss_slug != "random") { return }
+        const boss_names = zones.flatMap(zone => zone.bosses)
+        if (!boss_names.length) { return }  // not loaded yet
+        const pick = boss_names[Math.floor(Math.random() * boss_names.length)]
+        navigate(`/spec_ranking/${spec_slug}/${pick}`, { replace: true })
+    }, [boss_slug, zones])
+
     // set UI values
     useEffect(() => { dispatch(ui_store.set_mode(mode)) }, [])
     useEffect(() => { dispatch(ui_store.set_boss_slug(boss_slug)) }, [boss_slug])
     useEffect(() => { dispatch(ui_store.set_spec_slug(spec_slug)) }, [spec_slug])
     useEffect(() => { dispatch(ui_store.set_difficulty(difficulty)) }, [difficulty])
-    useEffect(() => { dispatch(ui_store.set_metric(metric)) }, [spec, metric])
+    useEffect(() => { dispatch(ui_store.set_metric(metric)) }, [metric])
 
     useEffect(() => {
         if (!spec) { return }
@@ -71,13 +84,15 @@ export default function SpecRankings() {
         dispatch(load_boss_spells(boss.full_name_slug))
     }, [boss])
 
-    // load fights
+    // load fights, once the spells of spec and boss are in
+    // (depends on flags instead of the spec/boss objects: those get replaced whenever their spells are set again)
+    const spec_spells_loaded = !!spec?.spells_by_type
+    const boss_spells_loaded = !!boss?.spells_by_type
     useEffect(() => {
-        if (!spec?.spells_by_type) { return }
-        if (!boss?.spells_by_type) { return }
+        if (!spec_spells_loaded || !boss_spells_loaded) { return }
         if (!metric) { return }
         dispatch(load_fights(mode, { spec_slug, boss_slug, difficulty, metric }))
-    }, [spec, boss, difficulty, metric])
+    }, [spec_slug, boss_slug, spec_spells_loaded, boss_spells_loaded, difficulty, metric])
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -85,6 +100,7 @@ export default function SpecRankings() {
     //
     return (
         <div className={mode}>
+            <VersionTabsHidden />
 
             <div className="mt-3 flex-row d-flex flex-wrap-reverse">
                 <SpecRankingsHeader spec_slug={spec_slug} boss_slug={boss_slug} />
@@ -101,8 +117,6 @@ export default function SpecRankings() {
                 <PlayerNamesList />
                 <TimelineCanvas />
             </div>
-
-            {/* <StickyFooterAd /> */}
         </div>
     );
 }

@@ -20,5 +20,8 @@ export default interface Boss extends Spec {
 
     zone_id: number
 
+    /** the only difficulty ranked for this boss's zone (`null` = the user picks one) */
+    difficulty: string | null
+
     phase_type: "static" | "dynamic"
 }

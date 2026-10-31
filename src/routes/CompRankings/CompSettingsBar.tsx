@@ -1,12 +1,14 @@
 /* SettingsBar for Comp Reports*/
-import { Link } from 'react-router-dom';
+import { memo } from "react";
+import { Link } from 'react-router';
 import DisplaySettings from '../../components/SettingsBar/DisplaySettings'
 import SettingsBar from '../../components/SettingsBar/SettingsBar'
 import styles from "./CompSettingsBar.module.scss"
 import SpellSettings from '../../components/SettingsBar/SpellSettings/SpellSettings';
 
 
-export default function CompSettingsBar() {
+/** memoized: takes no props, so the page's re-renders (loading flags, spell loads) don't reach it */
+function CompSettingsBar() {
 
     // Render
     return (
@@ -25,3 +27,5 @@ export default function CompSettingsBar() {
         </SettingsBar>
     )
 }
+
+export default memo(CompSettingsBar)

@@ -37,7 +37,7 @@ export default function UrlInput({input_name="report_url"}) {
     // Hooks: Router
     const { search } = useLocation();
     // Hooks: Form
-    const { register, setValue, formState: { errors } } = useFormContext();
+    const { register, setValue, formState: { errors } } = useFormContext<{ [key: string]: string }>();
     const url = useWatch({name: input_name})
 
 

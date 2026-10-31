@@ -1,8 +1,8 @@
 
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit'
 import type Boss from "../types/boss"
 import type { AppDispatch, RootState } from './store'
-import { fetch_data } from '../api'
+import { fetch_versioned, get_game_version_name } from '../api'
 import { group_spells_by_type } from './store_utils'
 import { ASSETS } from '../constants'
 import type RaidZone from '../types/raid_zone'
@@ -16,10 +16,13 @@ import type RaidZone from '../types/raid_zone'
 // Selectors
 //
 
-export function get_zones(state: RootState) {
-    // Always return zones sorted by numeric `id` so UI ordering is stable.
-    return Object.values(state.zones.zones).sort((a, b) => a.id - b.id)
-}
+const get_zones_by_id = (state: RootState) => state.zones.zones
+
+// Always return zones sorted by numeric `id` so UI ordering is stable. Memoized so the array keeps its reference.
+export const get_zones = createSelector(
+    [get_zones_by_id],
+    (zones) => Object.values(zones).sort((a, b) => a.id - b.id)
+)
 
 export function get_zone(state: RootState, zone_id: number) {
     return state.zones.zones[zone_id]
@@ -60,6 +63,7 @@ function _post_process_boss(zone: RaidZone, boss: Boss) {
     }
 
     boss.zone_id = Math.floor(zone.id)
+    boss.difficulty = zone.difficulty
 
     // insert some static data
     boss.role = "boss"
@@ -71,6 +75,7 @@ interface RaidZoneAPIResponse {
     id: -1,
     name: "",
     name_slug: "",
+    difficulty: string | null,
     bosses: Boss[],
 }
 
@@ -94,6 +99,7 @@ const SLICE = createSlice({
                 id: action.payload.id,
                 name: action.payload.name,
                 name_slug: action.payload.name_slug,
+                difficulty: action.payload.difficulty ?? null,
                 bosses: []
             }
             state.zones[zone.id] = zone
@@ -137,12 +143,15 @@ export function load_bosses(zone_id: number) {
     return async (dispatch: AppDispatch) => {
 
         dispatch({ type: "ui/set_loading", payload: { key: "zone", value: true } })
+        try {
 
-        // Request
-        const zone_info = await fetch_data(`/api/zones/${zone_id}`);
+            // Request
+            const zone_info = await fetch_versioned(`/zones/${zone_id}`);
 
-        dispatch(SLICE.actions.set_zone(zone_info))
-        dispatch({ type: "ui/set_loading", payload: { key: "zone", value: false } })
+            zone_info && dispatch(SLICE.actions.set_zone(zone_info))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: "zone", value: false } })
+        }
     }
 }
 
@@ -153,15 +162,19 @@ export function load_bosses(zone_id: number) {
  */
 export function load_boss_spells(boss_slug: string) {
 
-    return async (dispatch: AppDispatch) => {
+    return async (dispatch: AppDispatch, getState: () => RootState) => {
 
-        const load_key = `boss/${boss_slug}`
+        const load_key = `boss/${get_game_version_name()}/${boss_slug}`
+        if (getState().ui._loading[load_key]) { return } // already on its way
         dispatch({ type: "ui/set_loading", payload: { key: load_key, value: true } })
+        try {
 
-        // Request
-        const spells: RaidZoneAPIResponse = await fetch_data(`/api/bosses/${boss_slug}/spells`);
+            // Request
+            const spells: RaidZoneAPIResponse | null = await fetch_versioned(`/bosses/${boss_slug}/spells`);
 
-        dispatch(SLICE.actions.set_boss_spells({ boss_slug, spells }))
-        dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
+            spells && dispatch(SLICE.actions.set_boss_spells({ boss_slug, spells }))
+        } finally {
+            dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
+        }
     }
 }

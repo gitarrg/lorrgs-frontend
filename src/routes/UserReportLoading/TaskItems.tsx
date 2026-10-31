@@ -8,7 +8,7 @@ function format_tooltip(data: object) {
 }
 
 
-export function task_item_status( items = {} ) {
+export function task_item_status( items: Record<string, { status?: string }> = {} ) {
     // Calc overall status
     let v = 0
     let t = 0

@@ -4,9 +4,7 @@ import PlayerEventLine from "./PlayerEventLine"
 
 export default class Death extends PlayerEventLine {
 
-    get color() {
-        return "#ff4d4d"
-    }
+    color = "#ff4d4d"
 
     _get_text_label() {
         return "💀 " + super._get_text_label()
