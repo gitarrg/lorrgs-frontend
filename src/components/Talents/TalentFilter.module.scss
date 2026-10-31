@@ -198,11 +198,23 @@
     stroke-width: 1;
 }
 
-.dot {
-    cursor: pointer;
-
-    &:hover {
-        stroke: #e4e6ea;
-        stroke-width: 1.5;
-    }
+// attached below the wowhead tooltip (rendered into the body)
+.share {
+    position: fixed;
+    z-index: 2000000;
+    padding: 4px 8px;
+    pointer-events: none;
+    font-size: 12px;
+    color: #e4e6ea;
+    background: hsl(0, 0%, 5%);
+    border: 1px solid hsl(0, 0%, 30%);
+    border-radius: 4px;
 }
+
+// transparent link over a dot: takes the clicks and the wowhead tooltip
+.hit {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
