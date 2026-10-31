@@ -6,6 +6,7 @@ import type { TalentFilter } from "../../store/ui";
 import { ASSETS } from "../../constants";
 import { HERO_WIDTH, hero_tree_names, is_drawn, layout } from "./TalentTreeGraph";
 import styles from "./TalentFilter.module.scss";
+import Spec from "../../types/spec";
 
 
 const WIDTH = 800
@@ -13,14 +14,12 @@ const HEIGHT = 450
 const RADIUS = 12
 const VIEW_Y = -10  // room for the labels
 const VIEW_HEIGHT = HEIGHT - VIEW_Y
-const UNSELECTED_OPACITY = 0.25
 const PADDING = RADIUS * 1.5 + 2  // choice nodes are split into two dots, which reach further out
 
 
 type Props = {
     tree: TalentTree
-    class_name: string
-    spec_name: string
+    spec: Spec
     talent_filter: TalentFilter
     /** share (0-1) of the listed fights taking a talent */
     share: (entry_id: number) => number
@@ -31,7 +30,7 @@ type Props = {
 
 
 /** "42% of Fights", attached below the wowhead tooltip (which follows the cursor, so we follow it) */
-function ShareTooltip({ share }: { share: number }) {
+function ShareTooltip({ spec, share }: { spec: Spec, share: number }) {
     const ref = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -44,7 +43,7 @@ function ShareTooltip({ share }: { share: number }) {
                 el.style.display = ""
                 el.style.left = `${rect.left}px`
                 el.style.top = `${rect.bottom + 2}px`
-                el.style.minWidth = `${rect.width}px`
+                // el.style.minWidth = `${rect.width}px`
             } else if (el) {
                 el.style.display = "none"
             }
@@ -55,14 +54,20 @@ function ShareTooltip({ share }: { share: number }) {
     }, [])
 
     return createPortal(
-        <div ref={ref} className={styles.share} style={{ display: "none" }}>{Math.round(share * 100)}% of Fights</div>,
+        <div
+            ref={ref}
+            className={`wow-${spec.class.name_slug} ${styles.share}`}
+            style={{ display: "none" }}
+        >
+            <b>{Math.round(share * 100)}%</b> of Players
+        </div >,
         document.body,
     )
 }
 
 
 /** The whole tree of a spec (class | hero trees | spec), with one clickable dot (the talent icon) per talent: choice nodes are split. */
-export default function TalentFilterTree({ tree, class_name, spec_name, talent_filter, share, on_click, on_clear }: Props) {
+export default function TalentFilterTree({ tree, spec, talent_filter, share, on_click, on_clear }: Props) {
 
     const [hovered, set_hovered] = useState<{ entry: TalentEntry, x: number, y: number } | null>(null)
 
@@ -70,22 +75,23 @@ export default function TalentFilterTree({ tree, class_name, spec_name, talent_f
     const hero_trees = hero_tree_names(nodes)
 
     const { positions, labels } = layout([
-        { label: class_name, width: 1, nodes: nodes.filter(node => node.tree == "class") },
+        { label: spec.class.name, width: 1, nodes: nodes.filter(node => node.tree == "class") },
         ...hero_trees.map((hero_tree, row) => ({
             label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
             nodes: nodes.filter(node => node.hero_tree == hero_tree),
         })),
-        { label: spec_name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
+        { label: spec.name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
     ], [WIDTH, HEIGHT], PADDING)
 
     // wowhead only scans for links on load (and on hover for some versions): make sure it knows ours
     useEffect(() => { (window as any).$WowheadPower?.refreshLinks?.() }, [tree])
 
     // one link per dot, on top of the svg (wowhead's tooltips attach to links)
-    const dots: { entry: TalentEntry, cx: number, cy: number, r: number }[] = []
+    const dots: { entry: TalentEntry, cx: number, cy: number, r: number, locked: boolean }[] = []
 
     return (
         <div className={styles.tree_wrap}>
+
             <svg className={styles.tree} viewBox={`0 ${VIEW_Y} ${WIDTH} ${VIEW_HEIGHT}`} role="img" aria-label="talent filter tree">
 
                 {/* Labels */}
@@ -115,51 +121,48 @@ export default function TalentFilterTree({ tree, class_name, spec_name, talent_f
                         const cx = multi ? pos[0] + (i ? r + 0.5 : -r - 0.5) : pos[0]
                         const cy = pos[1]
                         const mode = talent_filter[entry.id]
-                        dots.push({ entry, cx, cy, r })
 
+                        // not selected: taken by everyone / no one (nothing to filter by), or somewhere in between
+                        const percent = Math.round(share(entry.id) * 100)
+                        const locked = !mode && (percent == 0 || percent == 100)
+                        const state = mode ?? (locked ? "fixed" : "varies")
+                        dots.push({ entry, cx, cy, r, locked })
+
+                        const hover = hovered?.entry.id == entry.id && !locked
                         return (
-                            <g key={entry.id}>
+                            <g key={entry.id} className={`${styles.node} ${styles[`node_${state}`]} ${hover ? styles.hovered : ""}`}>
                                 <clipPath id={`clip-${entry.id}`}><circle cx={cx} cy={cy} r={r} /></clipPath>
-                                <circle cx={cx} cy={cy} r={r} fill="hsl(0, 0%, 10%)" />
+                                <circle className={styles.bg} cx={cx} cy={cy} r={r} />
                                 {entry.icon && <image
+                                    className={styles.icon_image}
                                     href={`${ASSETS}/images/spells/${entry.icon}`}
                                     x={cx - r} y={cy - r} width={2 * r} height={2 * r}
                                     clipPath={`url(#clip-${entry.id})`}
-                                    // unselected: greyed out, dimmed by how few fights take it, and low contrast
-                                    style={mode ? undefined : { filter: `grayscale(1)`, opacity: UNSELECTED_OPACITY }}
-                                    pointerEvents="none"
                                 />}
-                                <circle
-                                    cx={cx} cy={cy} r={r}
-                                    fill="transparent"
-                                    stroke={hovered?.entry.id == entry.id ? "#e4e6ea" : mode ? `var(--talent-${mode})` : "hsl(0, 0%, 30%)"}
-                                    strokeWidth={hovered?.entry.id == entry.id ? 1.5 : mode ? 1 : 0.5}
-                                    pointerEvents="none"
-                                />
+                                <circle className={styles.ring} cx={cx} cy={cy} r={r} />
                             </g>
                         )
                     })
                 })}
             </svg>
 
-            {dots.map(({ entry, cx, cy, r }) => (
+            {dots.map(({ entry, cx, cy, r, locked }) => (
                 <a
                     key={entry.id}
                     href=""
-                    className={styles.hit}
+                    className={`${styles.hit} ${locked ? styles.locked : ""}`}
                     data-wowhead={`spell=${entry.spell_id}`}
                     style={{
                         left: `${(cx - r) / WIDTH * 100}%`, top: `${(cy - r - VIEW_Y) / VIEW_HEIGHT * 100}%`,
                         width: `${2 * r / WIDTH * 100}%`, height: `${2 * r / VIEW_HEIGHT * 100}%`,
                     }}
-                    onClick={event => { event.preventDefault(); on_click(entry.id) }}
+                    onClick={event => { event.preventDefault(); locked || on_click(entry.id) }}
                     onContextMenu={event => { event.preventDefault(); on_clear(entry.id) }}
                     onPointerEnter={() => set_hovered({ entry, x: cx, y: cy })}
                     onPointerLeave={() => set_hovered(null)}
                 />
             ))}
-
-            {hovered && <ShareTooltip share={share(hovered.entry.id)} />}
+            {hovered && <ShareTooltip spec={spec} share={share(hovered.entry.id)} />}
         </div>
     )
 }

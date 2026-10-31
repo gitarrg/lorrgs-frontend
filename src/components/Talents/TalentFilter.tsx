@@ -83,7 +83,7 @@ export default function TalentFilter() {
     }, [open, tree])
 
     const close = () => {
-        // set_open(false)
+        set_open(false)
         set_pinned(false)
     }
 
@@ -151,8 +151,7 @@ export default function TalentFilter() {
     // Render
     let tree_content = <TalentFilterTree
         tree={tree!}
-        class_name={spec?.class.name ?? "class"}
-        spec_name={spec?.name ?? "spec"}
+        spec={spec}
         talent_filter={talent_filter}
         share={share}
         on_click={entry_id => set_talent_filter(cycle_talent(talent_filter, entry_id))}
@@ -160,6 +159,13 @@ export default function TalentFilter() {
     />
     if (tree === undefined) { tree_content = <div className={styles.note}>Loading talents...</div> }
     if (tree === null) { tree_content = <div className={styles.note}>No talent tree for this spec</div> }
+
+    const info = <>
+        <b>Click</b> once to <span className={styles.with}>include</span>,&nbsp;
+        <b>double click</b> to <span className={styles.without}>exclude</span>,&nbsp;
+        <b>right click</b> to <span className={styles.clear}>clear</span>
+    </>
+
 
     return (
         <div>
@@ -204,7 +210,7 @@ export default function TalentFilter() {
                             Clear
                         </button>}
 
-                        {selected.length == 0 && <span className={styles.note}>No talents selected.</span>}
+                        {selected.length == 0 && <span className={styles.note}>{info}</span>}
                     </div>
 
                     {selected.length > 0 && without_talents > 0 &&
