@@ -7,20 +7,11 @@
 }
 
 .icon {
-    position: relative;
-    display: grid;
-    place-items: center;
-    height: 28px;
-    padding: 0 0.5rem;
 
-    color: #8d93a1;
-    background-color: #3a3a3a;
-    border: 1px solid transparent;
-    border-radius: 0.25rem;
+    width: 34px;
+    height: 34px;
 
-    &:hover {
-        color: #e4e6ea;
-    }
+
 }
 
 .active {
@@ -39,6 +30,19 @@
     background: var(--talent-with);
     border-radius: 999px;
     font-size: 11px;
+    border: 1px solid;
+}
+
+
+.new {
+    padding: 0 3px;
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 13px;
+    text-transform: uppercase;
+    pointer-events: none;
+    left: -6px;
+    right: unset;
 }
 
 

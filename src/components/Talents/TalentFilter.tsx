@@ -52,6 +52,10 @@ export default function TalentFilter() {
     const ref = useRef<HTMLDivElement>(null)
     const [open, set_open] = useState(false)
     const [pinned, set_pinned] = useState(false)
+    const close_timer = useRef<number>(undefined)
+
+    const cancel_close = () => window.clearTimeout(close_timer.current)
+    useEffect(() => cancel_close, [])
 
     useEffect(() => {
         spec_slug && dispatch(load_talent_tree(spec_slug))
@@ -104,6 +108,7 @@ export default function TalentFilter() {
     }
 
     function on_icon_click() {
+        cancel_close()
         if (open && pinned) { close(); return }
         set_open(true)
         set_pinned(true)
@@ -111,12 +116,14 @@ export default function TalentFilter() {
 
     function on_pointer_enter(event: React.PointerEvent) {
         if (event.pointerType != "mouse") { return }
+        cancel_close()
         set_open(true)
     }
 
     function on_pointer_leave(event: React.PointerEvent) {
         if (event.pointerType != "mouse" || pinned) { return }
-        close()
+        cancel_close()
+        close_timer.current = window.setTimeout(close, CLOSE_DELAY)
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -139,11 +146,16 @@ export default function TalentFilter() {
                 onPointerLeave={on_pointer_leave}
             >
                 <WebpImg
-                    className={`button icon-m rounded border ${selected.length ? styles.active : ""}`}
+                    className={`button icon-m rounded border ${styles.icon} ${selected.length ? styles.active : ""}`}
                     onClick={on_icon_click}
+                    onContextMenu={(event: React.MouseEvent<HTMLImageElement>) => {
+                        event.preventDefault()
+                        set_talent_filter({})
+                    }}
                     src={`${ASSETS}/images/spells/ability_marksmanship.jpg`}
                 />
                 {selected.length > 0 && <span className={styles.badge}>{selected.length}</span>}
+                {selected.length == 0 && <span className={`${styles.badge} ${styles.new}`}>new</span>}
                 {open && <div
                     className={`${styles.menu} bg-dark rounded border`}
                 >
