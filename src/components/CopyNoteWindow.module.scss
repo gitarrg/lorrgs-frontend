@@ -337,6 +337,12 @@
     }
 }
 
+.talent_locked {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: var(--danger);
+}
+
 .talent_edit {
     display: inline-flex;
     align-items: center;

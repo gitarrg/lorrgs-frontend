@@ -167,7 +167,7 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
                 <a
                     key={entry.id}
                     href=""
-                    className={`${styles.hit} ${side ? styles[`hit_${side}`] : ""} ${locked ? styles.locked : ""}`}
+                    className={`${styles.hit} ${side ? styles[`hit_${side}`] : ""}`}
                     data-wowhead={`spell=${entry.spell_id}`}
                     style={{
                         left: `${(cx - w / 2) / WIDTH * 100}%`, top: `${(cy - r - VIEW_Y) / VIEW_HEIGHT * 100}%`,

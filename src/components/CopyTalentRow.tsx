@@ -3,12 +3,14 @@ import { FaCopy, FaCheck, FaPencilAlt } from "react-icons/fa";
 import { get_talent_tree, load_talent_tree } from "../store/talent_trees";
 import { get_talent_string, get_wowhead_talent_url } from "./Talents/talent_string";
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
+import { TALENTS_EARLY_ACCESS_NOTE, has_talents_permission } from "../store/user";
 import * as ui_store from "../store/ui";
 import style from "./CopyNoteWindow.module.scss";
 
 
 /** One line: the import string (click to copy) and an "edit" button opening it in the Wowhead calculator. */
 export default function CopyTalentRow() {
+    const has_access = useAppSelector(has_talents_permission);
     const [isCopied, setIsCopied] = useState(false);
     const dispatch = useAppDispatch();
     const player = useAppSelector(ui_store.get_copynote_player);
@@ -28,19 +30,20 @@ export default function CopyTalentRow() {
     }
 
     async function doCopy(text: string) {
+        if (!has_access) { return; }
         await navigator.clipboard.writeText(text);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 1500);
     }
 
-    return (
+    return (<>
         <div className={style.talent_row}>
             <button
                 type="button"
                 className={style.talent_string}
                 onClick={() => doCopy(talent_string)}
                 aria-label="copy talent import string"
-                data-tooltip="click to copy"
+                data-tooltip={has_access ? "click to copy" : undefined}
                 data-tooltip-size="small"
             >
                 <span className={style.talent_string_text}>{talent_string}</span>
@@ -48,12 +51,13 @@ export default function CopyTalentRow() {
             </button>
             <a
                 className={["button border rounded", style.talent_edit].join(" ")}
-                href={get_wowhead_talent_url(talent_string)}
+                href={has_access ? get_wowhead_talent_url(talent_string) : undefined}
                 target="_blank"
                 rel="noopener noreferrer"
             >
                 <FaPencilAlt /> edit
             </a>
         </div>
-    );
+        {!has_access && <div className={style.talent_locked}>{TALENTS_EARLY_ACCESS_NOTE}</div>}
+    </>);
 }
