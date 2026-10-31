@@ -3,29 +3,32 @@ import type TalentTree from "../../types/talent_tree";
 import type { TalentEntry } from "../../types/talent_tree";
 import type { TalentFilter } from "../../store/ui";
 import { ASSETS } from "../../constants";
-import WebpImg from "../WebpImg";
 import { HERO_WIDTH, hero_tree_names, is_drawn, layout } from "./TalentTreeGraph";
 import styles from "./TalentFilter.module.scss";
 
 
 const WIDTH = 800
 const HEIGHT = 450
-const RADIUS = 10
-const UNSELECTED_OPACITY = 0.5
+const RADIUS = 12
+const UNSELECTED_OPACITY = 0.25
 const PADDING = RADIUS * 1.5 + 2  // choice nodes are split into two dots, which reach further out
 
 
 type Props = {
     tree: TalentTree
+    class_name: string
+    spec_name: string
     talent_filter: TalentFilter
     /** share (0-1) of the listed fights taking a talent */
     share: (entry_id: number) => number
     on_click: (entry_id: number) => void
+    /** right click */
+    on_clear: (entry_id: number) => void
 }
 
 
 /** The whole tree of a spec (class | hero trees | spec), with one clickable dot (the talent icon) per talent: choice nodes are split. */
-export default function TalentFilterTree({ tree, talent_filter, share, on_click }: Props) {
+export default function TalentFilterTree({ tree, class_name, spec_name, talent_filter, share, on_click, on_clear }: Props) {
 
     const [hovered, set_hovered] = useState<{ entry: TalentEntry, x: number, y: number } | null>(null)
 
@@ -33,20 +36,22 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click 
     const hero_trees = hero_tree_names(nodes)
 
     const { positions, labels } = layout([
-        { label: "class", width: 1, nodes: nodes.filter(node => node.tree == "class") },
+        { label: class_name, width: 1, nodes: nodes.filter(node => node.tree == "class") },
         ...hero_trees.map((hero_tree, row) => ({
             label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
             nodes: nodes.filter(node => node.hero_tree == hero_tree),
         })),
-        { label: "spec", width: 1, nodes: nodes.filter(node => node.tree == "spec") },
+        { label: spec_name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
     ], [WIDTH, HEIGHT], PADDING)
-
-    const hovered_icon = hovered?.entry.icon && `${ASSETS}/images/spells/${hovered.entry.icon}`
 
     return (
         <div className={styles.tree_wrap}>
-            <svg className={styles.tree} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="talent filter tree">
-                {labels.map(({ x, y, label }) => <text key={`${x}-${y}`} x={x} y={y} textAnchor="middle">{label}</text>)}
+            <svg className={styles.tree} viewBox={`0 -10 ${WIDTH} ${HEIGHT + 10}`} role="img" aria-label="talent filter tree">
+
+                {/* Labels */}
+                {labels.map(({ x, y, label }) =>
+                    <text key={`${x}-${y}`} x={x} y={y} textAnchor="middle">{label}</text>)
+                }
 
                 {/* Lines */}
                 {tree.edges.map(([a, b], i) => {
@@ -65,12 +70,11 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click 
                     if (!pos) { return null }
 
                     const multi = node.entries.length > 1
-                    const r = multi ? RADIUS * 0.7 : RADIUS
+                    const r = RADIUS
                     return node.entries.map((entry, i) => {
                         const cx = multi ? pos[0] + (i ? r + 0.5 : -r - 0.5) : pos[0]
                         const cy = pos[1]
                         const mode = talent_filter[entry.id]
-                        const brightness = 0.3 + 0.7 * share(entry.id)
 
                         return (
                             <g key={entry.id}>
@@ -81,7 +85,7 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click 
                                     x={cx - r} y={cy - r} width={2 * r} height={2 * r}
                                     clipPath={`url(#clip-${entry.id})`}
                                     // unselected: greyed out, dimmed by how few fights take it, and low contrast
-                                    style={mode ? undefined : { filter: `grayscale(1) brightness(${brightness})`, opacity: UNSELECTED_OPACITY }}
+                                    style={mode ? undefined : { filter: `grayscale(1)`, opacity: UNSELECTED_OPACITY }}
                                     pointerEvents="none"
                                 />}
                                 <circle
@@ -89,8 +93,9 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click 
                                     cx={cx} cy={cy} r={r}
                                     fill="transparent"
                                     stroke={mode ? `var(--talent-${mode})` : "hsl(0, 0%, 30%)"}
-                                    strokeWidth={1}
+                                    strokeWidth={mode ? 1 : 0.5}
                                     onClick={() => on_click(entry.id)}
+                                    onContextMenu={event => { event.preventDefault(); on_clear(entry.id) }}
                                     onPointerEnter={() => set_hovered({ entry, x: cx, y: cy })}
                                     onPointerLeave={() => set_hovered(null)}
                                 />
@@ -104,9 +109,6 @@ export default function TalentFilterTree({ tree, talent_filter, share, on_click 
                 className={styles.tooltip}
                 style={{ left: `${hovered.x / WIDTH * 100}%`, top: `${hovered.y / HEIGHT * 100}%` }}
             >
-                <span className={styles.tooltip_icon}>
-                    {hovered_icon && <WebpImg src={hovered_icon} />}
-                </span>
                 <b>{hovered.entry.name}</b>
                 <span className={styles.note}>{Math.round(share(hovered.entry.id) * 100)}% of Fights</span>
             </div>}

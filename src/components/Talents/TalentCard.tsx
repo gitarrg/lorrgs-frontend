@@ -24,6 +24,7 @@ function TalentCardBody({ player }: { player: Actor }) {
 
     const dispatch = useAppDispatch()
     const tree = useAppSelector(state => get_talent_tree(state, player.spec_slug))
+    const spec = useAppSelector(state => get_spec(state, player.spec_slug))
     const has_talents = !!player.talents && Object.keys(player.talents).length > 0
 
     useEffect(() => {
@@ -39,7 +40,7 @@ function TalentCardBody({ player }: { player: Actor }) {
     if (tree === null) {
         return <div className={styles.note}>No talent tree for this spec</div>
     }
-    return <TalentTreeGraph tree={tree} talents={player.talents!} />
+    return <TalentTreeGraph tree={tree} talents={player.talents!} class_name={spec?.class.name ?? "class"} spec_name={spec?.name ?? "spec"} />
 }
 
 

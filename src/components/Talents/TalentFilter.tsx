@@ -6,6 +6,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
 import { get_fights } from "../../store/fights";
+import { get_spec } from "../../store/specs";
 import { get_talent_tree, load_talent_tree } from "../../store/talent_trees";
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import type { TalentFilter as TalentFilterValues } from "../../store/ui";
@@ -46,6 +47,7 @@ export default function TalentFilter() {
     const dispatch = useAppDispatch()
     const spec_slug = useAppSelector(state => state.ui.spec_slug)
     const tree = useAppSelector(state => get_talent_tree(state, spec_slug))
+    const spec = useAppSelector(state => get_spec(state, spec_slug))
     const talent_filter = useAppSelector(state => state.ui.filters.talents)
     const [, set_search_params] = useSearchParams()
     const { counts, with_talents, without_talents } = useTalentCounts()
@@ -149,9 +151,12 @@ export default function TalentFilter() {
     // Render
     let tree_content = <TalentFilterTree
         tree={tree!}
+        class_name={spec?.class.name ?? "class"}
+        spec_name={spec?.name ?? "spec"}
         talent_filter={talent_filter}
         share={share}
         on_click={entry_id => set_talent_filter(cycle_talent(talent_filter, entry_id))}
+        on_clear={remove_talent}
     />
     if (tree === undefined) { tree_content = <div className={styles.note}>Loading talents...</div> }
     if (tree === null) { tree_content = <div className={styles.note}>No talent tree for this spec</div> }

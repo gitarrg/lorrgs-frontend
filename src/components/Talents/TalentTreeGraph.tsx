@@ -106,19 +106,19 @@ function NodeShape({ node, pos, rank }: { node: TalentNode, pos: Point, rank: nu
 
 
 /** The class, hero and spec tree of one player, side by side (the hero trees stacked). Entries unknown to the tree are ignored. */
-function TalentTreeGraph({ tree, talents }: { tree: TalentTree, talents: Talents }) {
+function TalentTreeGraph({ tree, talents, class_name, spec_name }: { tree: TalentTree, talents: Talents, class_name: string, spec_name: string }) {
 
     const nodes = tree.nodes.filter(is_drawn)
     // all hero trees, in the same slots as in the filter: the greyed out ones help the eye to orient itself
     const hero_trees = hero_tree_names(nodes)
 
     const { positions, labels } = layout([
-        { label: "class", width: 1, nodes: nodes.filter(node => node.tree == "class") },
+        { label: class_name, width: 1, nodes: nodes.filter(node => node.tree == "class") },
         ...hero_trees.map((hero_tree, row) => ({
             label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
             nodes: nodes.filter(node => node.hero_tree == hero_tree),
         })),
-        { label: "spec", width: 1, nodes: nodes.filter(node => node.tree == "spec") },
+        { label: spec_name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
     ])
 
     const rank = (node: TalentNode) => Math.max(0, ...node.entries.map(entry => talents[entry.id] || 0))

@@ -83,7 +83,7 @@
     padding: 4px;
 
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-rows: auto;
     column-gap: 4px;
     align-items: center;
 
@@ -189,7 +189,7 @@
 
     text {
         fill: hsl(0, 0%, 90%);
-        font-size: 12px;
+        font-size: 20px;
     }
 }
 
