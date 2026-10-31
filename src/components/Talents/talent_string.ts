@@ -56,8 +56,16 @@ export function get_talent_string(tree: TalentTree, talents: Talents): string {
             writer.write(0, 1) // not selected
             continue
         }
-        const rank = talents[node.entries[entry_index].id]
         const is_choice = node.type === "choice" || node.type === "hero_selection"
+
+        // a choice node has one entry with the ranks. A tiered node may list one entry per rank taken (or only the
+        // highest), so count the entries up to the last one with points.
+        let rank = talents[node.entries[entry_index].id]
+        if (!is_choice) {
+            const total = node.entries.reduce((sum, entry) => sum + (talents[entry.id] ?? 0), 0)
+            const last = node.entries.findLastIndex(entry => (talents[entry.id] ?? 0) > 0)
+            rank = Math.min(node.max_ranks, Math.max(total, last + 1))
+        }
 
         writer.write(1, 1) // selected
         writer.write(1, 1) // purchased (free nodes are not told apart yet, see issue #128)
