@@ -1,18 +1,34 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaCopy, FaCheck, FaPencilAlt } from "react-icons/fa";
+import { get_talent_tree, load_talent_tree } from "../store/talent_trees";
+import { get_talent_string, get_wowhead_talent_url } from "./Talents/talent_string";
+import { useAppDispatch, useAppSelector } from "../store/store_hooks";
+import * as ui_store from "../store/ui";
 import style from "./CopyNoteWindow.module.scss";
-
-// TODO(#128): generate from the player's talents. Placeholder until the string encoder exists.
-const PLACEHOLDER_STRING = "BcQAAAAAAAAAAAAAAAAAAAAAAAAAgZmZmZmZmxMzMmZmZmZmZGAAAAAAAAAAAAAAAAAAAAAAAAYmxMzMmZmZmZmZ";
 
 
 /** One line: the import string (click to copy) and an "edit" button opening it in the Wowhead calculator. */
 export default function CopyTalentRow() {
     const [isCopied, setIsCopied] = useState(false);
-    const talent_string = PLACEHOLDER_STRING;
+    const dispatch = useAppDispatch();
+    const player = useAppSelector(ui_store.get_copynote_player);
+    const tree = useAppSelector(state => player ? get_talent_tree(state, player.spec_slug) : undefined);
+    const has_talents = !!player?.talents && Object.keys(player.talents).length > 0;
 
-    async function doCopy() {
-        await navigator.clipboard.writeText(talent_string);
+    useEffect(() => {
+        if (player && has_talents) { dispatch(load_talent_tree(player.spec_slug)); }
+    }, [player?.spec_slug, has_talents]);
+
+    const talent_string = tree && has_talents ? get_talent_string(tree, player!.talents!) : null;
+
+    if (!talent_string) {
+        let reason = "Loading talents...";
+        if (!has_talents || tree === null) { reason = "No talent data for this fight"; }
+        return <div className="text-muted">{reason}</div>;
+    }
+
+    async function doCopy(text: string) {
+        await navigator.clipboard.writeText(text);
         setIsCopied(true);
         setTimeout(() => setIsCopied(false), 1500);
     }
@@ -22,7 +38,7 @@ export default function CopyTalentRow() {
             <button
                 type="button"
                 className={style.talent_string}
-                onClick={doCopy}
+                onClick={() => doCopy(talent_string)}
                 aria-label="copy talent import string"
                 data-tooltip="click to copy"
                 data-tooltip-size="small"
@@ -32,7 +48,7 @@ export default function CopyTalentRow() {
             </button>
             <a
                 className={["button border rounded", style.talent_edit].join(" ")}
-                href={`https://www.wowhead.com/talent-calc/blizzard/${talent_string}`}
+                href={get_wowhead_talent_url(talent_string)}
                 target="_blank"
                 rel="noopener noreferrer"
             >
