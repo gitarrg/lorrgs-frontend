@@ -73,6 +73,9 @@ type FilterGroup =
     | "class"
 
 
+export type TalentFilter = { [entry_id: number]: "with" | "without" }
+
+
 export interface FilterValues {
 
     killtime: { min: number | null, max: number | null }
@@ -91,6 +94,9 @@ export interface FilterValues {
 
     // Hide Player Rows if all spells are hiden.
     hide_empty_rows: boolean
+
+    /** Talent Filter (spec ranking): `{entry_id: "with" | "without"}`, kept in the url */
+    talents: TalentFilter
 
 }
 
@@ -169,6 +175,8 @@ const INITIAL_STATE: UiSliceState = {
         log_date: { from: null, to: null },
 
         hide_empty_rows: false,
+
+        talents: {},
     },
 
     tooltip: {

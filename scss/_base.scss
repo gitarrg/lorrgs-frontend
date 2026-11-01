@@ -62,14 +62,14 @@ a, a:hover, a:visited, a:active {
 }
 
 .text-muted {
-    color: #888 !important;
+    color: var(--text-muted) !important;
 }
 .text-wrap {
     white-space: normal !important;
 }
 
 .text-dark {
-    color: #303030; // only used on the help page
+    color: var(--text-dark); // only used on the help page
 }
 
 .text-danger { color: var(--danger); }

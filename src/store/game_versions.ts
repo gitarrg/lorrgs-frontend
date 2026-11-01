@@ -56,6 +56,11 @@ export function get_has_comp_modes(state: RootState): boolean {
 }
 
 
+export function get_has_talents(state: RootState): boolean {
+    return get_current_game_version(state)?.has_talents ?? false
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Slice

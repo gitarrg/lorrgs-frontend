@@ -14,6 +14,7 @@
         visibility: hidden;
         position: absolute;
         z-index: 10;
+        top: 0; // pin both layers to the same edge (their static position differs in flex/centered parents, which opened a gap)
         left: 50%;
         font-weight: 400;
         font-size: initial;
@@ -63,6 +64,11 @@
 
 [data-tooltip-dir="down"] {
     --scale-y: -1.0;
+
+    &::before,
+    &::after {
+        top: auto;
+    }
 
     &::after {
         // --translate-y: 0; //var(--arrow-size);

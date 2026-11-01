@@ -1,0 +1,231 @@
+
+.wrap {
+    --talent-with: #5ad17a;
+    --talent-without: #f0605a;
+
+    position: relative;
+}
+
+
+.with {
+    color: var(--talent-with);
+}
+
+.without { color: var(--talent-without); }
+
+
+.clear { color: var(--wow-rare); }
+
+
+.icon {
+    width: 34px;
+    height: 34px;
+}
+
+.active {
+    color: #e4e6ea;
+    border-color: var(--talent-with);
+}
+
+.badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    padding: 0 4px;
+
+    color: #15171c;
+    background: var(--talent-with);
+    border-radius: 999px;
+    font-size: 11px;
+    border: 1px solid;
+}
+
+
+.new {
+    padding: 0 3px;
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 13px;
+    text-transform: uppercase;
+    pointer-events: none;
+    left: -6px;
+    right: unset;
+}
+
+
+/********************************
+        Menu
+*********************************/
+.menu {
+    position: absolute;
+    top: calc(100% + 2px);
+    right: 0;
+    z-index: 1050;
+    width: min(950px, calc(100vw - 32px));
+    padding: 0.5rem;
+
+    display: grid;
+    gap: 0.5rem;
+
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+    color: #e4e6ea;
+}
+
+@media (max-width: 760px) {
+    .menu {
+        position: fixed;
+        top: 80px;
+        left: 16px;
+        right: 16px;
+        width: auto;
+        max-height: calc(100vh - 100px);
+        overflow: auto;
+    }
+}
+
+// attached below the wowhead tooltip (rendered into the body)
+.share {
+    position: fixed;
+    z-index: 2000000;
+    padding: 4px 8px;
+    pointer-events: none;
+    font-size: 14px;
+    color: #e4e6ea;
+    background: hsl(0, 0%, 5%);
+    border: 1px solid hsl(0, 0%, 30%);
+    border-radius: 4px;
+
+    b {
+        color: var(--wow-color);
+    }
+
+}
+
+// transparent link over a dot: takes the clicks and the wowhead tooltip
+.hit {
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+
+    &.locked { cursor: default; }
+}
+// halves of a choice pill: round on the outer end only
+.hit_left { border-radius: 50% 0 0 50%; }
+.hit_right { border-radius: 0 50% 50% 0; }
+
+
+.note {
+    color: #8d93a1;
+    font-size: 12px;
+}
+
+.selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid;
+    border-radius: 4px;
+    background: hsl(0, 0%, 15%);
+    font-size: 12px;
+
+    
+    button {
+        cursor: pointer;
+        padding: 0 2px;
+        color: inherit;
+        background: none;
+        border: 0;
+    }
+}
+
+
+button.with, button.without {
+    &:hover {
+        background-color: hsl(0, 0%, 30%);
+    }
+}
+
+
+.link {
+    padding: 0;
+    color: var(--wow-common);
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+        color: white;
+        text-decoration: underline;
+    }
+
+}
+
+
+/********************************
+        Tree
+*********************************/
+// spans both lines: [icon] [name]
+//                         [x% of Fights]
+.tree_wrap {
+    position: relative;
+}
+
+.tree {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+
+    text {
+        fill: hsl(0, 0%, 90%);
+        font-size: 20px;
+    }
+}
+
+.edge {
+    stroke: hsl(0, 0%, 30%);
+    stroke-width: 1;
+}
+
+// one dot of the filter tree: `node_<state>` is with / without (selected) or fixed / varies (not selected)
+.node {
+    pointer-events: none;
+
+    .bg { fill: var(--bg-dark); }
+    .ring {
+        fill: none;
+        stroke-width: 1;
+    }
+}
+
+.node_with .ring { stroke: var(--talent-with); }
+.node_without .ring { stroke: var(--talent-without); }
+
+// taken by no one / everyone: nothing to filter by
+.node_fixed {
+    .icon_image {
+        filter: grayscale(1) brightness(0.75) blur(0.5px);
+        opacity: 0.2;
+    }
+    .ring { stroke: hsl(0, 0%, 30%); }
+}
+
+// taken by some
+.node_varies {
+    .icon_image {
+        filter: grayscale(1);
+        opacity: 0.8;
+    }
+    .ring {
+        stroke: hsl(0, 0%, 75%);
+    }
+}
+

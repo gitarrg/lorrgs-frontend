@@ -14,4 +14,7 @@ export default interface GameVersion {
 
     /** whether the game version has comp rankings (hides the comp section on the home page otherwise). Default: true */
     has_comp_modes?: boolean
+
+    /** whether Spec Ranking players carry their Talents. Default: false */
+    has_talents?: boolean
 }

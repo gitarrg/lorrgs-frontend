@@ -16,6 +16,7 @@ import type Fight from "../types/fight";
 import type Phase from "../types/phase";
 import useCopyRateLimit from "../hooks/useCopyRateLimit";
 import useUser from "../routes/auth/useUser";
+import CopyTalentRow from "./CopyTalentRow";
 
 
 /** Output format for the copy-note modal. */
@@ -372,16 +373,8 @@ export default function CopyNoteWindow() {
     /*
         Main Render
     */
-    return (
-        <div className={style.modal}>
-            <div className="p-2 bg-dark rounded border">
-
-                {/* Header */}
-                <div className={`${style.header} mb-2`}>
-                    <h3><FaCopy /> Copy Note</h3>
-                    <FaXmark onClick={closeWindow} />
-                </div>
-
+    const noteBody = (
+        <>
                 {/* Settings */}
                 <div className="d-grid grid-cols-2 mb-1">
                     <select
@@ -501,6 +494,34 @@ export default function CopyNoteWindow() {
                     ⚠️ Blind Copy/Pasting Timings does not guarantee the same results.<br />
                     Make sure to adjust according to your guilds comp and killtime.
                 </div>
+
+        </>
+    );
+
+    return (
+        <div
+            className={style.modal}
+            onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                    closeWindow()
+                }
+            }}
+        >
+            <div className="p-2 bg-dark rounded border">
+
+                {/* Header */}
+                <div className={`${style.header} mb-2`}>
+                    <h3><FaCopy /> Copy</h3>
+                    <FaXmark onClick={closeWindow} />
+                </div>
+
+                <h4 className={style.section_title}>Talents</h4>
+                <CopyTalentRow />
+
+                <hr className={style.divider} />
+
+                <h4 className={style.section_title}>Note</h4>
+                {noteBody}
 
             </div>
         </div >

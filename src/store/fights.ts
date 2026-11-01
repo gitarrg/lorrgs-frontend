@@ -194,7 +194,7 @@ export default SLICE.reducer
 // Extra Actions
 
 function _pin_first_fight(fights: Fight[]) {
-    // little hack to make sure the first fight always remains visible
+    // little hack to make sure the boss and the ranked player of the first fight always remain visible (the fight itself is filtered like any other)
     if (fights.length == 0) { return fights }
 
     const [first_fight, ...others] = fights
