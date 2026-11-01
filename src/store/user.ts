@@ -15,18 +15,6 @@ export function get_current_user(state: RootState) {
 }
 
 
-/** Permission to use the talent filter and copy talents (early access for patreon members) */
-export const TALENTS_PERMISSION = "talents"
-
-export const TALENTS_EARLY_ACCESS_NOTE = "Talents are in early access for subscribed Patreon members"
-
-
-/** Whether the current user may filter fights by talents / copy talent strings */
-export function has_talents_permission(state: RootState) {
-    return state.user.permissions.includes(TALENTS_PERMISSION)
-}
-
-
 interface UserSliceState {
 
     logged_in: boolean

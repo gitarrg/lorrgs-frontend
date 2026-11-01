@@ -295,6 +295,7 @@
 }
 
 .talent_string {
+    position: relative;
     flex: 1;
     min-width: 0;
     display: flex;
@@ -310,6 +311,24 @@
     &:hover {
         border-color: hsl(0 0% 50%);
     }
+}
+
+.talent_copied {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: inherit;
+    background: hsl(0 0% 12% / 0.9);
+    color: var(--wow-kill);
+    pointer-events: none;
+    animation: talent_copied_fade 5s ease-in forwards;
+}
+
+@keyframes talent_copied_fade {
+    0%, 40% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
 .talent_string_text {
@@ -335,12 +354,6 @@
     .talent_string:focus-visible & {
         opacity: 1;
     }
-}
-
-.talent_locked {
-    margin-top: 0.4rem;
-    font-size: 0.85rem;
-    color: var(--danger);
 }
 
 .talent_edit {

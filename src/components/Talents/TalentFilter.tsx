@@ -8,7 +8,6 @@ import { useSearchParams } from "react-router";
 import { get_fights } from "../../store/fights";
 import { get_spec } from "../../store/specs";
 import { get_talent_tree, load_talent_tree } from "../../store/talent_trees";
-import { TALENTS_EARLY_ACCESS_NOTE, has_talents_permission } from "../../store/user";
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import type { TalentFilter as TalentFilterValues } from "../../store/ui";
 import { URL_PARAM, cycle_talent, format_talent_filter, get_fight_talents } from "./talent_filter";
@@ -50,7 +49,6 @@ export default function TalentFilter() {
     const tree = useAppSelector(state => get_talent_tree(state, spec_slug))
     const spec = useAppSelector(state => get_spec(state, spec_slug))
     const talent_filter = useAppSelector(state => state.ui.filters.talents)
-    const has_access = useAppSelector(has_talents_permission)
     const [, set_search_params] = useSearchParams()
     const { counts, with_talents, without_talents } = useTalentCounts()
 
@@ -224,10 +222,6 @@ export default function TalentFilter() {
 
                         {selected.length == 0 && <span className={styles.note}>{info}</span>}
                     </div>
-
-                    {!has_access &&
-                        <div className={styles.locked}>{TALENTS_EARLY_ACCESS_NOTE}</div>
-                    }
 
                     {selected.length > 0 && without_talents > 0 &&
                         <div className={styles.note}>{without_talents} fights without talent data hidden</div>

@@ -2,7 +2,6 @@ import { fight_matches_talents } from "./components/Talents/talent_filter"
 import { get_spec } from "./store/specs"
 import { get_spell_display } from "./store/spells"
 import store from "./store/store"
-import { has_talents_permission } from "./store/user"
 import type { FilterValues } from "./store/ui"
 import type Actor from "./types/actor"
 import type Fight from "./types/fight"
@@ -41,8 +40,6 @@ function fight_matches_filters(fight: Fight, filters: FilterValues) {
         if (to && fight_ms > get_date_ceil_ms(to)) { return false }
     }
 
-    // the talent filter is only applied for users with access (others can click around in the UI)
-    if (!has_talents_permission(store.getState())) { return true }
     return fight_matches_talents(fight, filters.talents)
 }
 
