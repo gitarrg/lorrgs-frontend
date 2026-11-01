@@ -69,6 +69,16 @@
 
     box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
     color: #e4e6ea;
+
+    // the Build buttons, right of the tree, widen it and push it out to the right: the tree stays in place
+    // (not on mobile, where the menu fills the screen)
+    @media (min-width: 761px) {
+        &:has([data-builds]) {
+            --builds-offset: calc(var(--builds-width) + 0.5rem);
+            right: calc(-1 * var(--builds-offset));
+            width: min(calc(950px + var(--builds-offset)), calc(100vw - 32px));
+        }
+    }
 }
 
 @media (max-width: 760px) {
@@ -115,8 +125,8 @@
 
 
 .note {
-    color: #8d93a1;
-    font-size: 12px;
+    color: var(--text-muted);
+    font-size: var(--font-size-small);
 }
 
 .selection {
@@ -134,7 +144,7 @@
     border: 1px solid;
     border-radius: 4px;
     background: hsl(0, 0%, 15%);
-    font-size: 12px;
+    font-size: var(--font-size-small);
 
     
     button {
@@ -184,799 +194,73 @@ button.with, button.without {
     height: auto;
     border-radius: 0.25rem;
 
-    text {
-        fill: hsl(0, 0%, 90%);
-        font-size: 20px;
-    }
 }
 
-.edge {
-    stroke: hsl(0, 0%, 30%);
-    stroke-width: 1;
-}
-
-// one dot of the filter tree: `node_<state>` is with / without (selected) or fixed / varies (not selected)
-.node {
-    pointer-events: none;
-
-    .bg { fill: var(--bg-dark); }
-    .ring {
-        fill: none;
-        stroke-width: 1;
-    }
-}
-
-.node_with .ring { stroke: var(--talent-with); }
-.node_without .ring { stroke: var(--talent-without); }
-
-// in the filter of the hovered Build button
-.node_preview .ring {
-    stroke: #ffd100;
-    stroke-width: 2;
-}
-
-// taken by no one / everyone: nothing to filter by
-.node_fixed {
-    .icon_image {
-        filter: grayscale(1) brightness(0.75) blur(0.5px);
-        opacity: 0.2;
-    }
-    .ring { stroke: hsl(0, 0%, 30%); }
-}
-
-// taken by some
-.node_varies {
-    .icon_image {
-        filter: grayscale(1);
-        opacity: 0.8;
-    }
-    .ring {
-        stroke: hsl(0, 0%, 75%);
-    }
-}
-
-
-.body {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-}
-
-.body_tree {
-    flex: 1;
-    min-width: 0;
-}
-
-@media (max-width: 760px) {
-    .menu {
-        position: fixed;
-        top: 80px;
-        left: 16px;
-        right: 16px;
-        width: auto;
-        max-height: calc(100vh - 100px);
-        overflow: auto;
-    }
-}
-
-// attached below the wowhead tooltip (rendered into the body)
-.share {
-    position: fixed;
-    z-index: 2000000;
-    padding: 4px 8px;
-    pointer-events: none;
-    font-size: 14px;
-    color: #e4e6ea;
-    background: hsl(0, 0%, 5%);
-    border: 1px solid hsl(0, 0%, 30%);
-    border-radius: 4px;
-
-    b {
-        color: var(--wow-color);
-    }
-
-}
-
-// transparent link over a dot: takes the clicks and the wowhead tooltip
-.hit {
+// label of a part of the tree, over the svg: `top` is its baseline
+.label {
     position: absolute;
-    border-radius: 50%;
-    cursor: pointer;
-
-    &.locked { cursor: default; }
-}
-// halves of a choice pill: round on the outer end only
-.hit_left { border-radius: 50% 0 0 50%; }
-.hit_right { border-radius: 0 50% 50% 0; }
-
-
-.note {
-    color: #8d93a1;
-    font-size: 12px;
-}
-
-.selection {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-}
-
-.chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    padding: 2px;
-    border: 1px solid;
-    border-radius: 4px;
-    background: hsl(0, 0%, 15%);
-    font-size: 12px;
-
-    
-    button {
-        cursor: pointer;
-        padding: 0 2px;
-        color: inherit;
-        background: none;
-        border: 0;
-    }
-}
-
-
-button.with, button.without {
-    &:hover {
-        background-color: hsl(0, 0%, 30%);
-    }
-}
-
-
-.link {
-    padding: 0;
-    color: var(--wow-common);
-    background: none;
-    border: 0;
-    cursor: pointer;
-
-    &:hover {
-        color: white;
-        text-decoration: underline;
-    }
-
-}
-
-
-/********************************
-        Tree
-*********************************/
-// spans both lines: [icon] [name]
-//                         [x% of Fights]
-.tree_wrap {
-    position: relative;
-}
-
-.tree {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 0.25rem;
-
-    text {
-        fill: hsl(0, 0%, 90%);
-        font-size: 20px;
-    }
-}
-
-.edge {
-    stroke: hsl(0, 0%, 30%);
-    stroke-width: 1;
-}
-
-// one dot of the filter tree: `node_<state>` is with / without (selected) or fixed / varies (not selected)
-.node {
-    pointer-events: none;
-
-    .bg { fill: var(--bg-dark); }
-    .ring {
-        fill: none;
-        stroke-width: 1;
-    }
-}
-
-.node_with .ring { stroke: var(--talent-with); }
-.node_without .ring { stroke: var(--talent-without); }
-
-// in the filter of the hovered Build button
-.node_preview .ring {
-    stroke: #ffd100;
-    stroke-width: 2;
-}
-
-// taken by no one / everyone: nothing to filter by
-.node_fixed {
-    .icon_image {
-        filter: grayscale(1) brightness(0.75) blur(0.5px);
-        opacity: 0.2;
-    }
-    .ring { stroke: hsl(0, 0%, 30%); }
-}
-
-// taken by some
-.node_varies {
-    .icon_image {
-        filter: grayscale(1);
-        opacity: 0.8;
-    }
-    .ring {
-        stroke: hsl(0, 0%, 75%);
-    }
-}
-
-
-.body {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-}
-
-.body_tree {
-    flex: 1;
-    min-width: 0;
-}
-
-// Build buttons, left of the tree
-.builds {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 180px;
-    flex-shrink: 0;
-
-    &:empty {
-        display: none;
-    }
-}
-
-.builds_label {
-    font-weight: bold;
-}
-
-.builds_note {
-    font-size: 11px;
-}
-
-.build {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 3px;
-    padding: 4px;
-    border: 1px solid hsl(0, 0%, 25%);
-    border-radius: 4px;
-    background: hsl(0, 0%, 12%);
-    cursor: pointer;
-
-    &:hover {
-        border-color: #ffd100;
-    }
-}
-
-.build_active {
-    border-color: var(--talent-with);
-    background: hsl(0, 0%, 18%);
-}
-
-// dimmed by colour, not opacity: an opacity would carry over to the tooltips
-.build_unplayed {
-    img {
-        filter: grayscale(1) brightness(0.5);
-    }
-
-    .build_count {
-        color: hsl(0, 0%, 45%);
-    }
-}
-
-.build_hero {
-    border-radius: 50%;
-}
-
-.build_count {
-    font-weight: bold;
-}
-
-.build_talents {
-    flex-basis: 100%;  // a row of its own, under the hero tree and the count
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-
-    &:empty {
-        display: none;
-    }
-}
-
-@media (max-width: 760px) {
-    .menu {
-        position: fixed;
-        top: 80px;
-        left: 16px;
-        right: 16px;
-        width: auto;
-        max-height: calc(100vh - 100px);
-        overflow: auto;
-    }
-}
-
-// attached below the wowhead tooltip (rendered into the body)
-.share {
-    position: fixed;
-    z-index: 2000000;
-    padding: 4px 8px;
-    pointer-events: none;
-    font-size: 14px;
-    color: #e4e6ea;
-    background: hsl(0, 0%, 5%);
-    border: 1px solid hsl(0, 0%, 30%);
-    border-radius: 4px;
-
-    b {
-        color: var(--wow-color);
-    }
-
-}
-
-// transparent link over a dot: takes the clicks and the wowhead tooltip
-.hit {
-    position: absolute;
-    border-radius: 50%;
-    cursor: pointer;
-
-    &.locked { cursor: default; }
-}
-// halves of a choice pill: round on the outer end only
-.hit_left { border-radius: 50% 0 0 50%; }
-.hit_right { border-radius: 0 50% 50% 0; }
-
-
-.note {
-    color: #8d93a1;
-    font-size: 12px;
-}
-
-.selection {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-}
-
-.chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    padding: 2px;
-    border: 1px solid;
-    border-radius: 4px;
-    background: hsl(0, 0%, 15%);
-    font-size: 12px;
-
-    
-    button {
-        cursor: pointer;
-        padding: 0 2px;
-        color: inherit;
-        background: none;
-        border: 0;
-    }
-}
-
-
-button.with, button.without {
-    &:hover {
-        background-color: hsl(0, 0%, 30%);
-    }
-}
-
-
-.link {
-    padding: 0;
-    color: var(--wow-common);
-    background: none;
-    border: 0;
-    cursor: pointer;
-
-    &:hover {
-        color: white;
-        text-decoration: underline;
-    }
-
-}
-
-
-/********************************
-        Tree
-*********************************/
-// spans both lines: [icon] [name]
-//                         [x% of Fights]
-.tree_wrap {
-    position: relative;
-}
-
-.tree {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 0.25rem;
-
-    text {
-        fill: hsl(0, 0%, 90%);
-        font-size: 20px;
-    }
-}
-
-.edge {
-    stroke: hsl(0, 0%, 30%);
-    stroke-width: 1;
-}
-
-// one dot of the filter tree: `node_<state>` is with / without (selected) or fixed / varies (not selected)
-.node {
-    pointer-events: none;
-
-    .bg { fill: var(--bg-dark); }
-    .ring {
-        fill: none;
-        stroke-width: 1;
-    }
-}
-
-.node_with .ring { stroke: var(--talent-with); }
-.node_without .ring { stroke: var(--talent-without); }
-
-// in the filter of the hovered Build button
-.node_preview .ring {
-    stroke: #ffd100;
-    stroke-width: 2;
-}
-
-// taken by no one / everyone: nothing to filter by
-.node_fixed {
-    .icon_image {
-        filter: grayscale(1) brightness(0.75) blur(0.5px);
-        opacity: 0.2;
-    }
-    .ring { stroke: hsl(0, 0%, 30%); }
-}
-
-// taken by some
-.node_varies {
-    .icon_image {
-        filter: grayscale(1);
-        opacity: 0.8;
-    }
-    .ring {
-        stroke: hsl(0, 0%, 75%);
-    }
-}
-
-
-.body {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-}
-
-.body_tree {
-    flex: 1;
-    min-width: 0;
-}
-
-// Build buttons, left of the tree
-.builds {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 180px;
-    flex-shrink: 0;
-
-    &:empty {
-        display: none;
-    }
-}
-
-.builds_label {
-    font-weight: bold;
-}
-
-.builds_note {
-    font-size: 11px;
-}
-
-.build {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 3px;
-    padding: 4px;
-    border: 1px solid hsl(0, 0%, 25%);
-    border-radius: 4px;
-    background: hsl(0, 0%, 12%);
-    color: inherit;
-    text-align: left;
-
-    &:hover {
-        border-color: #ffd100;
-    }
-}
-
-.build_active {
-    border-color: var(--talent-with);
-    background: hsl(0, 0%, 18%);
-}
-
-.build_unplayed {
-    opacity: 0.4;
-}
-
-.build_hero {
-    border-radius: 50%;
-    margin-right: 3px;
-}
-
-@media (max-width: 760px) {
-    .menu {
-        position: fixed;
-        top: 80px;
-        left: 16px;
-        right: 16px;
-        width: auto;
-        max-height: calc(100vh - 100px);
-        overflow: auto;
-    }
-}
-
-// attached below the wowhead tooltip (rendered into the body)
-.share {
-    position: fixed;
-    z-index: 2000000;
-    padding: 4px 8px;
-    pointer-events: none;
-    font-size: 14px;
-    color: #e4e6ea;
-    background: hsl(0, 0%, 5%);
-    border: 1px solid hsl(0, 0%, 30%);
-    border-radius: 4px;
-
-    b {
-        color: var(--wow-color);
-    }
-
-}
-
-// transparent link over a dot: takes the clicks and the wowhead tooltip
-.hit {
-    position: absolute;
-    border-radius: 50%;
-    cursor: pointer;
-
-    &.locked { cursor: default; }
-}
-// halves of a choice pill: round on the outer end only
-.hit_left { border-radius: 50% 0 0 50%; }
-.hit_right { border-radius: 0 50% 50% 0; }
-
-
-.note {
-    color: #8d93a1;
-    font-size: 12px;
-}
-
-.selection {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
-}
-
-.chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    padding: 2px;
-    border: 1px solid;
-    border-radius: 4px;
-    background: hsl(0, 0%, 15%);
-    font-size: 12px;
-
-    
-    button {
-        cursor: pointer;
-        padding: 0 2px;
-        color: inherit;
-        background: none;
-        border: 0;
-    }
-}
-
-
-button.with, button.without {
-    &:hover {
-        background-color: hsl(0, 0%, 30%);
-    }
-}
-
-
-.link {
-    padding: 0;
-    color: var(--wow-common);
-    background: none;
-    border: 0;
-    cursor: pointer;
-
-    &:hover {
-        color: white;
-        text-decoration: underline;
-    }
-
-}
-
-
-/********************************
-        Tree
-*********************************/
-// spans both lines: [icon] [name]
-//                         [x% of Fights]
-.tree_wrap {
-    position: relative;
-}
-
-.tree {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: 0.25rem;
-
-    text {
-        fill: hsl(0, 0%, 90%);
-        font-size: 20px;
-    }
-}
-
-.edge {
-    stroke: hsl(0, 0%, 30%);
-    stroke-width: 1;
-}
-
-// one dot of the filter tree: `node_<state>` is with / without (selected) or fixed / varies (not selected)
-.node {
-    pointer-events: none;
-
-    .bg { fill: var(--bg-dark); }
-    .ring {
-        fill: none;
-        stroke-width: 1;
-    }
-}
-
-.node_with .ring { stroke: var(--talent-with); }
-.node_without .ring { stroke: var(--talent-without); }
-
-// in the filter of the hovered Build button
-.node_preview .ring {
-    stroke: #ffd100;
-    stroke-width: 2;
-}
-
-// taken by no one / everyone: nothing to filter by
-.node_fixed {
-    .icon_image {
-        filter: grayscale(1) brightness(0.75) blur(0.5px);
-        opacity: 0.2;
-    }
-    .ring { stroke: hsl(0, 0%, 30%); }
-}
-
-// taken by some
-.node_varies {
-    .icon_image {
-        filter: grayscale(1);
-        opacity: 0.8;
-    }
-    .ring {
-        stroke: hsl(0, 0%, 75%);
-    }
-}
-
-
-.body {
-    display: flex;
-    gap: 0.5rem;
-    align-items: flex-start;
-}
-
-.body_tree {
-    flex: 1;
-    min-width: 0;
-}
-
-// Build buttons, left of the tree
-.builds {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    width: 180px;
-    flex-shrink: 0;
-
-    &:empty {
-        display: none;
-    }
-}
-
-.build {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    column-gap: 6px;
-    row-gap: 3px;
-    align-items: center;
-    padding: 4px 6px;
-    border: 1px solid hsl(0, 0%, 25%);
-    border-radius: 4px;
-    background: hsl(0, 0%, 12%);
-    color: inherit;
-    text-align: left;
-
-    &:hover {
-        border-color: #ffd100;
-    }
-}
-
-.build_active {
-    border-color: var(--talent-with);
-    background: hsl(0, 0%, 18%);
-}
-
-.build_unplayed {
-    opacity: 0.4;
-}
-
-.build_own {
-    font-size: 11px;
-}
-
-.build_hero {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-}
-
-.build_share {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    font-size: 14px;
-    font-weight: bold;
-}
-
-.build_count {
-    font-size: 11px;
-    font-weight: normal;
+    transform: translate(-50%, -100%);
+    line-height: 1;
     white-space: nowrap;
+    color: hsl(0, 0%, 90%);
+    pointer-events: none;
 }
 
-.build_talents {
-    grid-column: 1 / -1;  // a row of its own, under the hero tree icon and the text
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
+.edge {
+    stroke: hsl(0, 0%, 30%);
+    stroke-width: 1;
+}
 
-    &:empty {
-        display: none;
+// one dot of the filter tree: `node_<state>` is with / without (selected) or fixed / varies (not selected)
+.node {
+    pointer-events: none;
+
+    .bg { fill: var(--bg-dark); }
+    .ring {
+        fill: none;
+        stroke-width: 1;
     }
 }
 
-.build_talent {
-    width: 18px;
-    height: 18px;
+.node_with .ring { stroke: var(--talent-with); }
+.node_without .ring { stroke: var(--talent-without); }
+
+// in the filter of the hovered Build button
+.node_preview .ring {
+    stroke: #ffd100;
+    stroke-width: 2;
+}
+
+// taken by no one / everyone: nothing to filter by
+.node_fixed {
+    .icon_image {
+        filter: grayscale(1) brightness(0.75) blur(0.5px);
+        opacity: 0.2;
+    }
+    .ring { stroke: hsl(0, 0%, 30%); }
+}
+
+// taken by some
+.node_varies {
+    .icon_image {
+        filter: grayscale(1);
+        opacity: 0.8;
+    }
+    .ring {
+        stroke: hsl(0, 0%, 75%);
+    }
+}
+
+
+.body {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.body_tree {
+    flex: 1;
+    min-width: 0;
 }
 
 @media (max-width: 760px) {

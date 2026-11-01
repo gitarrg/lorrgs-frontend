@@ -8,6 +8,10 @@
     --bg-light-hover: hsl(0, 0%, 32%);
 
     --text-muted: hsl(0, 0%, 50%);
+
+    --font-size-small: 0.8rem;
+
+    --builds-width: 180px;  // the Build buttons in the Talent Filter menu
     --text-dark: hsl(0, 0%, 30%);
 
 }
@@ -15,6 +19,17 @@
 
 .bg-dark {
     background-color: var(--bg-dark);
+}
+
+/** notes, hints and other secondary text */
+.text-small {
+    font-size: var(--font-size-small);
+}
+
+/** the title of a section of a panel */
+.text-label {
+    font-size: 1rem;
+    font-weight: bold;
 }
 
 .bg-light {

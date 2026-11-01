@@ -107,11 +107,6 @@ export default function TalentFilterTree({ tree, spec, talent_filter, preview, s
 
                 <clipPath id="talent-clip" clipPathUnits="objectBoundingBox"><circle cx={0.5} cy={0.5} r={0.5} /></clipPath>
 
-                {/* Labels */}
-                {labels.map(({ x, y, label }) =>
-                    <text key={`${x}-${y}`} x={x} y={y} textAnchor="middle">{label}</text>)
-                }
-
                 {/* Lines */}
                 {tree.edges.map(([a, b], i) => {
                     const [pa, pb] = [positions[a], positions[b]]
@@ -164,6 +159,13 @@ export default function TalentFilterTree({ tree, spec, talent_filter, preview, s
                     })
                 })}
             </svg>
+
+            {/* html, not svg text: an svg text scales with the tree */}
+            {labels.map(({ x, y, label }) => <span
+                key={`${x}-${y}`}
+                className={`${styles.label} text-label`}
+                style={{ left: `${x / WIDTH * 100}%`, top: `${(y - VIEW_Y) / VIEW_HEIGHT * 100}%` }}
+            >{label}</span>)}
 
             {dots.map(({ entry, cx, cy, r, w, locked, side }) => (
                 <a

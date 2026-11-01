@@ -1,5 +1,5 @@
 /*
-    One button per Build of the spec (see the backend's `/builds/{spec_slug}`), left of the tree in the Talent Filter menu.
+    One button per Build of the spec (see the backend's `/builds/{spec_slug}`), right of the tree in the Talent Filter menu.
 
     Each player of the listed fights goes to one Build, or none ("cooked their own"), by the backend's rules
     (`build_assign.ts`): so the shares and counts add up. Sorted by share (in the tooltip); Builds nobody here plays
@@ -8,7 +8,7 @@
     Clicking the active one clears it again. Hovering one shows its talents on the tree.
 */
 import { useEffect, useMemo, useState } from "react";
-import { fetch_versioned } from "../../api";
+import { fetch_versioned, versioned } from "../../api";
 import { ASSETS } from "../../constants";
 import { get_fights } from "../../store/fights";
 import { useAppSelector } from "../../store/store_hooks";
@@ -44,16 +44,42 @@ interface Props {
 }
 
 
+/** loaded Builds by versioned path: the menu (and these buttons with it) mounts on every hover, loading them once */
+const loaded = new Map<string, SpecBuilds | null>()
+const loading = new Map<string, Promise<SpecBuilds | null>>()
+
+
+/** Load the Builds of a spec, once */
+export function load_builds(spec_slug: string): Promise<SpecBuilds | null> {
+    const path = versioned(`/builds/${spec_slug}`)
+    if (!loading.has(path)) {
+        loading.set(path, fetch_versioned(`/builds/${spec_slug}`).then(builds => {
+            const result = builds && !builds.error ? builds as SpecBuilds : null
+            if (builds) { loaded.set(path, result) }  // `null`: switched Game Version meanwhile, try again next time
+            else { loading.delete(path) }
+            return result
+        }).catch(() => {
+            loading.delete(path)  // try again next time
+            return null
+        }))
+    }
+    return loading.get(path)!
+}
+
+
 export default function BuildButtons({ spec_slug, tree, talent_filter, on_change, on_hover }: Props) {
 
     const fights_on_page = useAppSelector(get_fights)
-    const [data, set_data] = useState<{ spec_slug: string, builds: SpecBuilds } | null>(null)
+    const cached = spec_slug ? loaded.get(versioned(`/builds/${spec_slug}`)) : undefined
+    const [data, set_data] = useState<{ spec_slug: string, builds: SpecBuilds } | null>(
+        cached ? { spec_slug, builds: cached } : null,
+    )
 
     useEffect(() => {
-        if (!spec_slug) { return }
+        if (!spec_slug || data?.spec_slug == spec_slug) { return }
         let cancelled = false
-        fetch_versioned(`/builds/${spec_slug}`).then(builds => {
-            if (!cancelled && builds && !builds.error) { set_data({ spec_slug, builds }) }
+        load_builds(spec_slug).then(builds => {
+            if (!cancelled && builds) { set_data({ spec_slug, builds }) }
         })
         return () => { cancelled = true }
     }, [spec_slug])
@@ -88,8 +114,8 @@ export default function BuildButtons({ spec_slug, tree, talent_filter, on_change
         .map((build, index) => ({ build, count: counts.get(index) || 0 }))
         .sort((a, b) => b.count - a.count || b.build.fights - a.build.fights)
 
-    return <div className={styles.builds}>
-        <span className={styles.label}>Builds</span>
+    return <div className={styles.builds} data-builds>
+        <span className="text-label">Builds</span>
         {sorted.map(({ build, count }) => {
             const { filter, key_talents } = build_preset_filter(tree, build, builds.filter(other => other != build))
             const active = format_talent_filter(filter) == format_talent_filter(talent_filter)
@@ -130,8 +156,8 @@ export default function BuildButtons({ spec_slug, tree, talent_filter, on_change
                 </div>
             )
         })}
-        {total > 0 && <span className="text-muted">{own}/{total} players cooked their own builds</span>}
-        <span className="text-muted">
+        {total > 0 && own > 0 && <span className="text-muted text-small">{own}/{total} players cooked their own builds</span>}
+        <span className="text-muted text-small">
             Builds are generated based on<br />
             <b>all</b> bosses once per day.</span>
     </div>

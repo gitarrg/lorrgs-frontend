@@ -1,15 +1,11 @@
-// Build buttons, left of the tree in the Talent Filter menu
+// Build buttons, right of the tree in the Talent Filter menu
 .builds {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    width: 180px;
+    width: var(--builds-width);
     flex-shrink: 0;
-    font-size: 1rem;  // like the header of the Talent Card
-}
-
-.label {
-    font-weight: bold;
+    white-space: normal;  // the body doesn't wrap: the notes would run into the tree
 }
 
 .build {

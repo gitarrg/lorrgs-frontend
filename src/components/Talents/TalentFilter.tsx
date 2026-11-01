@@ -11,7 +11,7 @@ import { get_talent_tree, load_talent_tree } from "../../store/talent_trees";
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import type { TalentFilter as TalentFilterValues } from "../../store/ui";
 import { URL_PARAM, cycle_talent, format_talent_filter, get_fight_talents } from "./talent_filter";
-import BuildButtons from "./BuildButtons";
+import BuildButtons, { load_builds } from "./BuildButtons";
 import TalentFilterTree from "./TalentFilterTree";
 import styles from "./TalentFilter.module.scss";
 import WebpImg from "../WebpImg";
@@ -63,9 +63,12 @@ export default function TalentFilter() {
     const cancel_close = () => window.clearTimeout(close_timer.current)
     useEffect(() => cancel_close, [])
 
+    // only once the menu shows (on hover or click): both stay cached after
     useEffect(() => {
-        spec_slug && dispatch(load_talent_tree(spec_slug))
-    }, [spec_slug])
+        if (!open || !spec_slug) { return }
+        dispatch(load_talent_tree(spec_slug))
+        load_builds(spec_slug)
+    }, [open, spec_slug])
 
     // the menu is right-aligned to the icon, which isn't at the right edge of the page: shift it back into the viewport
     useLayoutEffect(() => {
@@ -205,8 +208,8 @@ export default function TalentFilter() {
                     className={`${styles.menu} bg-dark rounded border`}
                 >
                     <div className={styles.body}>
-                        <BuildButtons spec_slug={spec_slug} tree={tree} talent_filter={talent_filter} on_change={set_talent_filter} on_hover={set_preview} />
                         <div className={styles.body_tree}>{tree_content}</div>
+                        <BuildButtons spec_slug={spec_slug} tree={tree} talent_filter={talent_filter} on_change={set_talent_filter} on_hover={set_preview} />
                     </div>
 
                     <div className={styles.selection}>
