@@ -32,21 +32,9 @@ function spec_ranking_color(i = 0) {
     }
 }
 
-function CopyAsNoteButton({ fight, player }: { fight: Fight, player: Actor }) {
-
-    const dispatch = useAppDispatch()
-
-    function onClick(event: MouseEvent) {
-        event && event.preventDefault();
-
-        dispatch(ui_store.set_copynote_fight(fight));
-        dispatch(ui_store.set_copynote_player(player));
-        dispatch(ui_store.set_show_copynote(true));
-    }
-
+function CopyAsNoteButton() {
     return <>
         <FaCopy
-            onClick={onClick}
             data-tooltip="Copy Note"
             data-tooltip-dir="down"
         />
@@ -133,6 +121,7 @@ function useTalentCard(enabled: boolean) {
 export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     ///////////////////
     // hooks
+    const dispatch = useAppDispatch()
     const mode = useAppSelector((state) => state.ui.mode);
     // a boolean, so the row only re-renders when it gets shown or hidden.
     // (also depends on spell_display: with "hide empty rows", rows without visible casts are hidden)
@@ -166,10 +155,21 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
 
     const className = spec_ranking_color(player.rank) || `wow-${player.class_slug}`;
 
+    function open_copynote() {
+        dispatch(ui_store.set_copynote_fight(fight));
+        dispatch(ui_store.set_copynote_player(player));
+        dispatch(ui_store.set_show_copynote(true));
+    }
+
+    function on_name_click(event: MouseEvent) {
+        talent_card.on_click?.(event)
+        event.stopPropagation()
+    }
+
     ///////////////////
     // render
     return (
-        <div className={`${styles.player_name} ${className}`} {...talent_card.props}>
+        <div className={`${styles.player_name} ${className}`} onClick={open_copynote} {...talent_card.props}>
 
             {talent_card.anchor &&
                 <TalentCard
@@ -179,15 +179,21 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
                 />
             }
 
-            <a target="_blank" href={report_url} onClick={talent_card.on_click}>
-                {mode_comp && role?.icon_path && <img className={styles.icon} src={role.icon_path}></img>}
-                <WebpImg className={styles.icon} src={spec.icon_path} />
+            {mode_comp && role?.icon_path && <img className={styles.icon} src={role.icon_path}></img>}
+            <WebpImg className={styles.icon} src={spec.icon_path} />
 
-                <span className={styles.name}>{player.name.substring(0, MAX_CHAR_NAME)}</span>
-                <span className={styles.copy}><CopyAsNoteButton fight={fight} player={player} /></span>
-                {mode_spec && !!player.rank && <span className={styles.rank}>#{player.rank}</span>}
-                {!!player.total && <span className={styles.total}>{kFormatter(player.total)}</span>}
+            <a
+                target="_blank"
+                href={report_url}
+                className={styles.name}
+                onClick={on_name_click}
+            >
+                {player.name.substring(0, MAX_CHAR_NAME)}
             </a>
+
+            <span className={styles.copy}><CopyAsNoteButton /></span>
+            {mode_spec && !!player.rank && <span className={styles.rank}>#{player.rank}</span>}
+            {!!player.total && <span className={styles.total}>{kFormatter(player.total)}</span>}
         </div>
     );
 }
