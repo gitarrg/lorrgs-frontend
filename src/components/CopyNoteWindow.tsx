@@ -499,7 +499,14 @@ export default function CopyNoteWindow() {
     );
 
     return (
-        <div className={style.modal}>
+        <div
+            className={style.modal}
+            onClick={(event) => {
+                if (event.target === event.currentTarget) {
+                    closeWindow()
+                }
+            }}
+        >
             <div className="p-2 bg-dark rounded border">
 
                 {/* Header */}
