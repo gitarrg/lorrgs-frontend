@@ -1,6 +1,7 @@
-import { memo } from "react";
+import { memo, type CSSProperties } from "react";
 import type TalentTree from "../../types/talent_tree";
 import type { TalentNode, Talents } from "../../types/talent_tree";
+import { useTalentCounts } from "./talent_filter";
 import styles from "./TalentCard.module.scss";
 
 
@@ -89,8 +90,11 @@ export function layout(panels: Panel[], [total_width, total_height]: Point = [WI
 }
 
 
-function NodeShape({ node, pos, rank }: { node: TalentNode, pos: Point, rank: number }) {
-    const className = rank ? (rank < node.max_ranks ? styles.partial : styles.taken) : styles.untaken
+function NodeShape({ node, pos, rank, percent }: { node: TalentNode, pos: Point, rank: number, percent: number }) {
+    const state = rank ? (rank < node.max_ranks ? styles.partial : styles.taken) : styles.untaken
+    // used by everyone => "default"
+    const kind = percent >= 100 ? styles.default : ""
+    const className = `${state} ${kind}`
     const [x, y] = pos
 
     if (node.type == "choice") {
@@ -121,6 +125,12 @@ function TalentTreeGraph({ tree, talents, class_name, spec_name }: { tree: Talen
         { label: spec_name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
     ])
 
+    const { counts, with_talents } = useTalentCounts()
+    /** share (0-100) of the fights taking the node: of its most used entry */
+    const percent = (node: TalentNode) => with_talents
+        ? Math.round(100 * Math.max(0, ...node.entries.map(entry => counts[entry.id] || 0)) / with_talents)
+        : 0
+
     const rank = (node: TalentNode) => Math.max(0, ...node.entries.map(entry => talents[entry.id] || 0))
 
     return (
@@ -134,7 +144,7 @@ function TalentTreeGraph({ tree, talents, class_name, spec_name }: { tree: Talen
             })}
 
             {nodes.map(node => positions[node.id] &&
-                <NodeShape key={node.id} node={node} pos={positions[node.id]} rank={rank(node)} />
+                <NodeShape key={node.id} node={node} pos={positions[node.id]} rank={rank(node)} percent={percent(node)} />
             )}
         </svg>
     )

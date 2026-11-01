@@ -5,12 +5,11 @@
 */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router";
-import { get_fights } from "../../store/fights";
 import { get_spec } from "../../store/specs";
 import { get_talent_tree, load_talent_tree } from "../../store/talent_trees";
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import type { TalentFilter as TalentFilterValues } from "../../store/ui";
-import { URL_PARAM, cycle_talent, format_talent_filter, get_fight_talents } from "./talent_filter";
+import { URL_PARAM, cycle_talent, format_talent_filter, useTalentCounts } from "./talent_filter";
 import BuildButtons, { load_builds } from "./BuildButtons";
 import TalentFilterTree from "./TalentFilterTree";
 import styles from "./TalentFilter.module.scss";
@@ -20,25 +19,6 @@ import { ASSETS } from "../../constants";
 
 const VIEWPORT_MARGIN = 16  // px
 const CLOSE_DELAY = 250  // ms, to move the mouse from the icon into the menu
-
-
-/** How many of the loaded fights take each talent */
-function useTalentCounts() {
-    const fights = useAppSelector(get_fights)
-    return useMemo(() => {
-        const counts: { [entry_id: string]: number } = {}
-        let with_talents = 0
-        for (const fight of fights) {
-            const talents = get_fight_talents(fight)
-            if (!talents) { continue }
-            with_talents++
-            for (const [entry_id, rank] of Object.entries(talents)) {
-                if (rank > 0) { counts[entry_id] = (counts[entry_id] || 0) + 1 }
-            }
-        }
-        return { counts, with_talents, without_talents: fights.length - with_talents }
-    }, [fights])
-}
 
 
 export default function TalentFilter() {

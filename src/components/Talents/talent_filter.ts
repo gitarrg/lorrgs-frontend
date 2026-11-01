@@ -3,6 +3,9 @@
 
     Kept in the url as `?talents=<entry id>,-<entry id>` ("-" for "only without").
 */
+import { useMemo } from "react"
+import { get_fights } from "../../store/fights"
+import { useAppSelector } from "../../store/store_hooks"
 import type { TalentFilter } from "../../store/ui"
 import type Fight from "../../types/fight"
 import type { Talents } from "../../types/talent_tree"
@@ -55,4 +58,27 @@ export function fight_matches_talents(fight: Fight, talent_filter: TalentFilter 
     if (!talents) { return false }
 
     return selected.every(([id, mode]) => (talents[id] > 0) == (mode == "with"))
+}
+
+
+/** How many of the loaded fights take each talent */
+export function useTalentCounts() {
+    const fights = useAppSelector(get_fights)
+    return useMemo(() => {
+        const counts: { [entry_id: string]: number } = {}
+        let with_talents = 0
+        for (const fight of fights) {
+            const talents = get_fight_talents(fight)
+            if (!talents) { continue }
+            with_talents++
+            for (const [entry_id, rank] of Object.entries(talents)) {
+                if (rank > 0) { counts[entry_id] = (counts[entry_id] || 0) + 1 }
+            }
+        }
+        return {
+            counts,
+            with_talents,
+            without_talents: fights.length - with_talents,
+        }
+    }, [fights])
 }
