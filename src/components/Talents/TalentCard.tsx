@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import styles from "./TalentCard.module.scss";
 import TalentTreeGraph from "./TalentTreeGraph";
 import WebpImg from "../WebpImg";
+import { get_hero_tree } from "./hero_tree";
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 
@@ -47,6 +48,8 @@ function TalentCardBody({ player }: { player: Actor }) {
 export default function TalentCard({ fight, player, anchor }: { fight: Fight, player: Actor, anchor: DOMRect }) {
 
     const spec = useAppSelector(state => get_spec(state, player.spec_slug))
+    const tree = useAppSelector(state => get_talent_tree(state, player.spec_slug))
+    const hero_tree = get_hero_tree(tree, player.talents)
     const ref = useRef<HTMLDivElement>(null)
     const [position, set_position] = useState<{ left: number, top: number } | null>(null)
 
@@ -78,7 +81,10 @@ export default function TalentCard({ fight, player, anchor }: { fight: Fight, pl
             style={position ? position : { visibility: "hidden" }}
         >
             <header className={styles.header}>
-                {spec && <WebpImg className={styles.icon} src={spec.icon_path} />}
+                {hero_tree
+                    ? <WebpImg className={styles.icon} src={hero_tree.icon_path} />
+                    : spec && <WebpImg className={styles.icon} src={spec.icon_path} />
+                }
                 <span className={styles.name}>{player.name}</span>
                 {fight.region && <span className="text-muted">({fight.region})</span>}
                 {fight.start_time && <span className={`${styles.date} text-muted`}>{new Date(fight.start_time).toLocaleDateString()}</span>}

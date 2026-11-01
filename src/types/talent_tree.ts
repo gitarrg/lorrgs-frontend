@@ -22,6 +22,8 @@ export interface TalentNode {
     tree: "class" | "spec" | "hero"
     /** name of the hero tree (for nodes in one) */
     hero_tree: string | null
+    /** slug of the hero tree, also the name of its icon: "elunes-chosen" */
+    hero_tree_slug: string | null
     entries: TalentEntry[]
 }
 
