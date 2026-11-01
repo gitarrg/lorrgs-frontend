@@ -22,6 +22,8 @@ type Props = {
     tree: TalentTree
     spec: Spec
     talent_filter: TalentFilter
+    /** shown instead of `talent_filter`, highlighted (eg.: while hovering a Build button) */
+    preview?: TalentFilter | null
     /** share (0-1) of the listed fights taking a talent */
     share: (entry_id: number) => number
     on_click: (entry_id: number) => void
@@ -76,7 +78,7 @@ function ShareTooltip({ spec, share }: { spec: Spec, share: number }) {
 
 
 /** The whole tree of a spec (class | hero trees | spec), with one clickable dot (the talent icon) per talent: choice nodes are a pill with one half per option. */
-export default function TalentFilterTree({ tree, spec, talent_filter, share, on_click, on_clear }: Props) {
+export default function TalentFilterTree({ tree, spec, talent_filter, preview, share, on_click, on_clear }: Props) {
 
     const [hovered, set_hovered] = useState<TalentEntry | null>(null)
 
@@ -133,7 +135,7 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
                         const w = side ? HALF_WIDTH : 2 * r
                         const cx = side ? pos[0] + (side == "right" ? w / 2 : -w / 2) : pos[0]
                         const cy = pos[1]
-                        const mode = talent_filter[entry.id]
+                        const mode = (preview ?? talent_filter)[entry.id]
 
                         // not selected: taken by everyone / no one (nothing to filter by), or somewhere in between
                         const percent = Math.round(share(entry.id) * 100)
@@ -142,7 +144,7 @@ export default function TalentFilterTree({ tree, spec, talent_filter, share, on_
                         dots.push({ entry, cx, cy, r, w, locked, side })
 
                         return (
-                            <g key={entry.id} className={`${styles.node} ${styles[`node_${state}`]}`}>
+                            <g key={entry.id} className={`${styles.node} ${styles[`node_${state}`]} ${preview && mode ? styles.node_preview : ""}`}>
                                 {side
                                     ? <path className={styles.bg} d={half_path(pos[0], cy, r, side)} />
                                     : <circle className={styles.bg} cx={cx} cy={cy} r={r} />}

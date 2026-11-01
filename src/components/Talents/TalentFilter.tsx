@@ -57,6 +57,7 @@ export default function TalentFilter() {
     const menu_ref = useRef<HTMLDivElement>(null)
     const [open, set_open] = useState(false)
     const [pinned, set_pinned] = useState(false)
+    const [preview, set_preview] = useState<TalentFilterValues | null>(null)  // of the hovered Build button
     const close_timer = useRef<number>(undefined)
 
     const cancel_close = () => window.clearTimeout(close_timer.current)
@@ -86,6 +87,7 @@ export default function TalentFilter() {
     const close = () => {
         set_open(false)
         set_pinned(false)
+        set_preview(null)
     }
 
     useEffect(() => {
@@ -164,6 +166,7 @@ export default function TalentFilter() {
         tree={tree!}
         spec={spec}
         talent_filter={talent_filter}
+        preview={preview}
         share={share}
         on_click={on_tree_click}
         on_clear={remove_talent}
@@ -201,7 +204,7 @@ export default function TalentFilter() {
                     ref={menu_ref}
                     className={`${styles.menu} bg-dark rounded border`}
                 >
-                    <BuildButtons spec_slug={spec_slug} talent_filter={talent_filter} on_change={set_talent_filter} />
+                    <BuildButtons spec_slug={spec_slug} tree={tree} talent_filter={talent_filter} on_change={set_talent_filter} on_hover={set_preview} />
 
                     {tree_content}
 

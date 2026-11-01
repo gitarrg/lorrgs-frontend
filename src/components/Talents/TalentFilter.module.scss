@@ -209,6 +209,9 @@ button.with, button.without {
 .node_with .ring { stroke: var(--talent-with); }
 .node_without .ring { stroke: var(--talent-without); }
 
+// in the filter of the hovered Build button
+.node_preview .ring { stroke-width: 3; }
+
 // taken by no one / everyone: nothing to filter by
 .node_fixed {
     .icon_image {

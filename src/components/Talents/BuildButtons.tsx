@@ -1,22 +1,21 @@
 /*
     One button per Build of the spec (see the backend's `/builds/{spec_slug}`), on top of the Talent Filter menu.
 
-    Clicking one sets the Talent Filter to the defining talents of the Build:
-    "only with" for the talents only it has, "only without" for those every other Build has.
-    Clicking the active one clears it again.
+    Clicking one sets the Talent Filter to the talents that make up the Build (see `build_filter.ts`).
+    Clicking the active one clears it again. Hovering one shows its talents on the tree.
 */
 import { useEffect, useState } from "react";
 import { fetch_versioned } from "../../api";
 import type { TalentFilter } from "../../store/ui";
+import type TalentTree from "../../types/talent_tree";
+import { build_preset_filter, type BuildDefinition } from "./build_filter";
 import { format_talent_filter } from "./talent_filter";
 import styles from "./TalentFilter.module.scss";
 
 
-interface Build {
+interface Build extends BuildDefinition {
     letter: string
     fights: number
-    hero_tree: string | null
-    defining: { has: { [entry_id: string]: number }, lacks: { [entry_id: string]: number } }
 }
 
 interface SpecBuilds {
@@ -25,22 +24,17 @@ interface SpecBuilds {
 }
 
 
-function build_filter(build: Build): TalentFilter {
-    const filter: TalentFilter = {}
-    Object.keys(build.defining.has).forEach(id => { filter[Number(id)] = "with" })
-    Object.keys(build.defining.lacks).forEach(id => { filter[Number(id)] = "without" })
-    return filter
-}
-
-
 interface Props {
     spec_slug: string
+    tree: TalentTree | null | undefined
     talent_filter: TalentFilter
     on_change: (next: TalentFilter) => void
+    /** the filter of the hovered button, `null` when leaving it */
+    on_hover: (filter: TalentFilter | null) => void
 }
 
 
-export default function BuildButtons({ spec_slug, talent_filter, on_change }: Props) {
+export default function BuildButtons({ spec_slug, tree, talent_filter, on_change, on_hover }: Props) {
 
     const [data, set_data] = useState<{ spec_slug: string, builds: SpecBuilds } | null>(null)
 
@@ -55,11 +49,12 @@ export default function BuildButtons({ spec_slug, talent_filter, on_change }: Pr
 
     if (data?.spec_slug != spec_slug) { return null }
     const { fights, builds } = data.builds
+    if (!tree) { return null }
     if (builds.length < 2) { return null }  // a single Build has no defining talents
 
     return <div className={styles.builds}>
         {builds.map(build => {
-            const filter = build_filter(build)
+            const filter = build_preset_filter(tree, build, builds.filter(other => other != build))
             const active = format_talent_filter(filter) == format_talent_filter(talent_filter)
             return (
                 <button
@@ -67,6 +62,8 @@ export default function BuildButtons({ spec_slug, talent_filter, on_change }: Pr
                     className={`button rounded border ${active ? "active" : ""}`}
                     title={`Build ${build.letter}: ${build.hero_tree ?? ""} (${build.fights} of ${fights} ranked fights)`}
                     onClick={() => on_change(active ? {} : filter)}
+                    onPointerEnter={() => on_hover(filter)}
+                    onPointerLeave={() => on_hover(null)}
                 >
                     {build.letter} {fights ? Math.round(100 * build.fights / fights) : 0}%
                 </button>
