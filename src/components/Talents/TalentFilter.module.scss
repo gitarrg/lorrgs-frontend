@@ -229,3 +229,22 @@ button.with, button.without {
     }
 }
 
+
+.builds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    &:empty {
+        display: none;
+    }
+
+    button {
+        padding: 2px 8px;
+        font-size: 12px;
+
+        &:global(.active) {
+            border-color: #fff;
+        }
+    }
+}

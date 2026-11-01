@@ -11,6 +11,7 @@ import { get_talent_tree, load_talent_tree } from "../../store/talent_trees";
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks";
 import type { TalentFilter as TalentFilterValues } from "../../store/ui";
 import { URL_PARAM, cycle_talent, format_talent_filter, get_fight_talents } from "./talent_filter";
+import BuildButtons from "./BuildButtons";
 import TalentFilterTree from "./TalentFilterTree";
 import styles from "./TalentFilter.module.scss";
 import WebpImg from "../WebpImg";
@@ -200,6 +201,8 @@ export default function TalentFilter() {
                     ref={menu_ref}
                     className={`${styles.menu} bg-dark rounded border`}
                 >
+                    <BuildButtons spec_slug={spec_slug} talent_filter={talent_filter} on_change={set_talent_filter} />
+
                     {tree_content}
 
                     <div className={styles.selection}>
