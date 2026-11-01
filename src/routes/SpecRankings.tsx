@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { useTitle } from 'react-use'
 
@@ -69,6 +69,17 @@ export default function SpecRankings() {
     useEffect(() => { dispatch(ui_store.set_difficulty(difficulty)) }, [difficulty])
     useEffect(() => { dispatch(ui_store.set_metric(metric)) }, [metric])
     useEffect(() => { dispatch(ui_store.set_filters({ talents: parse_talent_filter(talents_param) })) }, [talents_param])
+    // talent ids belong to one spec: drop the filter when switching to another (but keep it for a shared link on first load)
+    const prev_spec_slug = useRef(spec_slug)
+    useEffect(() => {
+        if (prev_spec_slug.current == spec_slug) { return }
+        prev_spec_slug.current = spec_slug
+        const params = new URLSearchParams(window.location.search)
+        if (!params.has(TALENTS_PARAM)) { return }
+        params.delete(TALENTS_PARAM)
+        const search = params.toString()
+        navigate({ pathname: window.location.pathname, search: search ? `?${search}` : "" }, { replace: true })
+    }, [spec_slug])
     // the other pages have no talent filter
     useEffect(() => () => { dispatch(ui_store.set_filters({ talents: {} })) }, [])
 
