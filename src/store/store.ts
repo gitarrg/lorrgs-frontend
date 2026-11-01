@@ -5,7 +5,6 @@ Redux Data Store
 import { combineReducers, configureStore, UnknownAction } from '@reduxjs/toolkit'
 
 import { DEBUG } from '../constants'
-import admin_reducer from "./admin"
 import bosses_reducer from "./bosses"
 import classes_reducer from "./classes"
 import fights_reducer from "./fights"
@@ -23,7 +22,6 @@ import user_report_reducer from "./user_reports"
 // REDCUER
 //
 const combined_reducer = combineReducers({
-    admin: admin_reducer,
     classes: classes_reducer,
     fights: fights_reducer,
     game_versions: game_versions_reducer,

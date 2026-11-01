@@ -1,0 +1,79 @@
+.table {
+    font-size: 0.8rem;
+    border-collapse: collapse;
+
+    th, td {
+        border: 1px solid black;
+    }
+
+    th {
+        background: hsl(0, 0%, 25%);
+    }
+
+    td {
+        background: hsl(0, 0%, 15%);
+        text-align: center;
+        vertical-align: middle;
+        min-width: 2.25rem;
+        padding: 2px 4px;
+    }
+
+    .role_start > * {
+        border-top: 3px solid black;
+    }
+
+    .zone_start {
+        border-left: 3px solid black;
+    }
+}
+
+.boss_head {
+    padding: 2px;
+    text-align: center;
+    vertical-align: middle;
+
+    img {
+        display: block;
+        margin: 0 auto;
+    }
+}
+
+.strips {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.button_strip {
+    display: flex;
+    gap: 2px;
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #5a5a5a;
+    font-weight: bolder;
+
+    &:global.disabled {
+        background-color: #3a3a3a;
+    }
+}
+
+.spec_head {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    padding: 0 4px;
+}
+
+// dirty: hatching over the age color, so the age stays readable
+.dirty {
+    background-image: repeating-linear-gradient(
+        -45deg,
+        hsl(0 0% 0% / 55%) 0 4px,
+        transparent 4px 8px
+    );
+    font-weight: bold;
+}

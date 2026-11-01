@@ -6,6 +6,8 @@ import LoginButton from "../auth/LoginButton"
 import { VersionTabs } from "../../components/VersionSwitch/Variants"
 import styles from "./Index.module.scss"
 import { useTitle } from 'react-use'
+import { Link } from 'react-router'
+import useUser from '../auth/useUser'
 
 
 const INFO_TEXT = <div>
@@ -13,7 +15,7 @@ const INFO_TEXT = <div>
 
     <div className="bg-dark rounded border p-2 text-wrap">
         <p>This website looks at the current <strong className="wow-astounding">top 50 logs for every spec</strong>&nbsp;
-        and visualizes <em className="wow-mage">"relevant"</em> spells on an encounter timeline.</p>
+            and visualizes <em className="wow-mage">"relevant"</em> spells on an encounter timeline.</p>
 
         <p>This lets you easily compare multiple high performing logs against each other, concerning when they use various important cooldowns.</p>
         <strong className="wow-legendary">No more sifting through individual logs manually!</strong>
@@ -26,13 +28,13 @@ const DISCLAIMER = <div>
     <div className="bg-dark rounded p-2 pt-0 text-wrap wow-border-deathknight">
         <p><strong className="fs-5 text-white">Do not simply copy paste the timings you see here!</strong></p>
         <p>This page is meant to <strong className="wow-rogue">give you a reference</strong>,
-        but you will have to&nbsp;<strong className="wow-deathknight">adapt your cooldowns</strong>&nbsp;
-        based on your guild’s strats, setup, push timings and other variables.</p>
+            but you will have to&nbsp;<strong className="wow-deathknight">adapt your cooldowns</strong>&nbsp;
+            based on your guild’s strats, setup, push timings and other variables.</p>
 
         <hr className="border-0" />
 
         <p>Just seeing what people are doing successfully will not make it work for you,&nbsp;
-        <span className="wow-monk">unless you understand why</span>.</p>
+            <span className="wow-monk">unless you understand why</span>.</p>
 
         <p className="mb-0">By looking at the timelines represented here you should conclude something like:</p>
 
@@ -43,6 +45,21 @@ const DISCLAIMER = <div>
 </div> // disclaimer
 
 
+
+const AdminButton = () => {
+
+
+    const user = useUser()
+    if (!user?.permissions.includes("admin")) { return null }
+
+    return <div className="ml-2">
+        <Link to="/lorgmin/status">
+            Status
+        </Link>
+    </div>
+}
+
+
 export default function Index() {
 
     useTitle("Lorrgs: Index")
@@ -51,6 +68,7 @@ export default function Index() {
 
         <VersionTabs>
             <LoginButton />
+            <AdminButton />
         </VersionTabs>
 
         <div className={`${styles.container} mt-4`}>

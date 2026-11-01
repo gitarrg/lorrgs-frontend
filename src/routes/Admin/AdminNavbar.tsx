@@ -8,8 +8,8 @@ export default function AdminNavbar() {
 
     return (
         <nav className={styles.nav}>
-            <NavLink to="/lorgmin/spec_ranking_status" className={linkClass} end>
-                Spec rankings
+            <NavLink to="/lorgmin/status" className={linkClass}>
+                Status
             </NavLink>
             <NavLink to="/lorgmin/spells" className={linkClass}>
                 Spells
