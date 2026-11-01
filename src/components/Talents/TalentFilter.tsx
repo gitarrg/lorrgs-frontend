@@ -204,9 +204,10 @@ export default function TalentFilter() {
                     ref={menu_ref}
                     className={`${styles.menu} bg-dark rounded border`}
                 >
-                    <BuildButtons spec_slug={spec_slug} tree={tree} talent_filter={talent_filter} on_change={set_talent_filter} on_hover={set_preview} />
-
-                    {tree_content}
+                    <div className={styles.body}>
+                        <BuildButtons spec_slug={spec_slug} tree={tree} talent_filter={talent_filter} on_change={set_talent_filter} on_hover={set_preview} />
+                        <div className={styles.body_tree}>{tree_content}</div>
+                    </div>
 
                     <div className={styles.selection}>
                         {selected.map(([entry_id, mode]) => (

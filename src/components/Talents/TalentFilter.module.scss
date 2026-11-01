@@ -210,7 +210,10 @@ button.with, button.without {
 .node_without .ring { stroke: var(--talent-without); }
 
 // in the filter of the hovered Build button
-.node_preview .ring { stroke-width: 3; }
+.node_preview .ring {
+    stroke: #ffd100;
+    stroke-width: 2;
+}
 
 // taken by no one / everyone: nothing to filter by
 .node_fixed {
@@ -233,21 +236,105 @@ button.with, button.without {
 }
 
 
+.body {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.body_tree {
+    flex: 1;
+    min-width: 0;
+}
+
+// Build buttons, left of the tree
 .builds {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-direction: column;
+    gap: 4px;
+    width: 180px;
+    flex-shrink: 0;
 
     &:empty {
         display: none;
     }
+}
 
-    button {
-        padding: 2px 8px;
-        font-size: 12px;
+.build {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 6px;
+    row-gap: 3px;
+    align-items: center;
+    padding: 4px 6px;
+    border: 1px solid hsl(0, 0%, 25%);
+    border-radius: 4px;
+    background: hsl(0, 0%, 12%);
+    color: inherit;
+    text-align: left;
 
-        &:global(.active) {
-            border-color: #fff;
-        }
+    &:hover {
+        border-color: #ffd100;
+    }
+}
+
+.build_active {
+    border-color: var(--talent-with);
+    background: hsl(0, 0%, 18%);
+}
+
+.build_unplayed {
+    opacity: 0.4;
+}
+
+.build_own {
+    font-size: 11px;
+}
+
+.build_hero {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+}
+
+.build_share {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.build_count {
+    font-size: 11px;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+.build_talents {
+    grid-column: 1 / -1;  // a row of its own, under the hero tree icon and the text
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+
+    &:empty {
+        display: none;
+    }
+}
+
+.build_talent {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 760px) {
+    .body {
+        flex-direction: column;
+    }
+
+    .builds {
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: auto;
     }
 }
