@@ -1,0 +1,71 @@
+// Build buttons, left of the tree in the Talent Filter menu
+.builds {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 180px;
+    flex-shrink: 0;
+    font-size: 1rem;  // like the header of the Talent Card
+}
+
+.label {
+    font-weight: bold;
+}
+
+.build {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px;
+    padding: 4px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: hsl(0, 0%, 15%);
+    cursor: pointer;
+
+    &:hover {
+        border-color: #ffd100;
+        background-color: var(--bg-light-hover);
+    }
+}
+
+.active {
+    background: hsl(0, 0%, 25%);
+    border-color: var(--talent-with);
+}
+
+// dimmed by colour, not opacity: an opacity would carry over to the tooltips
+.unplayed {
+    img {
+        filter: grayscale(1);
+        opacity: 0.5;
+    }
+
+    .count {
+        color: var(--text-muted);
+    }
+}
+
+.hero {
+    border-radius: 50%;
+}
+
+
+.talents {
+    flex-basis: 100%;  // a row of its own, under the hero tree and the count
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1px;
+
+    &:empty {
+        display: none;
+    }
+}
+
+@media (max-width: 760px) {
+    .builds {
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: auto;
+    }
+}

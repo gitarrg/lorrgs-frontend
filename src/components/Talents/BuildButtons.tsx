@@ -2,8 +2,8 @@
     One button per Build of the spec (see the backend's `/builds/{spec_slug}`), left of the tree in the Talent Filter menu.
 
     Each player of the listed fights goes to one Build, or none ("cooked their own"), by the backend's rules
-    (`build_assign.ts`): so the shares and counts add up. Sorted by share, coloured by rank like item qualities;
-    Builds nobody here plays are greyed out. Each also shows its hero tree and the talents that tell it from the others.
+    (`build_assign.ts`): so the shares and counts add up. Sorted by share (in the tooltip); Builds nobody here plays
+    are greyed out. Each shows its hero tree and the talents that tell it from the others.
     Clicking one sets the Talent Filter to the talents that make up the Build (see `build_filter.ts`).
     Clicking the active one clears it again. Hovering one shows its talents on the tree.
 */
@@ -19,7 +19,7 @@ import WebpImg from "../WebpImg";
 import { build_assigner, talent_scope, type BuildSettings } from "./build_assign";
 import { build_preset_filter, type BuildDefinition } from "./build_filter";
 import { format_talent_filter, get_fight_talents } from "./talent_filter";
-import styles from "./TalentFilter.module.scss";
+import styles from "./BuildButtons.module.scss";
 
 
 interface Build extends BuildDefinition {
@@ -42,10 +42,6 @@ interface Props {
     /** the filter of the hovered button, `null` when leaving it */
     on_hover: (filter: TalentFilter | null) => void
 }
-
-
-/** like the item qualities: the most played Build first */
-const SHARE_COLORS = ["wow-artifact", "wow-legendary", "wow-epic", "wow-rare", "wow-uncommon"]
 
 
 export default function BuildButtons({ spec_slug, tree, talent_filter, on_change, on_hover }: Props) {
@@ -93,39 +89,50 @@ export default function BuildButtons({ spec_slug, tree, talent_filter, on_change
         .sort((a, b) => b.count - a.count || b.build.fights - a.build.fights)
 
     return <div className={styles.builds}>
-        {sorted.map(({ build, count }, rank) => {
+        <span className={styles.label}>Builds</span>
+        {sorted.map(({ build, count }) => {
             const { filter, key_talents } = build_preset_filter(tree, build, builds.filter(other => other != build))
             const active = format_talent_filter(filter) == format_talent_filter(talent_filter)
             const percent = total ? Math.round(100 * count / total) : 0
             const global_percent = fights ? Math.round(100 * build.fights / fights) : 0
+            const toggle = () => on_change(active ? {} : filter)
+            // a div: the talents inside are wowhead links, which a button can't hold
             return (
-                <button
+                <div
                     key={build.letter}
-                    className={`${styles.build} ${active ? styles.build_active : ""} ${count ? "" : styles.build_unplayed}`}
-                    title={`Build ${build.letter}: ${count} of ${total} players here, ${global_percent}% of all ranked fights`}
-                    onClick={() => on_change(active ? {} : filter)}
+                    role="button"
+                    tabIndex={0}
+                    className={`${styles.build} button ${active ? styles.active : ""} ${count ? "" : styles.unplayed}`}
+                    onClick={toggle}
+                    onKeyDown={event => { if (event.key == "Enter" || event.key == " ") { event.preventDefault(); toggle() } }}
                     onPointerEnter={() => on_hover(filter)}
                     onPointerLeave={() => on_hover(null)}
                 >
                     {build.hero_tree && <WebpImg
-                        className={styles.build_hero}
+                        className={`${styles.hero} icon-s`}
                         src={`${ASSETS}/images/hero_trees/${build.hero_tree}.png`}
                     />}
-                    <span className={styles.build_share}>
-                        <span className={count ? SHARE_COLORS[Math.min(rank, SHARE_COLORS.length - 1)] : ""}>{percent}%</span>
-                        <span className={`${styles.build_count} text-muted`}>{count}/{total} players</span>
+                    <span
+                        data-tooltip={`${percent}% - ${count}/${total} players on this boss\n${global_percent}% across all bosses`}
+                    >
+                        {percent}% <span className="text-muted">({count}/{total})</span>
                     </span>
-                    <span className={styles.build_talents}>
-                        {key_talents.map(id => entries[id]?.icon && <WebpImg
+                    <span className={styles.talents}>
+                        {key_talents.map(id => entries[id]?.icon && <a
                             key={id}
-                            className={`${styles.build_talent} border rounded`}
-                            src={`${ASSETS}/images/spells/${entries[id].icon}`}
-                            title={entries[id].name}
-                        />)}
+                            href=""
+                            data-wowhead={`spell=${entries[id].spell_id}`}
+                            onClick={event => event.preventDefault()}  // the click goes on to the card
+                        >
+                            <WebpImg className="icon-s border rounded" src={`${ASSETS}/images/spells/${entries[id].icon}`} />
+                        </a>)}
                     </span>
-                </button>
+                </div>
             )
         })}
-        {total > 0 && <span className={`${styles.build_own} text-muted`}>{own}/{total} players cooked their own builds</span>}
+        {total > 0 && <span className="text-muted">{own}/{total} players cooked their own builds</span>}
+        <span className="text-muted">
+            Builds are generated based on<br />
+            <b>all</b> bosses once per day.</span>
     </div>
 }
