@@ -29,14 +29,6 @@ export function get_role(state: RootState, role_name: string) {
 }
 
 
-export function get_specs_for_role(state: RootState, role_name: string) {
-
-    const role = get_role(state, role_name)
-    if (!role) { return [] }
-    return role.specs.map((spec_slug: string) => state.specs.specs_by_name[spec_slug])
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // Slice

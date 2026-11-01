@@ -11,9 +11,6 @@ export default function AdminNavbar() {
             <NavLink to="/lorgmin/status" className={linkClass}>
                 Status
             </NavLink>
-            <NavLink to="/lorgmin/spec_ranking_status" className={linkClass} end>
-                Spec rankings
-            </NavLink>
             <NavLink to="/lorgmin/spells" className={linkClass}>
                 Spells
             </NavLink>

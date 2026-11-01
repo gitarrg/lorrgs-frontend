@@ -149,7 +149,7 @@ function build_title(spec: Spec, boss: Boss, status?: CellStatus): string {
 // Grid
 //
 
-function Cell({ spec, boss, status, first_in_zone }: { spec: Spec, boss: Boss, status?: CellStatus, first_in_zone: boolean }) {
+function Cell({ spec, boss, status }: { spec: Spec, boss: Boss, status?: CellStatus }) {
 
     const age_ms = status?.last_refreshed ? Math.max(0, Date.now() - status.last_refreshed.getTime()) : null
     // no ranking of this metric / difficulty for the spec (eg.: hps for a dps spec)
@@ -157,7 +157,7 @@ function Cell({ spec, boss, status, first_in_zone }: { spec: Spec, boss: Boss, s
 
     return (
         <td
-            className={[status?.dirty && styles.dirty, first_in_zone && styles.zone_start].filter(Boolean).join(" ") || undefined}
+            className={status?.dirty ? styles.dirty : undefined}
             // not `background`: that would reset the hatching of `.dirty`
             style={{ backgroundColor: age_ms !== null ? ageColor(age_ms) : undefined }}
             title={build_title(spec, boss, status)}
@@ -266,7 +266,6 @@ export default function AdminStatus() {
                             <SpecHead spec={spec} />
                             {columns.flatMap(({ bosses }) => bosses.map((boss, j) => (
                                 <Cell
-                                    first_in_zone={j === 0}
                                     key={boss.full_name_slug}
                                     spec={spec}
                                     boss={boss}
