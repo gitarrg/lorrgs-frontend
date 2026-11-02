@@ -5,7 +5,7 @@ import { IoSkullSharp } from "react-icons/io5"
 import { RiSwordFill } from "react-icons/ri"
 import { fetch_versioned } from "../../api"
 import Icon from "../../components/shared/Icon"
-import { get_bosses, get_zones } from "../../store/bosses"
+import { get_bosses } from "../../store/bosses"
 import { get_role } from "../../store/roles"
 import { get_specs } from "../../store/specs"
 import { useAppSelector } from "../../store/store_hooks"
@@ -13,6 +13,7 @@ import type Boss from "../../types/boss"
 import type Spec from "../../types/spec"
 import type { SpecRankingStatus } from "../../types/spec_ranking"
 import styles from "./AdminStatus.module.scss"
+import WebpImg from "../../components/WebpImg"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,9 +23,9 @@ import styles from "./AdminStatus.module.scss"
 const ONE_HOUR = 60 * 60 * 1000
 
 /** Age at which a ranking is considered "mid" (yellow). */
-const MID_AGE_MS = 12 * ONE_HOUR
+const MID_AGE_MS = 8 * ONE_HOUR
 /** Age at which a ranking is considered "old" (red). */
-const OLD_AGE_MS = 24 * ONE_HOUR
+const OLD_AGE_MS = 16 * ONE_HOUR
 
 const COLOR_FRESH = "hsl(130 45% 32%)"
 const COLOR_MID = "hsl(48 65% 38%)"
@@ -86,11 +87,15 @@ const METRIC_CHOICES: { value: MetricChoice, label: string, icon: ReactNode, col
 ]
 
 type Difficulty = "mythic" | "heroic"
+const DIFFICULTIES: Difficulty[] = ["mythic", "heroic"]
+
 
 const DIFFICULTY_CHOICES: { value: Difficulty, label: string, icon: ReactNode, color: string }[] = [
     { value: "mythic", label: "Mythic", icon: "M", color: "wow-astounding" },
     { value: "heroic", label: "Heroic", icon: "H", color: "wow-artifact" },
 ]
+
+
 
 
 /**
@@ -107,18 +112,21 @@ interface CellStatus {
 }
 
 
-function build_status_map(rows: SpecRankingStatus[], metric: MetricChoice, difficulty: Difficulty): Map<string, CellStatus> {
+function build_status_map(rows: SpecRankingStatus[], metric: MetricChoice): Map<string, CellStatus> {
+
     const grouped = new Map<string, SpecRankingStatus[]>()
     for (const row of rows) {
-        const key = `${row.spec_slug}-${row.boss_slug}`
+        const key = `${row.spec_slug}-${row.boss_slug}-${row.difficulty}`
         grouped.set(key, [...(grouped.get(key) ?? []), row])
     }
 
     const result = new Map<string, CellStatus>()
     for (const [key, rankings] of grouped) {
+
         const shown = rankings.filter(r =>
-            r.difficulty === difficulty && (metric === "default" ? r.is_default_metric : r.metric === metric)
+            metric === "default" ? r.is_default_metric : r.metric === metric
         )
+
         const dates = shown.map(r => r.last_refreshed ? new Date(r.last_refreshed) : null)
         result.set(key, {
             // the oldest one: `null` (never stored) counts as the oldest
@@ -149,7 +157,7 @@ function build_title(spec: Spec, boss: Boss, status?: CellStatus): string {
 // Grid
 //
 
-function Cell({ spec, boss, status }: { spec: Spec, boss: Boss, status?: CellStatus }) {
+function Cell({ spec, boss, status, className }: { spec: Spec, boss: Boss, status?: CellStatus, className?: string }) {
 
     const age_ms = status?.last_refreshed ? Math.max(0, Date.now() - status.last_refreshed.getTime()) : null
     // no ranking of this metric / difficulty for the spec (eg.: hps for a dps spec)
@@ -157,7 +165,7 @@ function Cell({ spec, boss, status }: { spec: Spec, boss: Boss, status?: CellSta
 
     return (
         <td
-            className={status?.dirty ? styles.dirty : undefined}
+            className={`${className} ${status?.dirty ? styles.dirty : ""}`}
             // not `background`: that would reset the hatching of `.dirty`
             style={{ backgroundColor: age_ms !== null ? ageColor(age_ms) : undefined }}
             title={build_title(spec, boss, status)}
@@ -205,15 +213,14 @@ function ButtonStrip<T extends string>({ choices, value, onChange }: {
 }
 
 
+
 export default function AdminStatus() {
 
-    const zones = useAppSelector(get_zones)
     const all_bosses = useAppSelector(get_bosses)
     const all_specs = useAppSelector(get_specs)
 
     const [rows, setRows] = useState<SpecRankingStatus[] | null>(null)
     const [metric, setMetric] = useState<MetricChoice>("default")
-    const [difficulty, setDifficulty] = useState<Difficulty>("mythic")
     const [error, setError] = useState<string | null>(null)
 
     // one request covers every ranking of the season
@@ -227,55 +234,78 @@ export default function AdminStatus() {
         return () => { cancelled = true }
     }, [])
 
-    const statuses = useMemo(() => rows && build_status_map(rows, metric, difficulty), [rows, metric, difficulty])
+    // calculated values
+    const bosses = useMemo(() => Object.values(all_bosses), [all_bosses])
     const specs = useMemo(() => sort_specs(Object.values(all_specs)), [all_specs])
 
-    // all raids side by side: [zone, its bosses]
-    const columns = zones
-        .map(zone => ({ zone, bosses: zone.bosses.map(slug => all_bosses[slug]).filter(Boolean) }))
-        .filter(({ bosses }) => bosses.length)
+    const statuses = useMemo(() => rows && build_status_map(rows, metric), [rows, metric])
 
     if (error) { return <div className="p-2">Failed to load: {error}</div> }
-    if (!statuses || !columns.length) { return <div className="p-2">Loading…</div> }
+    if (!rows || !rows.length) { return <div className="p-2">Loading…</div> }
 
     return (
         <div className="p-2 bg-dark border rounded">
             <div className={`${styles.strips} mb-2`}>
-                <ButtonStrip choices={DIFFICULTY_CHOICES} value={difficulty} onChange={setDifficulty} />
                 <ButtonStrip choices={METRIC_CHOICES} value={metric} onChange={setMetric} />
             </div>
 
-            <table className={styles.table}>
-                <thead>
-                    <tr>
-                        <th />
-                        {columns.flatMap(({ zone, bosses }) => bosses.map((boss, i) => (
-                            <th
-                                key={boss.full_name_slug}
-                                title={boss.full_name}
-                                className={`${styles.boss_head}${i === 0 ? ` ${styles.zone_start}` : ""}`}
-                            >
-                                <Icon spec={boss} size="s" />
-                            </th>
-                        )))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {specs.map((spec, i) => (
-                        <tr key={spec.full_name_slug} className={i > 0 && ROLE_ORDER[specs[i - 1].role] !== ROLE_ORDER[spec.role] ? styles.role_start : undefined}>
-                            <SpecHead spec={spec} />
-                            {columns.flatMap(({ bosses }) => bosses.map((boss, j) => (
-                                <Cell
-                                    key={boss.full_name_slug}
-                                    spec={spec}
-                                    boss={boss}
-                                    status={statuses.get(`${spec.full_name_slug}-${boss.full_name_slug}`)}
-                                />
-                            )))}
+            <div className="d-flex flex-row gap-2">
+
+
+                <table className={styles.table}>
+                    <thead>
+                        <tr>
+
+                            {/* spec icons */}
+                            <th />
+
+                            {DIFFICULTIES.map((difficulty, d) => (
+                                bosses.map((boss, j) => (
+                                    <th
+                                        key={`${difficulty}-${boss.full_name_slug}`}
+                                        title={boss.full_name}
+                                        className={`${styles.boss_head}${d > 0 && j === 0 ? ` ${styles.difficulty_start}` : ""}`}
+                                    >
+                                        <WebpImg
+                                            src={boss.icon_path}
+                                            className={`icon-s rounded wow-border wow-${difficulty}`}
+                                        />
+                                    </th>
+                                ))
+                            ))}
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+
+                        {specs.map((spec, i) => (
+                            <tr
+                                key={spec.full_name_slug}
+                                className={i > 0 && ROLE_ORDER[specs[i - 1].role] !== ROLE_ORDER[spec.role] ? styles.role_start : undefined}
+                            >
+                                {/* specs */}
+                                <SpecHead spec={spec} />
+
+                                {DIFFICULTIES.map((difficulty, d) => (
+                                    bosses.map((boss, j) => (
+                                        <Cell
+                                            key={`${difficulty}-${boss.full_name_slug}`}
+                                            spec={spec}
+                                            boss={boss}
+                                            className={d > 0 && j === 0 ? styles.difficulty_start : undefined}
+                                            status={statuses?.get(`${spec.full_name_slug}-${boss.full_name_slug}-${difficulty}`)}
+                                        />
+                                    ))
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
+
+
+            </div>
+
+
         </div>
     )
 }

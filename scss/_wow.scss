@@ -61,8 +61,29 @@ $classes: (
     .wow-border-#{$name} {
         border: 1px solid $color;
     }
-
 }
+
+
+.wow-mythic {
+    --wow-color: var(--wow-astounding);
+}
+
+.wow-heroic {
+    --wow-color: var(--wow-artifact);
+}
+
+.wow-normal {
+    --wow-color: var(--wow-common);
+}
+
+
+
+// Generic Rules to be used in combination with a "wow-{color}" class
+.wow-border {
+    border: 1px solid var(--wow-color);
+}
+
+
 
 // slightly tuned down the colors for Hunter and Monk
 // .wow-bg-hunter {background-color: #7e9c54}
