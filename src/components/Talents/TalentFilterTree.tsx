@@ -4,7 +4,8 @@ import type TalentTree from "../../types/talent_tree";
 import type { TalentEntry } from "../../types/talent_tree";
 import type { TalentFilter } from "../../store/ui";
 import { ASSETS } from "../../constants";
-import { HERO_WIDTH, hero_tree_names, is_drawn, layout } from "./TalentTreeGraph";
+import { is_drawn, layout, tree_panels } from "./TalentTreeGraph";
+import { useTabNames } from "./tab_tree";
 import styles from "./TalentFilter.module.scss";
 import Spec from "../../types/spec";
 
@@ -77,22 +78,15 @@ function ShareTooltip({ spec, share }: { spec: Spec, share: number }) {
 }
 
 
-/** The whole tree of a spec (class | hero trees | spec), with one clickable dot (the talent icon) per talent: choice nodes are a pill with one half per option. */
+/** The whole tree of a spec (class | hero trees | spec, or its tabs), with one clickable dot (the talent icon) per talent: choice nodes are a pill with one half per option. */
 export default function TalentFilterTree({ tree, spec, talent_filter, preview, share, on_click, on_clear }: Props) {
 
     const [hovered, set_hovered] = useState<TalentEntry | null>(null)
 
     const nodes = tree.nodes.filter(is_drawn)
-    const hero_trees = hero_tree_names(nodes)
-
-    const { positions, labels } = layout([
-        { label: spec.class.name, width: 1, nodes: nodes.filter(node => node.tree == "class") },
-        ...hero_trees.map((hero_tree, row) => ({
-            label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
-            nodes: nodes.filter(node => node.hero_tree == hero_tree),
-        })),
-        { label: spec.name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
-    ], [WIDTH, HEIGHT], PADDING)
+    const tab_names = useTabNames(tree)
+    const panels = tree_panels(tree, nodes, { class_name: spec.class.name, spec_name: spec.name, tab_names })
+    const { positions, labels } = layout(panels, [WIDTH, HEIGHT], PADDING)
 
     // wowhead only scans for links on load (and on hover for some versions): make sure it knows ours
     useEffect(() => { (window as any).$WowheadPower?.refreshLinks?.() }, [tree])

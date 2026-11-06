@@ -2,6 +2,7 @@ import { memo, type CSSProperties } from "react";
 import type TalentTree from "../../types/talent_tree";
 import type { TalentNode, Talents } from "../../types/talent_tree";
 import { useTalentCounts } from "./talent_filter";
+import { is_tab_tree, node_rank, useTabNames } from "./tab_tree";
 import styles from "./TalentCard.module.scss";
 
 
@@ -22,6 +23,8 @@ export type Panel = {
     column?: number
     row?: number
     rows?: number
+    /** Area of the tree to fit into the box, as `[min, max]` in tree coordinates (default: the extent of the nodes) */
+    bounds?: { x: Point, y: Point }
 }
 export type Point = [number, number]
 
@@ -35,6 +38,36 @@ export function is_drawn(node: TalentNode) {
 /** The hero trees of a spec, in a stable order: the slot of a tree (top, bottom) is the same in every graph. */
 export function hero_tree_names(nodes: TalentNode[]) {
     return [...new Set(nodes.map(node => node.hero_tree).filter(Boolean))] as string[]
+}
+
+
+/** The sections of a tree, left to right: class | hero trees (stacked) | spec, or one per tab for three-tab trees. */
+export function tree_panels(tree: TalentTree, nodes: TalentNode[], names: { class_name: string, spec_name: string, tab_names: string[] }): Panel[] {
+
+    if (is_tab_tree(tree)) {
+        // same scale for all tabs: each tab's box is as wide as a typical tab (4 columns) and as high as the tallest one
+        const tabs = tree.tabs!.map((_, tab) => nodes.filter(node => node.tab == tab))
+        const xs = tabs.map(tab_nodes => tab_nodes.map(node => node.x))
+        const spans = xs.filter(x => x.length).map(x => Math.max(...x) - Math.min(...x)).sort((a, b) => a - b)
+        const span = spans[Math.floor(spans.length / 2)] ?? 0
+        const ys = nodes.map(node => node.y)
+        const y: Point = [Math.min(...ys), Math.max(...ys)]
+        return tabs.map((tab_nodes, tab) => {
+            const x0 = Math.min(...xs[tab])
+            return { label: names.tab_names[tab], width: 1, nodes: tab_nodes, bounds: { x: [x0, x0 + span], y } }
+        })
+    }
+
+    const hero_trees = hero_tree_names(nodes)
+    return [
+        { label: names.class_name, width: 1, nodes: nodes.filter(node => node.tree == "class") },
+        // all hero trees, in the same slots everywhere: the greyed out ones help the eye to orient itself
+        ...hero_trees.map((hero_tree, row) => ({
+            label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
+            nodes: nodes.filter(node => node.hero_tree == hero_tree),
+        })),
+        { label: names.spec_name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
+    ]
 }
 
 
@@ -75,8 +108,9 @@ export function layout(panels: Panel[], [total_width, total_height]: Point = [WI
 
         const xs = panel.nodes.map(node => node.x)
         const ys = panel.nodes.map(node => node.y)
-        const [min_x, min_y] = [Math.min(...xs), Math.min(...ys)]
-        const [span_x, span_y] = [Math.max(...xs) - min_x, Math.max(...ys) - min_y]
+        const [min_x, max_x] = panel.bounds?.x ?? [Math.min(...xs), Math.max(...xs)]
+        const [min_y, max_y] = panel.bounds?.y ?? [Math.min(...ys), Math.max(...ys)]
+        const [span_x, span_y] = [max_x - min_x, max_y - min_y]
         const inner_w = width - 2 * padding
         const inner_h = row_height - LABEL_HEIGHT - 2 * padding
         const scale = Math.min(inner_w / Math.max(1, span_x), inner_h / Math.max(1, span_y))
@@ -109,21 +143,12 @@ function NodeShape({ node, pos, rank, percent }: { node: TalentNode, pos: Point,
 }
 
 
-/** The class, hero and spec tree of one player, side by side (the hero trees stacked). Entries unknown to the tree are ignored. */
+/** The class, hero and spec tree of one player, side by side (the hero trees stacked), or the tabs of a three-tab tree. Entries unknown to the tree are ignored. */
 function TalentTreeGraph({ tree, talents, class_name, spec_name }: { tree: TalentTree, talents: Talents, class_name: string, spec_name: string }) {
 
     const nodes = tree.nodes.filter(is_drawn)
-    // all hero trees, in the same slots as in the filter: the greyed out ones help the eye to orient itself
-    const hero_trees = hero_tree_names(nodes)
-
-    const { positions, labels } = layout([
-        { label: class_name, width: 1, nodes: nodes.filter(node => node.tree == "class") },
-        ...hero_trees.map((hero_tree, row) => ({
-            label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
-            nodes: nodes.filter(node => node.hero_tree == hero_tree),
-        })),
-        { label: spec_name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
-    ])
+    const tab_names = useTabNames(tree)
+    const { positions, labels } = layout(tree_panels(tree, nodes, { class_name, spec_name, tab_names }))
 
     const { counts, with_talents } = useTalentCounts()
     /** share (0-100) of the fights taking the node: of its most used entry */
@@ -131,7 +156,7 @@ function TalentTreeGraph({ tree, talents, class_name, spec_name }: { tree: Talen
         ? Math.round(100 * Math.max(0, ...node.entries.map(entry => counts[entry.id] || 0)) / with_talents)
         : 0
 
-    const rank = (node: TalentNode) => Math.max(0, ...node.entries.map(entry => talents[entry.id] || 0))
+    const rank = (node: TalentNode) => node_rank(node, talents)
 
     return (
         <svg className={styles.graph} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="talent tree">

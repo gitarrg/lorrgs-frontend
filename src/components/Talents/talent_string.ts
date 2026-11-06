@@ -41,6 +41,12 @@ class BitWriter {
 }
 
 
+/** Whether the tree's import string is known (not for WoW Forever). */
+export function has_talent_string(tree: TalentTree): boolean {
+    return tree.node_order.length > 0
+}
+
+
 export function get_talent_string(tree: TalentTree, talents: Talents): string {
     const writer = new BitWriter()
     writer.write(SERIALIZATION_VERSION, 8)

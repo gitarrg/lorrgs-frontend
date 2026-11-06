@@ -24,6 +24,10 @@ export interface TalentNode {
     hero_tree: string | null
     /** slug of the hero tree, also the name of its icon: "elunes-chosen" */
     hero_tree_slug: string | null
+    /** Tab of a three-tab tree (WoW Forever): 0-2, left to right */
+    tab?: number
+    /** Tab trees: points spent in the node's tab to unlock its row (0, 5, ..., 30) */
+    required_points?: number
     entries: TalentEntry[]
 }
 
@@ -34,5 +38,10 @@ export default interface TalentTree {
     tree_id: number
     nodes: TalentNode[]
     edges: [number, number][]
+    /** node ids in the order of the import string. Empty if the tree has no known import string (WoW Forever) */
     node_order: number[]
+    /** Three-tab trees (WoW Forever): the spec id of each tab, left to right */
+    tabs?: number[]
+    /** Three-tab trees: talent points a player can spend */
+    max_points?: number
 }

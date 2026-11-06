@@ -17,6 +17,8 @@ import type Phase from "../types/phase";
 import useCopyRateLimit from "../hooks/useCopyRateLimit";
 import useUser from "../routes/auth/useUser";
 import CopyTalentRow from "./CopyTalentRow";
+import { get_talent_tree, load_talent_tree } from "../store/talent_trees";
+import { has_talent_string } from "./Talents/talent_string";
 
 
 /** Output format for the copy-note modal. */
@@ -236,6 +238,10 @@ export default function CopyNoteWindow() {
 
     const player = useAppSelector(ui_store.get_copynote_player);
     const spec = useAppSelector(state => get_spec(state, player?.spec_slug));
+    const talent_tree = useAppSelector(state => player ? get_talent_tree(state, player.spec_slug) : undefined);
+    useEffect(() => { if (player) { dispatch(load_talent_tree(player.spec_slug)); } }, [player?.spec_slug]);
+    // wait for the tree: without an import string (WoW Forever) there is nothing to copy
+    const show_talents = talent_tree === null || (!!talent_tree && has_talent_string(talent_tree));
 
     // Rate limiting
     const is_paid_user = user.permissions.includes("dynamic_timers");
@@ -515,10 +521,11 @@ export default function CopyNoteWindow() {
                     <FaXmark onClick={closeWindow} />
                 </div>
 
-                <h4 className={style.section_title}>Talents</h4>
-                <CopyTalentRow />
-
-                <hr className={style.divider} />
+                {show_talents && <>
+                    <h4 className={style.section_title}>Talents</h4>
+                    <CopyTalentRow />
+                    <hr className={style.divider} />
+                </>}
 
                 <h4 className={style.section_title}>Note</h4>
                 {noteBody}

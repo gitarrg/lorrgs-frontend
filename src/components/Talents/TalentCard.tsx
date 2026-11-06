@@ -13,6 +13,7 @@ import styles from "./TalentCard.module.scss";
 import TalentTreeGraph from "./TalentTreeGraph";
 import WebpImg from "../WebpImg";
 import { get_hero_tree } from "./hero_tree";
+import { points_per_tab } from "./tab_tree";
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 
@@ -50,6 +51,7 @@ export default function TalentCard({ fight, player, anchor }: { fight: Fight, pl
     const spec = useAppSelector(state => get_spec(state, player.spec_slug))
     const tree = useAppSelector(state => get_talent_tree(state, player.spec_slug))
     const hero_tree = get_hero_tree(tree, player.talents)
+    const tab_points = tree && player.talents ? points_per_tab(tree, player.talents) : []
     const ref = useRef<HTMLDivElement>(null)
     const [position, set_position] = useState<{ left: number, top: number } | null>(null)
 
@@ -86,6 +88,7 @@ export default function TalentCard({ fight, player, anchor }: { fight: Fight, pl
                     : spec && <WebpImg className={styles.icon} src={spec.icon_path} />
                 }
                 <span className={styles.name}>{player.name}</span>
+                {tab_points.length > 0 && <span className={styles.points}>{tab_points.join(" / ")}</span>}
                 {fight.region && <span className="text-muted">({fight.region})</span>}
                 {fight.start_time && <span className={`${styles.date} text-muted`}>{new Date(fight.start_time).toLocaleDateString()}</span>}
             </header>
