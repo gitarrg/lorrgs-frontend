@@ -20,6 +20,7 @@ import { build_assigner, talent_scope, type BuildSettings } from "./build_assign
 import { build_preset_filter, type BuildDefinition } from "./build_filter";
 import { format_talent_filter, get_fight_talents } from "./talent_filter";
 import styles from "./BuildButtons.module.scss";
+import { wowhead_data } from "../../wowhead"
 
 
 interface Build extends BuildDefinition {
@@ -147,7 +148,7 @@ export default function BuildButtons({ spec_slug, tree, talent_filter, on_change
                         {key_talents.map(id => entries[id]?.icon && <a
                             key={id}
                             href=""
-                            data-wowhead={`spell=${entries[id].spell_id}`}
+                            data-wowhead={wowhead_data(`spell=${entries[id].spell_id}`)}
                             onClick={event => event.preventDefault()}  // the click goes on to the card
                         >
                             <WebpImg className="icon-s border rounded" src={`${ASSETS}/images/spells/${entries[id].icon}`} />

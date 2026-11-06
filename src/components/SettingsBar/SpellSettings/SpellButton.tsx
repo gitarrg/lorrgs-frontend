@@ -7,6 +7,7 @@ import type Spec from '../../../types/spec'
 import { ButtonGroupContext } from '../shared/ButtonGroup'
 import { get_spell, set_spell_visible, get_spell_visible } from '../../../store/spells'
 import { useAppDispatch, useAppSelector } from '../../../store/store_hooks'
+import { wowhead_data } from "../../../wowhead"
 
 
 /** slug used for the `wow-{slug}` css classes */
@@ -104,7 +105,7 @@ export default function SpellButton({spec, spell_id, onClick} : { spec: Spec|Bos
     // Render
     return (
         <div className={styles.spell_button}>
-            <a href="" data-wowhead={spell.wowhead_data || spell.tooltip_info} onClick={toggle_spell}>
+            <a href="" data-wowhead={wowhead_data(spell.wowhead_data || spell.tooltip_info)} onClick={toggle_spell}>
                 <img
                     className={`button icon-s rounded wow-border-${wow_class} ${disabled}`}
                     src={spell.icon_path}

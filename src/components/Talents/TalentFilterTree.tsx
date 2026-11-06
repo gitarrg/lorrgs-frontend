@@ -8,6 +8,7 @@ import { is_drawn, layout, tree_panels } from "./TalentTreeGraph";
 import { useTabNames } from "./tab_tree";
 import styles from "./TalentFilter.module.scss";
 import Spec from "../../types/spec";
+import { wowhead_data } from "../../wowhead"
 
 
 const WIDTH = 800
@@ -166,7 +167,7 @@ export default function TalentFilterTree({ tree, spec, talent_filter, preview, s
                     key={entry.id}
                     href=""
                     className={`${styles.hit} ${side ? styles[`hit_${side}`] : ""}`}
-                    data-wowhead={`spell=${entry.spell_id}`}
+                    data-wowhead={wowhead_data(`spell=${entry.spell_id}`)}
                     style={{
                         left: `${(cx - w / 2) / WIDTH * 100}%`, top: `${(cy - r - VIEW_Y) / VIEW_HEIGHT * 100}%`,
                         width: `${w / WIDTH * 100}%`, height: `${2 * r / VIEW_HEIGHT * 100}%`,

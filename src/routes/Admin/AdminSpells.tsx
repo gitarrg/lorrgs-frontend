@@ -7,6 +7,7 @@ import Spec from "../../types/spec";
 import { get_is_loading } from "../../store/ui";
 
 import styles from "./AdminSpells.module.scss"
+import { wowhead_data } from "../../wowhead"
 
 ////////////////////////////////////////////////////////////////////////////////
 // SubNav
@@ -59,7 +60,7 @@ function SpellRow({ spell_id, spec }: { spell_id: number, spec: Spec }) {
     return (
         <tr>
             <td>
-                <a data-wowhead={spell.tooltip_info}>
+                <a data-wowhead={wowhead_data(spell.tooltip_info)}>
                     <img src={spell.icon_path} className={`icon-s button rounded`} />
                 </a>
             </td>
