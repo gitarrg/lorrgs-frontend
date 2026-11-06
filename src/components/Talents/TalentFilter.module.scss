@@ -61,7 +61,10 @@
     top: calc(100% + 2px);
     right: 0;
     z-index: 1050;
-    width: min(950px, calc(100vw - 32px));
+    // as wide as the tree (and the Build buttons)
+    width: max-content;
+    min-width: 300px;
+    max-width: calc(100vw - 32px);
     padding: 0.5rem;
 
     display: grid;
@@ -76,7 +79,6 @@
         &:has([data-builds]) {
             --builds-offset: calc(var(--builds-width) + 0.5rem);
             right: calc(-1 * var(--builds-offset));
-            width: min(calc(950px + var(--builds-offset)), calc(100vw - 32px));
         }
     }
 }
@@ -88,6 +90,7 @@
         left: 16px;
         right: 16px;
         width: auto;
+        max-width: none;
         max-height: calc(100vh - 100px);
         overflow: auto;
     }
@@ -122,11 +125,18 @@
 // halves of a choice pill: round on the outer end only
 .hit_left { border-radius: 50% 0 0 50%; }
 .hit_right { border-radius: 0 50% 50% 0; }
+.hit_square { border-radius: 20%; }  // CORNER in tree_style.ts
 
 
 .note {
     color: var(--text-muted);
     font-size: var(--font-size-small);
+}
+
+// below the tree: takes the width of the menu, without widening it
+.selection, .menu > .note {
+    width: 0;
+    min-width: 100%;
 }
 
 .selection {
@@ -186,11 +196,14 @@ button.with, button.without {
 //                         [x% of Fights]
 .tree_wrap {
     position: relative;
+    width: fit-content;
+    max-width: 100%;
 }
 
+// its own size (see `TreeView`), scaled down on narrow screens
 .tree {
     display: block;
-    width: 100%;
+    max-width: 100%;
     height: auto;
     border-radius: 0.25rem;
 
@@ -209,6 +222,13 @@ button.with, button.without {
 .edge {
     stroke: hsl(0, 0%, 30%);
     stroke-width: 1;
+}
+
+// between the tabs of a three-tab tree
+.divider {
+    stroke: hsl(0, 0%, 30%);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
 }
 
 // one dot of the filter tree: `node_<state>` is with / without (selected) or fixed / varies (not selected)

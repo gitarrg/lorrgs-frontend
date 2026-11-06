@@ -3,27 +3,17 @@ import type TalentTree from "../../types/talent_tree";
 import type { TalentNode, Talents } from "../../types/talent_tree";
 import { useTalentCounts } from "./talent_filter";
 import { is_tab_tree, node_rank, useTabNames } from "./tab_tree";
+import type { TreeStyle, TreeView } from "./tree_style";
+import { CORNER, GRID, useTreeStyle } from "./tree_style";
 import styles from "./TalentCard.module.scss";
-
-
-const WIDTH = 436
-const HEIGHT = 184
-const GAP = 4
-const LABEL_HEIGHT = 24
-const PADDING = 6
-const RADIUS = 4
-export const HERO_WIDTH = 0.55
 
 
 export type Panel = {
     label?: string,
-    width: number,
     nodes: TalentNode[]
-    /** Panels sharing a column are stacked on top of each other, each taking `1 / rows` of the height (default: own column, full height). */
+    /** Panels sharing a column are stacked on top of each other, in order (default: own column). */
     column?: number
-    row?: number
-    rows?: number
-    /** Area of the tree to fit into the box, as `[min, max]` in tree coordinates (default: the extent of the nodes) */
+    /** Area of the tree the panel takes up at least, as `[min, max]` in tree coordinates (default: the extent of the nodes) */
     bounds?: { x: Point, y: Point }
 }
 export type Point = [number, number]
@@ -45,7 +35,7 @@ export function hero_tree_names(nodes: TalentNode[]) {
 export function tree_panels(tree: TalentTree, nodes: TalentNode[], names: { class_name: string, spec_name: string, tab_names: string[] }): Panel[] {
 
     if (is_tab_tree(tree)) {
-        // same scale for all tabs: each tab's box is as wide as a typical tab (4 columns) and as high as the tallest one
+        // each tab at least as wide as a typical tab (4 columns) and as high as the tallest one
         const tabs = tree.tabs!.map((_, tab) => nodes.filter(node => node.tab == tab))
         const xs = tabs.map(tab_nodes => tab_nodes.map(node => node.x))
         const spans = xs.filter(x => x.length).map(x => Math.max(...x) - Math.min(...x)).sort((a, b) => a - b)
@@ -54,92 +44,122 @@ export function tree_panels(tree: TalentTree, nodes: TalentNode[], names: { clas
         const y: Point = [Math.min(...ys), Math.max(...ys)]
         return tabs.map((tab_nodes, tab) => {
             const x0 = Math.min(...xs[tab])
-            return { label: names.tab_names[tab], width: 1, nodes: tab_nodes, bounds: { x: [x0, x0 + span], y } }
+            return { label: names.tab_names[tab], nodes: tab_nodes, bounds: { x: [x0, x0 + span], y } }
         })
     }
 
     const hero_trees = hero_tree_names(nodes)
     return [
-        { label: names.class_name, width: 1, nodes: nodes.filter(node => node.tree == "class") },
+        { label: names.class_name, nodes: nodes.filter(node => node.tree == "class") },
         // all hero trees, in the same slots everywhere: the greyed out ones help the eye to orient itself
-        ...hero_trees.map((hero_tree, row) => ({
-            label: hero_tree, width: HERO_WIDTH, column: 1, row, rows: hero_trees.length,
+        ...hero_trees.map(hero_tree => ({
+            label: hero_tree, column: 1,
             nodes: nodes.filter(node => node.hero_tree == hero_tree),
         })),
-        { label: names.spec_name, width: 1, nodes: nodes.filter(node => node.tree == "spec") },
+        { label: names.spec_name, nodes: nodes.filter(node => node.tree == "spec") },
     ]
 }
 
 
-/** Fit each panel's nodes into its box, side by side (or stacked, within a column), keeping the aspect ratio of the tree. */
-export function layout(panels: Panel[], [total_width, total_height]: Point = [WIDTH, HEIGHT], padding = PADDING) {
-    const column_of = (panel: Panel, i: number) => panel.column ?? -i - 1
-    const columns = new Map<number, number>()  // column -> width
-    panels.forEach((panel, i) => {
-        const column = column_of(panel, i)
-        columns.set(column, Math.max(columns.get(column) || 0, panel.width))
-    })
-
-    const total = [...columns.values()].reduce((sum, width) => sum + width, 0)
-    const unit = (total_width - GAP * (columns.size - 1)) / total
-    const positions: { [node_id: number]: Point } = {}
-    const labels: { x: number, y: number, label: string }[] = []
-
-    const x0s = new Map<number, number>()
-    let x = 0
-    for (const [column, width] of columns) {
-        x0s.set(column, x)
-        x += unit * width + GAP
-    }
-
-    panels.forEach((panel, i) => {
-        const column = column_of(panel, i)
-        const x0 = x0s.get(column)!
-        const width = unit * columns.get(column)!
-
-        const rows = panel.rows || 1
-        const row_height = (total_height - GAP * (rows - 1)) / rows
-        const y0 = (panel.row || 0) * (row_height + GAP)
-
-        if (panel.label) {
-            labels.push({ x: x0 + width / 2, y: y0 + 10, label: panel.label })
-        }
-        if (!panel.nodes.length) { return }
-
-        const xs = panel.nodes.map(node => node.x)
-        const ys = panel.nodes.map(node => node.y)
-        const [min_x, max_x] = panel.bounds?.x ?? [Math.min(...xs), Math.max(...xs)]
-        const [min_y, max_y] = panel.bounds?.y ?? [Math.min(...ys), Math.max(...ys)]
-        const [span_x, span_y] = [max_x - min_x, max_y - min_y]
-        const inner_w = width - 2 * padding
-        const inner_h = row_height - LABEL_HEIGHT - 2 * padding
-        const scale = Math.min(inner_w / Math.max(1, span_x), inner_h / Math.max(1, span_y))
-        const offset_x = x0 + padding + (inner_w - span_x * scale) / 2
-        const offset_y = y0 + LABEL_HEIGHT + padding
-        for (const node of panel.nodes) {
-            positions[node.id] = [offset_x + (node.x - min_x) * scale, offset_y + (node.y - min_y) * scale]
-        }
-    })
-    return { positions, labels }
+/** How far the talents of a panel reach out from their centers, in talent sizes: a choice pill is 1.5 talents wide. */
+function reach(nodes: TalentNode[]): number {
+    return nodes.some(node => node.entries.length > 1) ? 0.75 : 0.5
 }
 
 
-function NodeShape({ node, pos, rank, percent }: { node: TalentNode, pos: Point, rank: number, percent: number }) {
+/** Extent of a panel in tree coordinates: its nodes, and at least its `bounds`. */
+function extent(values: number[], bounds?: Point): Point {
+    if (!values.length) { return bounds ?? [0, 0] }
+    return [Math.min(...values, bounds?.[0] ?? Infinity), Math.max(...values, bounds?.[1] ?? -Infinity)]
+}
+
+
+/**
+ * Place the panels side by side (or stacked, within a column), in pixels (see `TreeView`).
+ *
+ * Each panel has its label on top. Neighbouring talents are `node_size + node_spacing` apart, the panels `tree_margin` (half of it around the drawing).
+ * `size` is the size of the whole drawing, `dividers` are the x positions between the columns.
+ */
+export function layout(panels: Panel[], view: TreeView) {
+    const { node_size, node_spacing, tree_margin, label_size, label_spacing } = view
+    const scale = (node_size + node_spacing) / GRID  // tree coordinates -> pixels
+
+    // size of each panel
+    const boxes = panels.map(panel => {
+        const x = extent(panel.nodes.map(node => node.x), panel.bounds?.x)
+        const y = extent(panel.nodes.map(node => node.y), panel.bounds?.y)
+        const margin = panel.nodes.length ? reach(panel.nodes) * node_size : 0  // room for the talents at the edges
+        const header = panel.label ? label_size + label_spacing : 0
+        return { x, y, margin, header, w: (x[1] - x[0]) * scale + 2 * margin, h: (y[1] - y[0]) * scale + 2 * margin }
+    })
+
+    // panels per column, in order
+    const columns = new Map<number, number[]>()
+    panels.forEach((panel, i) => {
+        const column = panel.column ?? -i - 1
+        columns.set(column, [...(columns.get(column) ?? []), i])
+    })
+
+    const positions: { [node_id: number]: Point } = {}
+    const labels: { x: number, y: number, label: string }[] = []
+    const dividers: number[] = []
+    let height = 0
+
+    // each panel has half a margin around it: `tree_margin` between two panels, half of it at the edges
+    const half = tree_margin / 2
+    let x = half
+    Array.from(columns.values()).forEach((members, c) => {
+        if (c > 0) {
+            dividers.push(x - tree_margin / 2)
+        }
+        const column_w = Math.max(...members.map(i => boxes[i].w))
+        let y = half
+        members.forEach((i, row) => {
+            const [panel, box] = [panels[i], boxes[i]]
+            if (row > 0) { y += tree_margin }
+            if (panel.label) { labels.push({ x: x + column_w / 2, y: y + label_size, label: panel.label }) }
+            y += box.header
+            const offset_x = x + (column_w - box.w) / 2 + box.margin
+            const offset_y = y + box.margin
+            for (const node of panel.nodes) {
+                positions[node.id] = [offset_x + (node.x - box.x[0]) * scale, offset_y + (node.y - box.y[0]) * scale]
+            }
+            y += box.h
+        })
+        height = Math.max(height, y + half)
+        x += column_w + tree_margin
+    })
+
+    const width = x - half  // `x` is past the last column and a full margin
+    return { positions, labels, dividers, radius: node_size / 2, size: [width, height] as Point }
+}
+
+
+function NodeShape({ node, pos, rank, percent, radius, style }: { node: TalentNode, pos: Point, rank: number, percent: number, radius: number, style: TreeStyle }) {
     const state = rank ? (rank < node.max_ranks ? styles.partial : styles.taken) : styles.untaken
     // used by everyone => "default"
     const kind = percent >= 100 ? styles.default : ""
     const className = `${state} ${kind}`
     const [x, y] = pos
+    const shape = style.node_shape(node)
 
-    if (node.type == "choice") {
+    if (shape == "choice") {
         return <rect
             className={className}
-            x={x - RADIUS} y={y - RADIUS}
-            width={2 * RADIUS} height={2 * RADIUS}
+            x={x - radius} y={y - radius}
+            width={2 * radius} height={2 * radius}
             transform={`rotate(45 ${x} ${y})`}
         />
     }
-    return <circle className={className} cx={x} cy={y} r={RADIUS} />
+    if (shape == "square") {
+        return <rect
+            className={className}
+            x={x - radius} y={y - radius}
+            width={2 * radius} height={2 * radius}
+            rx={2 * radius * CORNER}
+        />
+    }
+    return <circle className={className} cx={x} cy={y} r={radius} />
 }
 
 
@@ -148,7 +168,8 @@ function TalentTreeGraph({ tree, talents, class_name, spec_name }: { tree: Talen
 
     const nodes = tree.nodes.filter(is_drawn)
     const tab_names = useTabNames(tree)
-    const { positions, labels } = layout(tree_panels(tree, nodes, { class_name, spec_name, tab_names }))
+    const style = useTreeStyle()
+    const { positions, labels, dividers, radius, size: [width, height] } = layout(tree_panels(tree, nodes, { class_name, spec_name, tab_names }), style.card)
 
     const { counts, with_talents } = useTalentCounts()
     /** share (0-100) of the fights taking the node: of its most used entry */
@@ -159,8 +180,10 @@ function TalentTreeGraph({ tree, talents, class_name, spec_name }: { tree: Talen
     const rank = (node: TalentNode) => node_rank(node, talents)
 
     return (
-        <svg className={styles.graph} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="talent tree">
-            {labels.map(({ x, y, label }) => <text key={`${x}-${y}`} x={x} y={y} textAnchor="middle">{label}</text>)}
+        <svg className={styles.graph} width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label="talent tree">
+            {labels.map(({ x, y, label }) => <text key={`${x}-${y}`} x={x} y={y} fontSize={style.card.label_size} textAnchor="middle">{label}</text>)}
+
+            {style.dividers && dividers.map(x => <line key={x} className={styles.divider} x1={x} y1={0} x2={x} y2={height} />)}
 
             {tree.edges.map(([a, b], i) => {
                 const [pa, pb] = [positions[a], positions[b]]
@@ -169,7 +192,7 @@ function TalentTreeGraph({ tree, talents, class_name, spec_name }: { tree: Talen
             })}
 
             {nodes.map(node => positions[node.id] &&
-                <NodeShape key={node.id} node={node} pos={positions[node.id]} rank={rank(node)} percent={percent(node)} />
+                <NodeShape key={node.id} node={node} pos={positions[node.id]} rank={rank(node)} percent={percent(node)} radius={radius} style={style} />
             )}
         </svg>
     )

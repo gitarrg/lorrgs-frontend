@@ -10,6 +10,15 @@ export interface TalentEntry {
     /** icon filename, eg.: "spell_nature_rejuvenation.jpg". Empty if unknown */
     icon: string
     index: number
+
+    /** the talent's spell is passive */
+    passive?: boolean
+
+    /** `Enum.TraitNodeEntryType`
+     * eg.: "spend_square" (drawn square ingame: mostly active talents),
+     * "spend_circle"
+     * */
+    entry_type?: string
 }
 
 

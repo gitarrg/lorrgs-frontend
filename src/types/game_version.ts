@@ -1,3 +1,7 @@
+/** The look of the talent trees, named after the expansion that introduced it (see `tree_style.ts`). */
+export type TalentTreeStyleName = "classic" | "mists" | "dragonflight"
+
+
 export default interface GameVersion {
 
     /** unique id (e.g. "retail", "mists", "forever") */
@@ -17,4 +21,7 @@ export default interface GameVersion {
 
     /** whether Spec Ranking players carry their Talents. Default: false */
     has_talents?: boolean
+
+    /** the look of the talent trees. Default: "dragonflight" */
+    talent_tree_style?: TalentTreeStyleName
 }

@@ -6,18 +6,13 @@ import type { TalentFilter } from "../../store/ui";
 import { ASSETS } from "../../constants";
 import { is_drawn, layout, tree_panels } from "./TalentTreeGraph";
 import { useTabNames } from "./tab_tree";
+import { CORNER, useTreeStyle } from "./tree_style";
 import styles from "./TalentFilter.module.scss";
 import Spec from "../../types/spec";
 import { wowhead_data } from "../../wowhead"
 
 
-const WIDTH = 800
-const HEIGHT = 450
-const RADIUS = 12
-const VIEW_Y = -10  // room for the labels
-const VIEW_HEIGHT = HEIGHT - VIEW_Y
-const HALF_WIDTH = RADIUS * 1.5  // one half of a choice pill: thinner than a full dot
-const PADDING = HALF_WIDTH + 2  // choice nodes are a pill of two halves, which reaches further out
+const HALF_WIDTH = 1.5  // one half of a choice pill, in radii: thinner than a full dot
 
 
 type Props = {
@@ -38,7 +33,8 @@ type Side = "left" | "right"
 
 /** outline of one half of a choice pill: the outer end is round, the inner edge (at `x`, the pill's center) is flat */
 function half_path(x: number, y: number, r: number, side: Side): string {
-    const [end, sweep] = side == "left" ? [x - HALF_WIDTH + r, 0] : [x + HALF_WIDTH - r, 1]
+    const w = HALF_WIDTH * r
+    const [end, sweep] = side == "left" ? [x - w + r, 0] : [x + w - r, 1]
     return `M${x} ${y - r} H${end} A${r} ${r} 0 0 ${sweep} ${end} ${y + r} H${x} Z`
 }
 
@@ -87,20 +83,24 @@ export default function TalentFilterTree({ tree, spec, talent_filter, preview, s
     const nodes = tree.nodes.filter(is_drawn)
     const tab_names = useTabNames(tree)
     const panels = tree_panels(tree, nodes, { class_name: spec.class.name, spec_name: spec.name, tab_names })
-    const { positions, labels } = layout(panels, [WIDTH, HEIGHT], PADDING)
+    const style = useTreeStyle()
+    const { positions, labels, dividers, radius, size: [WIDTH, HEIGHT] } = layout(panels, style.filter)
 
     // wowhead only scans for links on load (and on hover for some versions): make sure it knows ours
     useEffect(() => { (window as any).$WowheadPower?.refreshLinks?.() }, [tree])
 
     // one link per dot, on top of the svg (wowhead's tooltips attach to links)
-    const dots: { entry: TalentEntry, cx: number, cy: number, r: number, w: number, locked: boolean, side?: Side }[] = []
+    const dots: { entry: TalentEntry, cx: number, cy: number, r: number, w: number, locked: boolean, side?: Side, square: boolean }[] = []
 
     return (
         <div className={styles.tree_wrap}>
 
-            <svg className={styles.tree} viewBox={`0 ${VIEW_Y} ${WIDTH} ${VIEW_HEIGHT}`} role="img" aria-label="talent filter tree">
+            <svg className={styles.tree} width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="talent filter tree">
 
                 <clipPath id="talent-clip" clipPathUnits="objectBoundingBox"><circle cx={0.5} cy={0.5} r={0.5} /></clipPath>
+                <clipPath id="talent-clip-square" clipPathUnits="objectBoundingBox"><rect width={1} height={1} rx={CORNER} /></clipPath>
+
+                {style.dividers && dividers.map(x => <line key={x} className={styles.divider} x1={x} y1={0} x2={x} y2={HEIGHT} />)}
 
                 {/* Lines */}
                 {tree.edges.map(([a, b], i) => {
@@ -118,11 +118,12 @@ export default function TalentFilterTree({ tree, spec, talent_filter, preview, s
                     const pos = positions[node.id]
                     if (!pos) { return null }
 
-                    const multi = node.entries.length > 1
-                    const r = RADIUS
+                    const shape = style.node_shape(node)
+                    const square = shape == "square"
+                    const r = radius
                     return node.entries.map((entry, i) => {
-                        const side: Side | undefined = multi ? (i ? "right" : "left") : undefined
-                        const w = side ? HALF_WIDTH : 2 * r
+                        const side: Side | undefined = shape == "choice" ? (i ? "right" : "left") : undefined
+                        const w = side ? HALF_WIDTH * r : 2 * r
                         const cx = side ? pos[0] + (side == "right" ? w / 2 : -w / 2) : pos[0]
                         const cy = pos[1]
                         const mode = (preview ?? talent_filter)[entry.id]
@@ -131,24 +132,28 @@ export default function TalentFilterTree({ tree, spec, talent_filter, preview, s
                         const percent = Math.round(share(entry.id) * 100)
                         const locked = !mode && (percent == 0 || percent == 100)
                         const state = mode ?? (locked ? "fixed" : "varies")
-                        dots.push({ entry, cx, cy, r, w, locked, side })
+                        dots.push({ entry, cx, cy, r, w, locked, side, square })
 
                         return (
                             <g key={entry.id} className={`${styles.node} ${styles[`node_${state}`]} ${preview && mode ? styles.node_preview : ""}`}>
                                 {side
                                     ? <path className={styles.bg} d={half_path(pos[0], cy, r, side)} />
-                                    : <circle className={styles.bg} cx={cx} cy={cy} r={r} />}
+                                    : square
+                                        ? <rect className={styles.bg} x={cx - r} y={cy - r} width={2 * r} height={2 * r} rx={2 * r * CORNER} />
+                                        : <circle className={styles.bg} cx={cx} cy={cy} r={r} />}
                                 {side && <clipPath id={`talent-clip-${entry.id}`}><path d={half_path(pos[0], cy, r, side)} /></clipPath>}
                                 {entry.icon && <image
                                     className={styles.icon_image}
                                     href={`${ASSETS}/images/spells/${entry.icon}`}
                                     x={cx - w / 2} y={cy - r} width={w} height={2 * r}
                                     preserveAspectRatio="xMidYMid slice"
-                                    clipPath={side ? `url(#talent-clip-${entry.id})` : "url(#talent-clip)"}
+                                    clipPath={side ? `url(#talent-clip-${entry.id})` : square ? "url(#talent-clip-square)" : "url(#talent-clip)"}
                                 />}
                                 {side
                                     ? <path className={styles.ring} d={half_path(pos[0], cy, r, side)} />
-                                    : <circle className={styles.ring} cx={cx} cy={cy} r={r} />}
+                                    : square
+                                        ? <rect className={styles.ring} x={cx - r} y={cy - r} width={2 * r} height={2 * r} rx={2 * r * CORNER} />
+                                        : <circle className={styles.ring} cx={cx} cy={cy} r={r} />}
                             </g>
                         )
                     })
@@ -159,18 +164,18 @@ export default function TalentFilterTree({ tree, spec, talent_filter, preview, s
             {labels.map(({ x, y, label }) => <span
                 key={`${x}-${y}`}
                 className={`${styles.label} text-label`}
-                style={{ left: `${x / WIDTH * 100}%`, top: `${(y - VIEW_Y) / VIEW_HEIGHT * 100}%` }}
+                style={{ left: `${x / WIDTH * 100}%`, top: `${y / HEIGHT * 100}%`, fontSize: style.filter.label_size }}
             >{label}</span>)}
 
-            {dots.map(({ entry, cx, cy, r, w, locked, side }) => (
+            {dots.map(({ entry, cx, cy, r, w, locked, side, square }) => (
                 <a
                     key={entry.id}
                     href=""
-                    className={`${styles.hit} ${side ? styles[`hit_${side}`] : ""}`}
+                    className={`${styles.hit} ${side ? styles[`hit_${side}`] : ""} ${square ? styles.hit_square : ""}`}
                     data-wowhead={wowhead_data(`spell=${entry.spell_id}`)}
                     style={{
-                        left: `${(cx - w / 2) / WIDTH * 100}%`, top: `${(cy - r - VIEW_Y) / VIEW_HEIGHT * 100}%`,
-                        width: `${w / WIDTH * 100}%`, height: `${2 * r / VIEW_HEIGHT * 100}%`,
+                        left: `${(cx - w / 2) / WIDTH * 100}%`, top: `${(cy - r) / HEIGHT * 100}%`,
+                        width: `${w / WIDTH * 100}%`, height: `${2 * r / HEIGHT * 100}%`,
                     }}
                     onClick={event => { event.preventDefault(); locked || on_click(entry.id) }}
                     onContextMenu={event => { event.preventDefault(); on_clear(entry.id) }}

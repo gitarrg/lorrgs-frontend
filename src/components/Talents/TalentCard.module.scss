@@ -2,7 +2,10 @@
 .card {
     position: fixed;
     z-index: 1050;
-    width: min(345px, calc(100vw - 32px));
+    // as wide as the tree graph
+    width: fit-content;
+    min-width: 200px;
+    max-width: calc(100vw - 32px);
 
     display: grid;
     gap: 0.5rem;
@@ -12,6 +15,10 @@
 
 
 .header {
+    // takes the width of the card, without widening it
+    width: 0;
+    min-width: 100%;
+
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -50,18 +57,25 @@
 *********************************/
 .graph {
     display: block;
-    width: 100%;
+    // its own size (see `TreeView`), scaled down on narrow screens
+    max-width: 100%;
     height: auto;
 
     text {
         fill: hsl(0 0% 45%);
-        font-size: 9px;
     }
 }
 
 .edge {
     stroke: hsl(0 0% 25%);
     stroke-width: 1;
+}
+
+// between the tabs of a three-tab tree
+.divider {
+    stroke: hsl(0 0% 30%);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
 }
 
 .taken {

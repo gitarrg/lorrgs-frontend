@@ -7,6 +7,7 @@
 */
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type GameVersion from '../types/game_version'
+import type { TalentTreeStyleName } from '../types/game_version'
 import { AppDispatch, RootState } from './store'
 import { fetch_data, get_game_version_name, set_game_version_name } from '../api'
 
@@ -58,6 +59,11 @@ export function get_has_comp_modes(state: RootState): boolean {
 
 export function get_has_talents(state: RootState): boolean {
     return get_current_game_version(state)?.has_talents ?? false
+}
+
+
+export function get_talent_tree_style(state: RootState): TalentTreeStyleName {
+    return get_current_game_version(state)?.talent_tree_style ?? "dragonflight"
 }
 
 
