@@ -73,8 +73,9 @@ export default class Stage extends Konva.Stage {
     private rows: FightRow[] = []
     back_layer: Konva.Layer
     main_layer: Konva.Layer
-    overlay_layer: Konva.Layer  // general overlays (MouseCrossHair / Timeline Markers)
+    overlay_layer: Konva.Layer  // general overlays (MouseCrossHair)
     overlay_layer2: Konva.Layer  // additional overlays
+    marker_layer: Konva.Layer  // Timeline Markers (on top: nothing may catch their mouse events)
     ruler: Ruler
     private crosshair: MouseCrosshair
 
@@ -120,6 +121,9 @@ export default class Stage extends Konva.Stage {
 
         this.overlay_layer2 = new Konva.Layer()
         this.add(this.overlay_layer2);
+
+        this.marker_layer = new Konva.Layer()
+        this.add(this.marker_layer);
 
         this.ruler = new Ruler(this);
         this.back_layer.add(this.ruler)

@@ -84,9 +84,9 @@ export default class TimelineMarker extends Konva.Group {
             if (e.evt.button === 2) {
                 let stage = this.getStage() as Stage || null
 
-                if (stage && stage.overlay_layer) {
+                if (stage && stage.marker_layer) {
                     this.remove()
-                    stage.overlay_layer.batchDraw()
+                    stage.marker_layer.batchDraw()
                 }
             }
         })

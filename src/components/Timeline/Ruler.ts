@@ -240,6 +240,6 @@ export default class Ruler extends Konva.Group {
 
 
         this.markers.push(marker)
-        this.stage.overlay_layer.add(marker)
+        this.stage.marker_layer.add(marker)
     }
 }
