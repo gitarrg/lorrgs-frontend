@@ -12,8 +12,8 @@ export type TimeIndicator = {
 }
 
 
-/** px of background left and right of the indicator's text */
-const INDICATOR_PADDING = 3
+/** px of background left and right of the indicator's text (half of it above and below) */
+const INDICATOR_PADDING = 4
 
 
 /**
@@ -49,9 +49,9 @@ export default class MouseCrosshair extends Konva.Group {
         // a timestamp like the ruler's (see `Ruler.create_ticks`), on the ruler's background to hide the timestamps below it
         this.indicator = new Konva.Group({ listening: false, visible: false, transformsEnabled: "position" })
         this.indicator_background = new Konva.Rect({
-            x: -INDICATOR_PADDING,
-            y: 3,
-            height: constants.LINE_HEIGHT - 10 - 3,  // down to the big ticks
+            // the text's line box (4 to 18, see below) plus the padding
+            y: 4 - INDICATOR_PADDING / 2,
+            height: 14 + INDICATOR_PADDING,
             listening: false,
             transformsEnabled: "position",
         })
@@ -91,7 +91,12 @@ export default class MouseCrosshair extends Konva.Group {
             this.indicator.y(indicator.y)
             this.indicator_text.text(indicator.text)
             this.indicator_background.fill(indicator.background)
-            this.indicator_background.width(this.indicator_text.width() + 2 * INDICATOR_PADDING)
+
+            // centered on the line
+            const width = this.indicator_text.width()
+            this.indicator_text.x(Math.round(-width / 2))
+            this.indicator_background.x(Math.round(-width / 2) - INDICATOR_PADDING)
+            this.indicator_background.width(width + 2 * INDICATOR_PADDING)
         }
     }
 
