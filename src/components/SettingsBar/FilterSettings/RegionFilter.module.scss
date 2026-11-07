@@ -1,25 +1,46 @@
-
-.button {
-
-    font-size: 12px;
-    align-content: center;
-    text-align: center;
-
-    font-weight: 700;
-
-    background-color: #5a5a5a;
-
-    &:hover {
-        background-color: hsl(0, 0%, 50%);
-    }
-
-    &:global.disabled {
-        background-color: #3a3a3a;
-    }
-
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.buttons {
+// one region: [flag] [full name]. The flag has a border while included
+.row {
     display: flex;
-    gap: 0.25rem;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 3px 6px 3px 3px;
+
+    color: #e4e6ea;
+    background: none;
+    border: 0;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    text-align: left;
+
+    &:hover { background-color: hsl(0, 0%, 20%); }
+}
+
+.flag {
+    flex-shrink: 0;
+    width: 24px;
+    height: 16px;
+    border-radius: 2px;
+    box-shadow: 0 0 0 1px hsl(0, 0%, 85%);
+}
+
+.name {
+    flex: 1;
+    white-space: nowrap;
+}
+
+// excluded region
+.off {
+    color: var(--text-muted);
+
+    .flag {
+        box-shadow: 0 0 0 1px hsl(0, 0%, 35%);
+        filter: grayscale(1) brightness(1.6);
+        opacity: 0.5;
+    }
 }

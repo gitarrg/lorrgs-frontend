@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../../../store/store_hooks'
 import { set_filters } from '../../../store/ui'
-import { ASSETS } from '../../../constants'
+import { FaClock } from 'react-icons/fa'
 import FilterMenu, { FilterMenuHeader } from '../shared/FilterMenu'
 import DurationInputGroup from "../../shared/DurationInputGroup"
 
@@ -29,7 +29,7 @@ export default function FilterKilltimeGroup() {
 
     return (
         <FilterMenu
-            icon={`${ASSETS}/images/spells/inv_misc_pocketwatch_01.jpg`}
+            icon={<FaClock />}
             label="Killtime"
             active={active}
             on_clear={clear}
