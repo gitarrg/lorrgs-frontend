@@ -2,6 +2,7 @@ import styles from "./ViewSettings.module.scss"
 import { FaCog } from "react-icons/fa"
 import { get_view_settings, set_view_setting, type ViewSettings as ViewSettingsType } from "../../store/report_links"
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
+import { get_user_report_fights } from "../../store/user_reports"
 import { useEffect, useRef, useState } from "react"
 
 
@@ -20,6 +21,7 @@ export default function ViewSettings() {
     const settings = useAppSelector(get_view_settings)
     const [open, set_open] = useState(false)
     const container = useRef<HTMLDivElement>(null)
+    const fights = useAppSelector(get_user_report_fights)
 
     // close when clicking anywhere else
     useEffect(() => {
@@ -37,6 +39,9 @@ export default function ViewSettings() {
             document.removeEventListener("keydown", on_key_down)
         }
     }, [open])
+
+    // only with a report loaded (like the Load button)
+    if (fights.length == 0) { return null }
 
     return (
         <div ref={container} className={styles.container}>

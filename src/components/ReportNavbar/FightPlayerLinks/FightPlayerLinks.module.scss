@@ -31,6 +31,8 @@
 // Tooltip
 
 .tooltip {
+    --tooltip-icon-size: 24px;
+
     position: fixed;
     z-index: 1000;
     max-width: 30rem;
@@ -61,22 +63,24 @@
     font-weight: normal;
 }
 
+.tooltip img {
+    width: var(--tooltip-icon-size);
+    height: var(--tooltip-icon-size);
+    flex-shrink: 0;
+}
+
 .row {
     display: flex;
     align-items: flex-start;
     gap: 0.4rem;
-
-    img {
-        flex-shrink: 0;
-    }
 }
 
+// each line as tall as the icon: the first line sits centered next to it, wrapped lines continue below
 .row_items {
     display: flex;
     flex-wrap: wrap;
     column-gap: 0.6rem;
-    row-gap: 0.1rem;
-    padding-top: 1px;
+    line-height: var(--tooltip-icon-size);
 }
 
 .pull {
