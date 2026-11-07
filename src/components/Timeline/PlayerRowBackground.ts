@@ -8,6 +8,8 @@ export default class PlayerRowBackground extends Konva.Group {
 
     row: PlayerRow
     fill: Konva.Rect
+    /** behind the icons of casts from before the crop (see `FightRow.update_gutter`) */
+    gutter: Konva.Rect
 
     constructor(row: PlayerRow) {
         super()
@@ -26,7 +28,23 @@ export default class PlayerRowBackground extends Konva.Group {
             listening: false,
             transformsEnabled: "position",
         })
-        this.add(this.fill)
+        this.gutter = new Konva.Rect({
+            height: constants.LINE_HEIGHT,
+            y: 0.5,
+            fill: "#181818",
+            stroke: "black",
+            strokeWidth: 1,
+            listening: false,
+            visible: false,
+            transformsEnabled: "position",
+        })
+        this.add(this.gutter, this.fill)
+    }
+
+    set_gutter(width: number) {
+        this.gutter.visible(width > 0)
+        this.gutter.x(-width - 0.5)
+        this.gutter.width(width)
     }
 
     /////////////////////////

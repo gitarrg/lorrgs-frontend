@@ -16,6 +16,12 @@ export default class Player extends Konva.Group {
     resurrections: Resurrection[]
     player_data: Actor
 
+    /** width (px) of the gutter left of the row, for casts from before the crop (see `FightRow.update_gutter`) */
+    private gutter = 0
+
+    /** casts with an icon in the gutter (see `update_gutter_slots`) */
+    gutter_count = 0
+
     constructor(row: PlayerRow, player_data: Actor) {
         super()
         this.row = row
@@ -58,6 +64,29 @@ export default class Player extends Konva.Group {
 
         this.removeChildren()
         this.add(...visible_casts, ...this.deaths, ...this.resurrections)
+        this.update_gutter_slots()
+    }
+
+    /** Place the icons of the shown casts from before the crop in the gutter: the latest next to the row. */
+    update_gutter_slots() {
+        const casts = this.casts.filter(cast => cast.before_row && cast.in_range && cast.visible() && cast.has_visible_bar())
+        this.casts.forEach(cast => cast.gutter_slot = null)
+        casts.reverse().forEach((cast, i) => cast.gutter_slot = i)
+        this.gutter_count = casts.length
+    }
+
+    /** Make room for the gutter left of the row */
+    set_gutter(width: number) {
+        if (width == this.gutter) { return }
+        this.gutter = width
+        this.update_clip()
+        this.invalidate_cache()
+    }
+
+    /** everything the row shows: the gutter, and the row (1px less to allow the border to show) */
+    private update_clip() {
+        this.clipX(-this.gutter)
+        this.clipWidth(this.gutter + this.row.duration * this.scale_x - 1)
     }
 
     /** The row's look changed: redraw its cache right away if possible, else rebuild it once the browser is idle. */
@@ -167,8 +196,11 @@ export default class Player extends Konva.Group {
         this.invalidate_cache()
     }
 
+    private scale_x = constants.DEFAULT_ZOOM
+
     _handle_zoom_change(scale_x: number) {
-        this.clipWidth((this.row.duration * scale_x) - 1)  // 1px to allow border to show
+        this.scale_x = scale_x
+        this.update_clip()
     }
 
     _handle_time_map_changed() {
@@ -185,6 +217,7 @@ export default class Player extends Konva.Group {
         this.casts.forEach(cast => cast.handle_event(event_name, payload))
         this.deaths.forEach(event => event.handle_event(event_name, payload))
         this.resurrections.forEach(event => event.handle_event(event_name, payload))
+        if (event_name === constants.EVENT_DISPLAY_SETTINGS) { this.update_gutter_slots() }  // bars shown or hidden
 
         if (Player.REDRAW_EVENTS.has(event_name)) {
             this.invalidate_cache()

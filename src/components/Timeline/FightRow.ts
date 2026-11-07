@@ -67,6 +67,9 @@ export default class FightRow {
     private rows_height = 0
     private scale_x = constants.DEFAULT_ZOOM
 
+    /** width (px) left of the row for the icons of casts from before the crop (see `update_gutter`) */
+    private gutter = 0
+
 
     constructor(fight_data: Fight) {
 
@@ -263,8 +266,40 @@ export default class FightRow {
     _handle_zoom_change(scale_x: number) {
         this.scale_x = scale_x
         this.killtime_text.x(this.KILLTIME_MARGIN + (this.time_ref.current.duration * scale_x))
-        this.x(this.anchor_offset * scale_x)
+        this.update_x()
     }
+
+    /** the anchor offset, and the gutter in front of the row */
+    private update_x() {
+        this.x(this.anchor_offset * this.scale_x + this.gutter)
+    }
+
+    /**
+     * A cropped row starts with a gutter, with the icons of the casts from before the crop
+     * whose bars reach into it (so they don't look like they were cast at the row's start).
+     * As wide as the most such casts of a (visible) player. None: no gutter.
+     */
+    private update_gutter() {
+        const count = Math.max(0, ...this.rows.filter(row => row.visible()).map(row => row.foreground.gutter_count))
+        const gutter = count ? count * constants.GUTTER_SLOT + constants.GUTTER_PADDING : 0
+        if (gutter == this.gutter) { return }
+
+        this.gutter = gutter
+        this.rows.forEach(row => {
+            row.foreground.set_gutter(gutter)
+            row.background.set_gutter(gutter)
+        })
+        this.update_x()
+        this.background.getStage()?.batchDraw()  // the background moved too (casts only redraw their layer)
+    }
+
+    /** events that can change which casts go in the gutter */
+    static GUTTER_EVENTS = new Set([
+        constants.EVENT_TIME_MAP_CHANGED,
+        constants.EVENT_SPELL_DISPLAY,
+        constants.EVENT_DISPLAY_SETTINGS,
+        constants.EVENT_APPLY_FILTERS,
+    ])
 
     _handle_time_map_changed() {
         const map = this.time_ref.current
@@ -285,7 +320,7 @@ export default class FightRow {
         if (ts == 0) {
             this.anchor_offset = 0
             this.anchor_ts = 0
-            this.x(0)
+            this.update_x()
         }
 
         // find the same phase in this fight
@@ -296,7 +331,7 @@ export default class FightRow {
         // of the object clicked on.
         let new_offset = ts - this.time_ref.current.to_display(phase_in_fight.ts / 1000);
         this.anchor_offset = new_offset;
-        this.x(this.anchor_offset * stage.scale_x);
+        this.update_x()
     }
 
 
@@ -336,5 +371,6 @@ export default class FightRow {
 
         // postprocess after filters applied (in case height change due to child rows updating)
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_post() }
+        if (FightRow.GUTTER_EVENTS.has(event_name)) { this.update_gutter() }
     }
 }

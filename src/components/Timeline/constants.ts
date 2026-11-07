@@ -5,6 +5,11 @@ export const LINE_HEIGHT = 28
 
 export const DEFAULT_ZOOM = 4
 
+/** width of a slot in a cropped row's gutter: the icon of a cast from before the crop (see `FightRow.update_gutter`) */
+export const GUTTER_SLOT = 22
+/** space between the gutter's icons and the row */
+export const GUTTER_PADDING = 4
+
 // Events
 export const EVENT_ZOOM_CHANGE = "zoom_change"
 export const EVENT_SPELL_DISPLAY = "spell_display"
