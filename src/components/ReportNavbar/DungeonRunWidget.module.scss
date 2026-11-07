@@ -24,11 +24,33 @@ $in-progress-color: hsl(205, 85%, 62%);
 }
 
 
-.runs .container:global(.selected) {
-    background: hsl(0, 0%, 30%);
+.runs .container {
+    position: relative;
 
-    .label { font-weight: bold; }
-    .time, .duration { color: hsl(0, 0%, 80%); }
+    span {
+        position: relative;  // above the background
+    }
+}
+
+
+// selected: like the players (see PlayerWidget), on the artifact color
+.runs .container:global(.selected) {
+
+    // background as its own layer, so dimming it leaves the text alone
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;  // follow the rounded corners inside the border
+        background: hsl(20, 30%, 40%);
+        // filter: brightness(0.75);
+    }
+
+    span {
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        font-weight: bold;
+    }
 }
 
 
@@ -53,11 +75,15 @@ $in-progress-color: hsl(205, 85%, 62%);
 }
 
 .runs .container.in_progress .duration {
-    color: $in-progress-color;  // also when selected
+    color: $in-progress-color;
 }
 
 
 // (after `.in_progress`: a selected run is always white)
 .runs .container:global(.selected) {
     border-color: white !important;
+}
+
+.runs .container.in_progress:global(.selected) .duration {
+    color: white;  // blue is hard to read on the selected background
 }

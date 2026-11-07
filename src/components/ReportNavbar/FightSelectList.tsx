@@ -56,7 +56,7 @@ export default function FightSelectList() {
 
     // render
     return (
-        <div className="d-flex flex-column gap-3">
+        <div className="flex-grow-1 d-flex flex-column gap-3">
             {boss_fights.length > 0 &&
                 <SelectGrid title="Pulls:">
                     {Object.keys(fights_by_boss).map(boss_slug =>
