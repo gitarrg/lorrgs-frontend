@@ -35,11 +35,11 @@ function format_result(fight: Fight) {
 }
 
 
-/** "#5" in kill/wipe colour, plus the wipe % in its pull colour */
+/** "#5" with a kill/wipe coloured border, plus the wipe % in its pull colour */
 function PullLabel({ fight, number }: { fight: Fight, number: number }) {
     return (
-        <span className={styles.pull}>
-            <span className={fight.kill ? "wow-kill" : "wow-wipe"}>#{number}</span>
+        <span className={`${styles.chip} ${fight.kill ? "wow-kill" : "wow-wipe"}`}>
+            <span>#{number}</span>
             {!fight.kill && !fight.dungeon && (
                 <span className={`wow-${get_pull_color(fight.percent || 0)}`}> {(fight.percent || 0).toFixed(0)}%</span>
             )}
@@ -96,7 +96,7 @@ function FightTooltipContent({ fight_id }: { fight_id: number }) {
                     <Icon spec={role} size="s" />
                     <div className={styles.row_items}>
                         {players.map(player => (
-                            <span key={player.source_id} className={`wow-${player.class_slug}`}>{player.name}</span>
+                            <span key={player.source_id} className={`${styles.chip} wow-${player.class_slug}`}>{player.name}</span>
                         ))}
                     </div>
                 </div>

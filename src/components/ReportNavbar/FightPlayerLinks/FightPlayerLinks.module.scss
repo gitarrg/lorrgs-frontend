@@ -75,14 +75,21 @@
     gap: 0.4rem;
 }
 
-// each line as tall as the icon: the first line sits centered next to it, wrapped lines continue below
 .row_items {
     display: flex;
     flex-wrap: wrap;
-    column-gap: 0.6rem;
-    line-height: var(--tooltip-icon-size);
+    gap: 2px 0.3rem;
 }
 
-.pull {
+// a player name or a pull ("#5 71%"), bordered in its class / kill / wipe colour (`wow-*` sets --wow-color).
+// As tall as the icon: the first line sits centered next to it, wrapped lines continue below.
+.chip {
+    line-height: calc(var(--tooltip-icon-size) - 2px);  // + the border
+    padding: 0 0.35em;
+
+    background: hsl(0, 0%, 17%);
+    border: 1px solid var(--wow-color);
+    border-radius: 3px;
+
     white-space: nowrap;
 }
