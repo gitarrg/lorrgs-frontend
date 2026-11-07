@@ -7,7 +7,13 @@ export type TimeIndicator = {
     text: string
     /** top of that ruler (stage coords) */
     y: number
+    /** of that ruler: hides the timestamps under the indicator */
+    background: string
 }
+
+
+/** px of background left and right of the indicator's text */
+const INDICATOR_PADDING = 3
 
 
 /**
@@ -20,7 +26,8 @@ export default class MouseCrosshair extends Konva.Group {
     private time = 0
 
     private line: Konva.Line
-    private indicator: Konva.Label
+    private indicator: Konva.Group
+    private indicator_background: Konva.Rect
     private indicator_text: Konva.Text
 
     constructor() {
@@ -39,25 +46,26 @@ export default class MouseCrosshair extends Konva.Group {
             transformsEnabled: "none",
         })
 
-        // box above the ticks, pointing down at the time
-        this.indicator = new Konva.Label({ x: 0.5, listening: false, visible: false, transformsEnabled: "position" })
-        this.indicator.add(new Konva.Tag({
-            fill: "#ddd",
-            cornerRadius: 2,
-            pointerDirection: "down",
-            pointerWidth: 6,
-            pointerHeight: 4,
+        // a timestamp like the ruler's (see `Ruler.create_ticks`), on the ruler's background to hide the timestamps below it
+        this.indicator = new Konva.Group({ listening: false, visible: false, transformsEnabled: "position" })
+        this.indicator_background = new Konva.Rect({
+            x: -INDICATOR_PADDING,
+            y: 3,
+            height: constants.LINE_HEIGHT - 10 - 3,  // down to the big ticks
             listening: false,
-        }))
-        this.indicator_text = new Konva.Text({
-            fontFamily: "Lato",
-            fontSize: 12,
-            fontStyle: "bold",
-            fill: "black",
-            padding: 2,
-            listening: false,
+            transformsEnabled: "position",
         })
-        this.indicator.add(this.indicator_text)
+        this.indicator_text = new Konva.Text({
+            y: -10,
+            height: constants.LINE_HEIGHT,
+            verticalAlign: "bottom",
+            fontSize: 14,
+            fontFamily: "Lato",
+            fill: "white",
+            listening: false,
+            transformsEnabled: "position",
+        })
+        this.indicator.add(this.indicator_background, this.indicator_text)
 
         this.add(this.line, this.indicator)
     }
@@ -80,8 +88,10 @@ export default class MouseCrosshair extends Konva.Group {
 
         this.indicator.visible(!!indicator)
         if (indicator) {
+            this.indicator.y(indicator.y)
             this.indicator_text.text(indicator.text)
-            this.indicator.y(indicator.y + 20)  // tip just above the big ticks
+            this.indicator_background.fill(indicator.background)
+            this.indicator_background.width(this.indicator_text.width() + 2 * INDICATOR_PADDING)
         }
     }
 

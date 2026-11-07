@@ -21,8 +21,12 @@ import type Stage from "./Stage"
 
 
 const HEIGHT = constants.LINE_HEIGHT
-const BAND_OPACITY = 0.35
+const BAND_OPACITY = 0.2
 const BAND_OPACITY_SELECTED = 0.6
+const BACKGROUND = "#1a1a1a"
+/** darkens the time between the selected pulls (drawn by the `FightRow`, over this row too) */
+export const DIM_COLOR = "black"
+export const DIM_OPACITY = 0.6
 /** ticks and timestamps: same as the main `Ruler` */
 const TEXT_COLOR = "white"
 const FONT = "14px Lato"
@@ -38,6 +42,14 @@ const MIN_STRIP_TEXT_WIDTH = 14
 
 /** min. px between two timestamps (eg. left and right of a cut) */
 const MIN_TEXT_SPACING = 40
+
+
+/** `color` drawn with `opacity` over `base` (both "#rrggbb") */
+function mix(base: string, color: string, opacity: number) {
+    const channel = (hex: string, i: number) => parseInt(hex.slice(1 + 2 * i, 3 + 2 * i), 16)
+    const rgb = [0, 1, 2].map(i => Math.round(channel(base, i) * (1 - opacity) + channel(color, i) * opacity))
+    return `rgb(${rgb.join(", ")})`
+}
 
 
 export default class PullRow {
@@ -101,7 +113,7 @@ export default class PullRow {
         context.clip()
 
         // background
-        context.setAttr("fillStyle", "#1a1a1a")
+        context.setAttr("fillStyle", BACKGROUND)
         context.fillRect(0, 0, width, HEIGHT)
 
         // pulls that are shown (not cut out)
@@ -124,7 +136,7 @@ export default class PullRow {
             // edges
             context.setAttr("globalAlpha", 1)
             context.setAttr("strokeStyle", color)
-            context.setAttr("lineWidth", 1)
+            context.setAttr("lineWidth", 2)
             context.beginPath()
             context.moveTo(Math.round(x0) + 0.5, 1)
             context.lineTo(Math.round(x0) + 0.5, HEIGHT)
@@ -227,6 +239,24 @@ export default class PullRow {
                 }
             }
         })
+    }
+
+    /** the colour of the row at `d` (display time): background, tinted by the pull band there and dimmed */
+    background_at(d: number): string {
+        const map = this.time_ref.current
+        let color = BACKGROUND
+
+        // the last band drawn there
+        this.pulls.forEach((pull, i) => {
+            const x0 = map.to_display(pull.start / 1000)
+            const x1 = map.to_display(pull.end / 1000)
+            if (x1 <= x0 || d < x0 || d > x1) { return }
+            const opacity = this.selected.has(i) ? BAND_OPACITY_SELECTED : BAND_OPACITY
+            color = mix(BACKGROUND, pull.boss ? BOSS_PULL_COLOR : PULL_COLOR, opacity)
+        })
+
+        if (map.is_dimmed(map.to_run(d))) { color = mix(color, "#000000", DIM_OPACITY) }
+        return color
     }
 
     ////////////////////////////////////////////////////////////////////////////

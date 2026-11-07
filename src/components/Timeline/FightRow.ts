@@ -14,7 +14,7 @@ import filter_logic from "../../filter_logic";
 import Konva from "konva";
 import PhaseMarker from "./PhaseMarker";
 import PlayerRow from "./PlayerRow";
-import PullRow from "./PullRow";
+import PullRow, { DIM_COLOR, DIM_OPACITY } from "./PullRow";
 import TimeMap, { type TimeMapRef } from "./TimeMap";
 import { get_run_key } from "../../store/ui";
 import type { Context } from "konva/lib/Context";
@@ -170,12 +170,14 @@ export default class FightRow {
         const top = -(this.pull_row?.height() ?? 0)
         const height = this.rows_height - top
 
-        context.setAttr("fillStyle", "rgba(0, 0, 0, 0.6)")
+        context.setAttr("fillStyle", DIM_COLOR)
+        context.setAttr("globalAlpha", DIM_OPACITY)
         map.dimmed.forEach(range => {
             const x0 = map.to_display(range.start) * s
             const x1 = map.to_display(range.end) * s
             context.fillRect(x0, top, x1 - x0, height)
         })
+        context.setAttr("globalAlpha", 1)
 
         // cuts: dashed line through the whole run
         context.setAttr("strokeStyle", "rgba(255, 255, 255, 0.6)")
@@ -257,6 +259,11 @@ export default class FightRow {
     /** top of the ruler showing this fight's time: its pull row, or the shared ruler */
     ruler_y(): number {
         return this.pull_row ? this.top - this.pull_row.height() : 0
+    }
+
+    /** colour of this fight's ruler at `time` seconds on the stage (`null`: the shared ruler) */
+    ruler_background_at(time: number): string | null {
+        return this.pull_row ? this.pull_row.background_at(time - this.anchor_offset) : null
     }
 
     /** this fight's time (as labelled on its ruler) at `time` seconds on the stage, or null outside the fight */
