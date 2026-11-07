@@ -5,7 +5,7 @@ import { useVersionSwitch } from "./useVersionSwitch"
 
 
 /** feature flag: the switcher is hidden until we're ready to roll it out */
-const SHOW_VERSION_SWITCH = true
+const SHOW_VERSION_SWITCH = false
 
 
 function Tabs() {

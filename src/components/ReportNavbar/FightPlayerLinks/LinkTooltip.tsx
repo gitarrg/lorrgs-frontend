@@ -1,14 +1,12 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useCanSelectLinks } from "./useLinkItem"
 import Icon from "../../shared/Icon"
 import styles from "./FightPlayerLinks.module.scss"
-import type Actor from "../../../types/actor"
 import type Fight from "../../../types/fight"
-import type Role from "../../../types/role"
 import { get_pull_color, group_by, timetamp_to_time } from "../../../utils"
-import { get_player_roles } from "../../../store/roles"
-import { UNKNOWN_ROLE } from "../PlayerSelectList"
-import { get_specs } from "../../../store/specs"
+import { usePlayersByRole } from "../PlayerSelectList"
+import { get_boss } from "../../../store/bosses"
+import { get_dungeon } from "../../../store/dungeons"
 import { get_user_report_players } from "../../../store/user_reports"
 import { useAppSelector } from "../../../store/store_hooks"
 import {
@@ -49,21 +47,21 @@ function PullLabel({ fight, number }: { fight: Fight, number: number }) {
 }
 
 
-/** the icon of a pull's boss, or of its dungeon */
-function FightIcon({ fight }: { fight: Fight }) {
-    const boss = useAppSelector(state => fight.boss?.boss_slug ? state.zones.bosses[fight.boss.boss_slug] : null)
-    const dungeon = useAppSelector(state => fight.dungeon ? state.dungeons[fight.dungeon] : null)
-    if (boss) { return <Icon spec={boss} size="s" /> }
-    if (dungeon) { return <img className="icon-s rounded" src={dungeon.icon_path} alt="" /> }
-    return null
+/** a pull's boss, or its dungeon (`get_boss` without a slug would give the selected boss) */
+function useFightGroup(fight?: Fight) {
+    const boss_slug = fight?.boss?.boss_slug
+    const boss = useAppSelector(state => boss_slug ? get_boss(state, boss_slug) : null)
+    const dungeon = useAppSelector(state => boss_slug ? null : get_dungeon(state, fight?.dungeon ?? undefined))
+    return { boss, dungeon }
 }
 
 
-function useFightName(fight?: Fight) {
-    return useAppSelector(state => {
-        const boss_slug = fight?.boss?.boss_slug
-        return boss_slug ? state.zones.bosses[boss_slug]?.full_name : state.dungeons[fight?.dungeon || ""]?.name
-    }) || ""
+/** the icon of a pull's boss, or of its dungeon */
+function FightIcon({ fight }: { fight: Fight }) {
+    const { boss, dungeon } = useFightGroup(fight)
+    if (boss) { return <Icon spec={boss} size="s" /> }
+    if (dungeon) { return <img className="icon-s rounded" src={dungeon.icon_path} alt="" /> }
+    return null
 }
 
 
@@ -74,14 +72,12 @@ function FightTooltipContent({ fight_id }: { fight_id: number }) {
     const number = useAppSelector(get_fight_numbers)[fight_id]
     const player_ids = useAppSelector(get_player_ids_by_fight)[fight_id]
     const all_players = useAppSelector(get_user_report_players)
-    const roles = useAppSelector(get_player_roles)
-    const specs = useAppSelector(get_specs)
-    const name = useFightName(fight)
+    const { boss, dungeon } = useFightGroup(fight)
+    const players = player_ids ? all_players.filter(player => player_ids.has(player.source_id!)) : []
+    const rows = usePlayersByRole(players)
     if (!fight || !player_ids) { return null }
 
-    const players = all_players.filter(player => player_ids.has(player.source_id!))
-    const players_by_role = group_by(players, (player: Actor) => specs[player.spec_slug]?.role || UNKNOWN_ROLE.code)
-    const rows: [Role, Actor[]][] = [...roles, UNKNOWN_ROLE].map(role => [role, players_by_role[role.code]])
+    const name = boss?.full_name || dungeon?.name || ""
 
     return (
         <>
@@ -92,7 +88,7 @@ function FightTooltipContent({ fight_id }: { fight_id: number }) {
                     {timetamp_to_time(fight.start_time)} · {format_result(fight)} · {players.length} players
                 </span>
             </div>
-            {rows.filter(([, players]) => players?.length).map(([role, players]) => (
+            {rows.map(([role, players]) => (
                 <div key={role.code} className={styles.row}>
                     <Icon spec={role} size="s" />
                     <div className={styles.row_items}>
@@ -149,14 +145,27 @@ function SelectHint({ kind }: { kind: LinkHover["kind"] }) {
 }
 
 
+const GAP = 4
+
+
 /** Places the tooltip under the item, growing away from the closer screen edge. */
 function get_position(hovered: LinkHover): React.CSSProperties {
     const { left, right, bottom } = hovered.anchor
-    const top = bottom + 4
+    const top = bottom + GAP
     if (left > window.innerWidth * 0.55) {
         return { top, right: window.innerWidth - right }
     }
     return { top, left }
+}
+
+
+/** Moves the tooltip above the item if it doesn't fit below (once its size is known). */
+function flip_if_needed(element: HTMLElement, hovered: LinkHover) {
+    // (set here each time: React leaves `top` alone while its own value doesn't change)
+    const { top, bottom } = hovered.anchor
+    const height = element.offsetHeight
+    const fits_below = bottom + GAP + height <= window.innerHeight
+    element.style.top = `${fits_below ? bottom + GAP : Math.max(GAP, top - GAP - height)}px`
 }
 
 
@@ -169,6 +178,7 @@ export default function LinkTooltip() {
     const can_select_links = useCanSelectLinks()
     const shown_ref = useRef(shown)
     shown_ref.current = shown
+    const element = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (!enabled) { set_shown(null); return }
@@ -179,10 +189,22 @@ export default function LinkTooltip() {
         return () => clearTimeout(timer)
     }, [hovered, enabled])
 
+    useLayoutEffect(() => {
+        if (shown && element.current) { flip_if_needed(element.current, shown) }
+    })
+
+    // placed for where the item was: hide it when that moves
+    useEffect(() => {
+        if (!shown) { return }
+        const hide = () => set_shown(null)
+        window.addEventListener("scroll", hide, { capture: true, passive: true })
+        return () => window.removeEventListener("scroll", hide, { capture: true })
+    }, [shown])
+
     if (!shown) { return null }
 
     return (
-        <div className={styles.tooltip} style={get_position(shown)}>
+        <div ref={element} className={styles.tooltip} style={get_position(shown)}>
             {shown.kind == "fight"
                 ? <FightTooltipContent fight_id={shown.id} />
                 : <PlayerTooltipContent player_id={shown.id} />

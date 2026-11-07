@@ -9,17 +9,17 @@ import type { LinkItem } from "../../../store/report_links";
 
 
 type SelectGridItemProps = {
-
-    field_name: string
+    /** the pull/player this item is: checked as `fight[12]` / `player[34]`, and shows who was in which pull */
+    link: LinkItem
     className?: string
     children: JSX.Element | JSX.Element[]
-    /** the pull/player this item is: to show who was in which pull */
-    link?: LinkItem
 }
 
 
 
-export default function SelectGridItem({field_name, className="", children, link}: SelectGridItemProps) {
+export default function SelectGridItem({link, className="", children}: SelectGridItemProps) {
+
+    const field_name = `${link.kind}[${link.id}]`
 
     ////////////////////////////////
     // Hooks
@@ -30,7 +30,6 @@ export default function SelectGridItem({field_name, className="", children, link
 
     const user = useUser()
     const user_can_multiselect = user.permissions.includes("user_reports")
-    const field_parent = field_name.split("[")[0]
     const link_props = useLinkItem(link)
 
     ////////////////////////////////
@@ -38,14 +37,13 @@ export default function SelectGridItem({field_name, className="", children, link
     function onClick(event: React.MouseEvent) {
 
         // Alt+click: with its linked pulls/players (Shift: added to the selection)
-        if (event.altKey && link_props.select_with_links) {
-            link_props.select_with_links(event.shiftKey)
+        if (event.altKey && user_can_multiselect && link_props.select_with_links(event.shiftKey)) {
             return
         }
 
         // force deseletion for free users
         if (!user_can_multiselect) {
-            setValue(field_parent, [])
+            setValue(link.kind, [])
         }
 
         setValue(field_name, !selected)
@@ -65,7 +63,7 @@ export default function SelectGridItem({field_name, className="", children, link
     // Render
     return (
         <div
-            className={`${styles.item__container} ${className} bg-dark border rounded ${selected ? "selected" : ""} ${link_props.className || ""}`}
+            className={`${styles.item__container} ${className} bg-dark border rounded ${selected ? "selected" : ""} ${link_props.className}`}
             onClick={onClick}
             onMouseEnter={link_props.onMouseEnter}
             onMouseLeave={link_props.onMouseLeave}

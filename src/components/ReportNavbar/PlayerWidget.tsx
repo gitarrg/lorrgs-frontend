@@ -12,7 +12,6 @@ const MAX_CHAR_NAME = 6;
 
 export default function PlayerWidget({player} : {player: Actor}) {
 
-    const field_name = `player[${player.source_id}]`
     const spec = useAppSelector(state => get_spec(state, player.spec_slug))
     const wow_class_name = player.class_slug
     const wow_class = useAppSelector(state => get_class(state, wow_class_name))
@@ -21,7 +20,7 @@ export default function PlayerWidget({player} : {player: Actor}) {
     ////////////////////////////////
     // Render
     return (
-        <SelectGridItem field_name={field_name} className={className} link={{kind: "player", id: player.source_id!}}>
+        <SelectGridItem className={className} link={{kind: "player", id: player.source_id!}}>
             <div className={styles.background}></div>
             {/* (neither is known while the specs/classes of the report's Game Version load) */}
             {(spec || wow_class) && <Icon spec={spec || wow_class} size="s" />}

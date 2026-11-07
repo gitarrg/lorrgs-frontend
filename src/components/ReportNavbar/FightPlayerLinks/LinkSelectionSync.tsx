@@ -19,15 +19,12 @@ function checked_ids(values?: boolean[]) {
 export default function LinkSelectionSync() {
 
     const dispatch = useAppDispatch()
-    const fights: boolean[] | undefined = useWatch({ name: "fight" })
-    const players: boolean[] | undefined = useWatch({ name: "player" })
-
-    const fight_ids = checked_ids(fights).join(".")
-    const player_ids = checked_ids(players).join(".")
+    // (`compute` only gives new ids when they change)
+    const fight_ids = useWatch({ name: "fight", compute: checked_ids })
+    const player_ids = useWatch({ name: "player", compute: checked_ids })
 
     useEffect(() => {
-        const to_ids = (text: string) => text ? text.split(".").map(Number) : []
-        dispatch(set_selection({ fight_ids: to_ids(fight_ids), player_ids: to_ids(player_ids) }))
+        dispatch(set_selection({ fight_ids, player_ids }))
     }, [fight_ids, player_ids])
 
     // nothing stays hovered when leaving the page

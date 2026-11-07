@@ -20,7 +20,6 @@ function format_percent(percent: number) {
 
 export default function FightWidget({fight, label} : FightWidgetProps) {
 
-    const field_name = `fight[${fight.fight_id}]`
     const pull_color = get_pull_color(fight.percent || 0)
     const className = `${styles.container} ${fight.kill ? "wow-kill": "wow-wipe"}`
 
@@ -38,7 +37,7 @@ export default function FightWidget({fight, label} : FightWidgetProps) {
     // Render
     return (
 
-        <SelectGridItem field_name={field_name} className={className} link={{kind: "fight", id: fight.fight_id}}>
+        <SelectGridItem className={className} link={{kind: "fight", id: fight.fight_id}}>
             <span className={styles.label_pull}>{label}</span>
             <span className={styles.label_duration}>({toMMSS(fight.duration/1000) })</span>
 

@@ -18,11 +18,19 @@ import { get_user_report_fights, get_user_report_players } from './user_reports'
 // Types
 //
 
-/** a pull ("fight") or player on the selection page */
+/**
+ * A pull ("fight") or player on the selection page.
+ * `kind` is also the name of its form field: the item is checked as `fight[12]` / `player[34]`.
+ */
 export type LinkItem = { kind: "fight" | "player", id: number }
 
+/** the other kind: the players of a pull / the pulls of a player */
+export function get_linked_kind(kind: LinkItem["kind"]): LinkItem["kind"] {
+    return kind == "fight" ? "player" : "fight"
+}
+
 /** where the hovered item is on screen (to place the tooltip) */
-export type LinkAnchor = { left: number, right: number, bottom: number }
+export type LinkAnchor = { left: number, right: number, top: number, bottom: number }
 
 export type LinkHover = LinkItem & { anchor: LinkAnchor }
 
@@ -37,8 +45,8 @@ export interface ViewSettings {
     tooltip: boolean
 }
 
-/** how an item shows, from the hovered and selected items */
-export type LinkState = "" | "linked" | "dim" | "grey" | "linked grey" | "dim grey"
+/** how an item shows, from the hovered and selected items: space separated, eg. "dim grey" */
+export type LinkState = `${"" | "linked" | "dim"}${"" | " grey"}`
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,13 +153,6 @@ export function get_hover_enabled(state: RootState) {
 }
 
 
-/** whether the report's fights know their players (overviews loaded before that don't) */
-export const get_has_player_data = createSelector(
-    get_user_report_fights,
-    (fights) => fights.some(fight => fight.player_ids?.length)
-)
-
-
 /** a pull's group on the page: its boss, or its dungeon for a whole dungeon run */
 export function get_fight_group(fight: Fight) {
     return fight.boss?.boss_slug || (fight.dungeon ?? "")
@@ -170,6 +171,23 @@ export const get_shown_fights = createSelector(
 )
 
 
+/**
+ * Whether the shown fights know their players (overviews loaded before that don't).
+ * Also false while the zone/dungeons of the report load and no fight is shown yet.
+ */
+export const get_has_player_data = createSelector(
+    get_shown_fights,
+    (fights) => fights.some(fight => fight.player_ids?.length)
+)
+
+
+/** source ids of the report's players (fights may list others, eg. pets) */
+const get_report_player_ids = createSelector(
+    get_user_report_players,
+    (players) => new Set(players.map(player => player.source_id!))
+)
+
+
 /** fight id -> its number within its boss/dungeon (as labeled in the pull selection) */
 export const get_fight_numbers = createSelector(
     get_shown_fights,
@@ -185,12 +203,15 @@ export const get_fight_numbers = createSelector(
 )
 
 
-/** fight id -> source ids of the players in that fight (shown fights only) */
+/** fight id -> source ids of the report's players in that fight (shown fights only) */
 export const get_player_ids_by_fight = createSelector(
     get_shown_fights,
-    (fights) => {
+    get_report_player_ids,
+    (fights, report_player_ids) => {
         const result: { [fight_id: number]: Set<number> } = {}
-        fights.forEach(fight => { result[fight.fight_id] = new Set(fight.player_ids || []) })
+        fights.forEach(fight => {
+            result[fight.fight_id] = new Set((fight.player_ids || []).filter(id => report_player_ids.has(id)))
+        })
         return result
     }
 )
@@ -198,12 +219,12 @@ export const get_player_ids_by_fight = createSelector(
 
 /** player source id -> ids of the shown fights that player took part in */
 export const get_fight_ids_by_player = createSelector(
-    get_shown_fights,
-    (fights) => {
+    get_player_ids_by_fight,
+    (players_by_fight) => {
         const result: { [player_id: number]: Set<number> } = {}
-        fights.forEach(fight => {
-            (fight.player_ids || []).forEach(player_id => {
-                (result[player_id] ??= new Set()).add(fight.fight_id)
+        Object.entries(players_by_fight).forEach(([fight_id, player_ids]) => {
+            player_ids.forEach(player_id => {
+                (result[player_id] ??= new Set()).add(Number(fight_id))
             })
         })
         return result
@@ -223,7 +244,7 @@ export const get_shown_players = createSelector(
 )
 
 
-/** ids of the items of the other kind linked to `item`: the players of a pull / the pulls of a player */
+/** ids of the items of the other kind linked to `item`: the (shown) players of a pull / the (shown) pulls of a player */
 export function get_linked_ids(state: RootState, item: LinkItem): number[] {
     const ids = item.kind == "fight" ? get_player_ids_by_fight(state)[item.id] : get_fight_ids_by_player(state)[item.id]
     return [...(ids || [])]
@@ -283,10 +304,6 @@ export function get_link_state(state: RootState, item: LinkItem): LinkState {
     const hover = get_hover_links(state)
     const grey = get_greyed(state)[item.kind].has(item.id)
 
-    let hover_state = ""
-    if (hover && hover.kind == item.kind) {
-        hover_state = hover.ids.has(item.id) ? "linked" : "dim"
-    }
-    const result = [hover_state, grey ? "grey" : ""].filter(Boolean).join(" ")
-    return result as LinkState
+    const hover_state = hover?.kind == item.kind ? (hover.ids.has(item.id) ? "linked" : "dim") : ""
+    return `${hover_state}${grey ? " grey" : ""}` as LinkState
 }

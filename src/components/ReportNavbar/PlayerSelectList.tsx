@@ -24,8 +24,16 @@ export const UNKNOWN_ROLE: Role = {
 }
 
 
+/** the players grouped by role, in role order (players of unknown specs last). Only roles with players. */
+export function usePlayersByRole(players: Actor[]): [Role, Actor[]][] {
+    const roles = useAppSelector(get_player_roles)
+    const specs = useAppSelector(get_specs)
+    const players_by_role = group_by(players, (player: Actor) => specs[player.spec_slug]?.role || UNKNOWN_ROLE.code)
+    return [...roles, UNKNOWN_ROLE].filter(role => players_by_role[role.code]).map(role => [role, players_by_role[role.code]])
+}
+
+
 function RoleGroup({role, players} : {role: Role, players: Actor[]}) {
-    if (!players) { return null }
     players = players.sort((a, b) => a.spec_slug > b.spec_slug ? -1 : 1)
 
     // Render
@@ -38,18 +46,14 @@ function RoleGroup({role, players} : {role: Role, players: Actor[]}) {
 export default function PlayerSelectList() {
 
     const players = useAppSelector(get_shown_players)
-    const roles = useAppSelector(get_player_roles)
-    const specs = useAppSelector(get_specs)
+    const players_by_role = usePlayersByRole(players)
     if (players.length == 0) { return null }
-
-    const players_by_role = group_by(players, (player: Actor) => specs[player.spec_slug]?.role || UNKNOWN_ROLE.code)
-
 
     // Render
     return (
         <SelectGrid title="Players:">
-            {[...roles, UNKNOWN_ROLE].map(role =>
-                <RoleGroup key={role.code} role={role} players={players_by_role[role.code]} />
+            {players_by_role.map(([role, players]) =>
+                <RoleGroup key={role.code} role={role} players={players} />
             )}
         </SelectGrid>
     )
