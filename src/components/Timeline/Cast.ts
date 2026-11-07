@@ -9,7 +9,7 @@ import type Spell from "../../types/spell"
 import type CastType from "../../types/cast"
 import type Stage from "./Stage"
 import { IDENTITY_REF, type TimeMapRef } from "./TimeMap"
-import { format_duration, get_time_info, show_tooltip, type TooltipInfo } from "./tooltip"
+import { format_time, get_time_lines, pull_tag, show_tooltip, type TooltipInfo } from "./tooltip"
 
 /** simple cache to reuse existing images */
 export const IMAGES: {[key: number]: HTMLImageElement} = {}
@@ -201,29 +201,41 @@ export default class Cast extends Konva.Shape {
         }
     }
 
-    /** time, spell, and the time since the previous cast and since it was ready again */
+    /**
+     * Spell, and in aligned lines:
+     *
+     *     14m22s  into Dungeon
+     *        35s  into Pull #3           (see `get_time_lines`)
+     *      1m07s  before Pull #4         carried: before where it comes into view
+     *      1m05s  since last use
+     *        12s  after it was off cooldown   (or "before base cooldown")
+     */
     get_tooltip(): TooltipInfo {
-        const lines: TooltipInfo["lines"] = []
+        const pulls = this.time_ref.pulls
+        const lines = get_time_lines(pulls, this.timestamp)
+
+        if (this.carried) {
+            const value = format_time(this.shown_from - this.timestamp)
+            const index = (pulls || []).findIndex(pull => Math.abs(pull.start / 1000 - this.shown_from) < 0.01)
+            const tag = index >= 0 ? pull_tag(pulls![index], index) : undefined
+            // between pulls, the line before the next pull may be that one already
+            const listed = lines.some(line => line.label == "before" && line.pull?.name == tag?.name)
+            if (!tag) { lines.push({ value, label: "before the cut" }) }
+            else if (!listed) { lines.push({ value, label: "before", pull: tag }) }
+        }
 
         if (this.previous) {
             const since = this.timestamp - this.previous.timestamp
-            lines.push({ value: format_duration(since), label: "since the last cast" })
+            lines.push({ value: format_time(since), label: "since last use" })
 
+            // a bit early can be just rounding of the log's times
             const cooldown = this.spell.cooldown || 0
             const late = since - cooldown
-            if (cooldown && late >= 1) { lines.push({ value: format_duration(late), label: "after it was ready" }) }
-            else if (cooldown && late > -1) { lines.push({ value: "", label: "as soon as it was ready" }) }
-        }
-
-        const time_info = get_time_info(this.time_ref, this.timestamp)
-        if (this.carried) {
-            // pull time has no value for time that isn't shown: use the run time
-            time_info.time = toMMSS(this.timestamp)
-            lines.unshift({ value: format_duration(this.shown_from - this.timestamp), label: "before the shown time" })
+            if (cooldown && late > -0.05) { lines.push({ value: format_time(Math.max(late, 0)), label: "after it was off cooldown" }) }
+            else if (cooldown) { lines.push({ value: format_time(-late), label: "before base cooldown" }) }
         }
 
         return {
-            ...time_info,
             icon: this.spell.icon_path,
             title: this.spell.name + (this.counter ? ` #${this.counter}` : ""),
             title_color: this.spell.color || undefined,

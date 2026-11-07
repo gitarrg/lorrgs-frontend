@@ -44,7 +44,10 @@ function TooltipBody({ info }: { info: TooltipInfo }) {
             <div className={styles.lines}>
                 {info.lines.map((line, i) => <div key={i} className={styles.line}>
                     <span className={styles.value}>{line.value}</span>
-                    <span className={styles.muted}>{line.label}</span>
+                    <span className={styles.muted}>
+                        {line.label}
+                        {line.pull && <> <span style={{ color: line.pull.color }}>{line.pull.name}</span></>}
+                    </span>
                 </div>)}
             </div>
         )}
