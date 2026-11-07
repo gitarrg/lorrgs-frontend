@@ -3,7 +3,6 @@ import { AppDispatch, RootState } from './store'
 import { createSelector } from 'reselect'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { fetch_data } from '../api'
-import { load_bosses } from './bosses'
 
 
 
@@ -131,11 +130,7 @@ export function load_report_overview(report_id: string, refresh?: boolean) {
         const url = `/api/user_reports/${report_id}/load_overview`;
         const report_data: UserReport = await fetch_data(url, { refresh: refresh || false });
 
-        // load zone first
-        if (report_data.zone_id > 0) {
-            dispatch(load_bosses(report_data.zone_id))
-        }
-
+        // (the report's zone loads with the report's Game Version: see `useReportGameVersion`)
         // store result
         dispatch(SLICE.actions.report_overview_loaded(report_data))
     }

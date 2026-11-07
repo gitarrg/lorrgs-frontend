@@ -1,6 +1,6 @@
 import { get_occuring_bosses, get_occuring_specs, load_report_fights } from "../../store/fights"
 import { load_boss_spells } from '../../store/bosses'
-import { get_current_game_version, get_game_versions, get_game_version_by_wcl_id, switch_game_version } from '../../store/game_versions'
+import { get_current_game_version, get_game_versions, get_game_version_by_wcl_id } from '../../store/game_versions'
 import { get_user_report, load_report_overview } from '../../store/user_reports'
 import { load_spec_spells } from '../../store/specs'
 import { useAppDispatch, useAppSelector } from '../../store/store_hooks'
@@ -15,6 +15,7 @@ import ReportHeader from './ReportHeader'
 import ReportSettingsBar from './ReportSettingsBar'
 import TimelineCanvas from "./../../components/Timeline/TimelineCanvas"
 import UserReportNavbar from './UserReportNavbar'
+import useReportGameVersion from './useReportGameVersion'
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,11 +64,7 @@ export default function UserReport() {
 
 
     // The report's Game Version comes from its log: show it with the data of that Game Version.
-    // (once switched, the Game Versions match and nothing happens.)
-    useEffect(() => {
-        if (user_report.report_id != report_id) { return }  // overview not loaded (yet)
-        report_game_version && dispatch(switch_game_version(report_game_version))
-    }, [user_report.report_id, report_game_version])
+    useReportGameVersion(report_id)
 
 
     useEffect(() => {

@@ -3,6 +3,7 @@ import { get_season, load_season } from "../store/seasons";
 import { get_current_game_version, load_game_versions } from "../store/game_versions";
 import { load_bosses } from "../store/bosses";
 import { load_classes } from "../store/classes";
+import { load_dungeons } from "../store/dungeons";
 import { load_roles } from "../store/roles";
 import { load_specs } from "../store/specs";
 import { useAppDispatch, useAppSelector } from "../store/store_hooks";
@@ -24,6 +25,7 @@ export default function GlobalDataLoader() {
     useEffect(() => {
         if (!game_version) { return }
         dispatch(load_classes());
+        dispatch(load_dungeons());
         dispatch(load_roles());
         dispatch(load_specs());
         dispatch(load_season());

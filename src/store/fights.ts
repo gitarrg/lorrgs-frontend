@@ -125,6 +125,11 @@ function is_empty_fight(fight: Fight) {
 
 
 function _process_fight(fight: Fight) {
+    // fights without a boss (eg.: dungeon runs) may come with an empty `boss: {}`
+    if (fight.boss && !fight.boss.boss_slug && !fight.boss.name) {
+        fight.boss = undefined
+    }
+
     if (fight.boss) {
         fight.boss = _process_actor(fight.boss)
         fight.boss.class_slug = "boss"

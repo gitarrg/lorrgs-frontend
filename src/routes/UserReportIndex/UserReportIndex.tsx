@@ -11,6 +11,7 @@ import { SubmitButton } from "./SubmitButton";
 import { get_is_loading } from "../../store/user_reports"
 import { useAppSelector } from "../../store/store_hooks"
 import { useForm, FormProvider } from "react-hook-form";
+import useReportGameVersion from "../UserReport/useReportGameVersion"
 
 
 export default function UserReportIndex() {
@@ -21,6 +22,7 @@ export default function UserReportIndex() {
     const user = useUser()
     const is_loading = useAppSelector(get_is_loading)
     const form_methods  = useForm();
+    useReportGameVersion()  // show the pulls with the data of the report's Game Version
 
     const user_reports_perm = user.permissions.includes("user_reports")
 

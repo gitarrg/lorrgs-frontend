@@ -7,6 +7,7 @@ import { combineReducers, configureStore, UnknownAction } from '@reduxjs/toolkit
 import { DEBUG } from '../constants'
 import bosses_reducer from "./bosses"
 import classes_reducer from "./classes"
+import dungeons_reducer from "./dungeons"
 import fights_reducer from "./fights"
 import game_versions_reducer, { SWITCH_GAME_VERSION } from "./game_versions"
 import roles_reducer from "./roles"
@@ -23,6 +24,7 @@ import user_report_reducer from "./user_reports"
 //
 const combined_reducer = combineReducers({
     classes: classes_reducer,
+    dungeons: dungeons_reducer,
     fights: fights_reducer,
     game_versions: game_versions_reducer,
     roles: roles_reducer,

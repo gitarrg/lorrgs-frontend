@@ -23,7 +23,8 @@ export default function PlayerWidget({player} : {player: Actor}) {
     return (
         <SelectGridItem field_name={field_name} className={className}>
             <div className={styles.background}></div>
-            <Icon spec={spec || wow_class} size="s" />
+            {/* (neither is known while the specs/classes of the report's Game Version load) */}
+            {(spec || wow_class) && <Icon spec={spec || wow_class} size="s" />}
             <span>{player.name.substring(0, MAX_CHAR_NAME)}</span>
         </SelectGridItem>
     )

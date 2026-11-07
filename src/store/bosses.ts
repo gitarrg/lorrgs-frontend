@@ -148,7 +148,8 @@ export function load_bosses(zone_id: number) {
             // Request
             const zone_info = await fetch_versioned(`/zones/${zone_id}`);
 
-            zone_info && dispatch(SLICE.actions.set_zone(zone_info))
+            // (an unknown zone, eg.: a dungeon-only report, comes back as an error)
+            zone_info && !zone_info.error && dispatch(SLICE.actions.set_zone(zone_info))
         } finally {
             dispatch({ type: "ui/set_loading", payload: { key: "zone", value: false } })
         }

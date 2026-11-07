@@ -13,6 +13,9 @@ export default interface Fight {
     duration: number
 
     boss?: Actor
+
+    /** slug of the Dungeon, for a whole dungeon run (which has no boss) */
+    dungeon?: string | null
     players: Actor[]
     phases: Phase[]
 
