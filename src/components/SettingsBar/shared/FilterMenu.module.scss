@@ -27,6 +27,7 @@
     font-size: 11px;
     border: 1px solid;
     pointer-events: none;
+    z-index: 1;  // above the neighbouring icons in the group
 }
 
 

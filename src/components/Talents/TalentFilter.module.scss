@@ -25,6 +25,7 @@
     line-height: 13px;
     text-transform: uppercase;
     pointer-events: none;
+    z-index: 1;  // above the neighbouring icons in the group
 }
 
 
