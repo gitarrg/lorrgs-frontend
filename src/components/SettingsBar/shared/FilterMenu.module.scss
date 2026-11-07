@@ -1,0 +1,100 @@
+.wrap {
+    --filter-active: #5ad17a;
+
+    position: relative;
+}
+
+.icon {
+    width: 34px;
+    height: 34px;
+}
+
+.active {
+    border-color: var(--filter-active);
+}
+
+.badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    padding: 0 4px;
+
+    color: #15171c;
+    background: var(--filter-active);
+    border-radius: 999px;
+    font-size: 11px;
+    border: 1px solid;
+    pointer-events: none;
+}
+
+
+/********************************
+        Menu
+*********************************/
+.menu {
+    position: absolute;
+    top: calc(100% + 2px);
+    right: 0;
+    z-index: 1050;
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    padding: 0.5rem;
+
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
+    color: #e4e6ea;
+}
+
+// fills the screen width
+@media (max-width: 760px) {
+    .menu {
+        position: fixed;
+        top: 80px;
+        left: 16px;
+        right: 16px;
+        width: auto;
+        max-width: none;
+        max-height: calc(100vh - 100px);
+        overflow: auto;
+    }
+}
+
+// a react-icon instead of an image
+.icon_glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: #c8cad0;
+    background-color: hsl(0, 0%, 20%);
+
+    &:hover { color: white; }
+}
+
+.icon_glyph.active { color: var(--filter-active); }
+
+
+/********************************
+        Header
+*********************************/
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+}
+
+.link {
+    padding: 0;
+    color: var(--wow-common);
+    background: none;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+        color: white;
+        text-decoration: underline;
+    }
+}

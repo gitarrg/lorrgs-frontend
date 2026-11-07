@@ -1,12 +1,4 @@
 
-.wrap {
-    --talent-with: #5ad17a;
-    --talent-without: #f0605a;
-
-    position: relative;
-}
-
-
 .with {
     color: var(--talent-with);
 }
@@ -17,61 +9,38 @@
 .clear { color: var(--wow-rare); }
 
 
-.icon {
-    width: 34px;
-    height: 34px;
-}
-
-.active {
-    color: #e4e6ea;
-    border-color: var(--talent-with);
-}
-
-.badge {
+// next to the icon, while no talents are selected
+.new {
     position: absolute;
     top: -6px;
-    right: -6px;
-    padding: 0 4px;
+    left: -6px;
+    padding: 0 3px;
 
     color: #15171c;
-    background: var(--talent-with);
-    border-radius: 999px;
-    font-size: 11px;
+    background: var(--filter-active);
     border: 1px solid;
-}
-
-
-.new {
-    padding: 0 3px;
+    border-radius: 999px;
     font-size: 9px;
     font-weight: bold;
     line-height: 13px;
     text-transform: uppercase;
     pointer-events: none;
-    left: -6px;
-    right: unset;
 }
 
 
 /********************************
         Menu
 *********************************/
+// on top of the shared FilterMenu menu
 .menu {
-    position: absolute;
-    top: calc(100% + 2px);
-    right: 0;
-    z-index: 1050;
+    --talent-with: #5ad17a;
+    --talent-without: #f0605a;
+
     // as wide as the tree (and the Build buttons)
-    width: max-content;
     min-width: 300px;
-    max-width: calc(100vw - 32px);
-    padding: 0.5rem;
 
     display: grid;
     gap: 0.5rem;
-
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.55);
-    color: #e4e6ea;
 
     // the Build buttons, right of the tree, widen it and push it out to the right: the tree stays in place
     // (not on mobile, where the menu fills the screen)
@@ -80,19 +49,6 @@
             --builds-offset: calc(var(--builds-width) + 0.5rem);
             right: calc(-1 * var(--builds-offset));
         }
-    }
-}
-
-@media (max-width: 760px) {
-    .menu {
-        position: fixed;
-        top: 80px;
-        left: 16px;
-        right: 16px;
-        width: auto;
-        max-width: none;
-        max-height: calc(100vh - 100px);
-        overflow: auto;
     }
 }
 

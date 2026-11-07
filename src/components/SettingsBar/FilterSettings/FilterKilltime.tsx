@@ -1,29 +1,47 @@
-import { useAppDispatch } from '../../../store/store_hooks'
+import { useState } from 'react'
+import { useAppDispatch, useAppSelector } from '../../../store/store_hooks'
 import { set_filters } from '../../../store/ui'
-import ButtonGroup from '../shared/ButtonGroup'
+import { ASSETS } from '../../../constants'
+import FilterMenu, { FilterMenuHeader } from '../shared/FilterMenu'
 import DurationInputGroup from "../../shared/DurationInputGroup"
 
 import styles from "./FilterKilltime.module.scss"
 
 
-/**
- * Group to set the min/max killtime-filter
- *
- * @returns {ReactComponent}
- */
+/** Icon to set the min/max killtime-filter */
 export default function FilterKilltimeGroup() {
 
     const dispatch = useAppDispatch()
+    const min = useAppSelector(state => state.ui.filters.killtime.min) || undefined
+    const max = useAppSelector(state => state.ui.filters.killtime.max) || undefined
+    const [reset, set_reset] = useState(0)  // remounts the inputs, to clear their text
 
-    // Callback when values get changed
-    function onChange({min, max}: {min: number, max: number}) {
-        dispatch(set_filters({killtime: {min, max}}))
+    const active = !!(min || max)
+
+    function onChange(values: { min?: number, max?: number }) {
+        dispatch(set_filters({ killtime: { min: values.min || null, max: values.max || null } }))
     }
 
-    // Render
+    function clear() {
+        onChange({})
+        set_reset(reset + 1)
+    }
+
     return (
-        <ButtonGroup name="Killtime">
-            <DurationInputGroup onChange={onChange} className={styles.killtime_group} />
-        </ButtonGroup>
+        <FilterMenu
+            icon={`${ASSETS}/images/spells/inv_misc_pocketwatch_01.jpg`}
+            label="Killtime"
+            active={active}
+            on_clear={clear}
+        >
+            <FilterMenuHeader title="Killtime" on_clear={active ? clear : undefined} />
+            <DurationInputGroup
+                key={reset}
+                start_min={min}
+                start_max={max}
+                onChange={onChange}
+                className={styles.killtime_group}
+            />
+        </FilterMenu>
     )
 }

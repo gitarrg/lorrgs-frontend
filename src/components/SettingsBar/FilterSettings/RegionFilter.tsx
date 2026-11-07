@@ -1,7 +1,7 @@
-import { set_region_filter } from '../../../store/ui'
-import { useAppDispatch } from '../../../store/store_hooks'
-import { useContext, useEffect, useState } from 'react'
-import ButtonGroup, { ButtonGroupContext } from '../shared/ButtonGroup'
+import { FaGlobe } from 'react-icons/fa'
+import { set_filters, set_region_filter } from '../../../store/ui'
+import { useAppDispatch, useAppSelector } from '../../../store/store_hooks'
+import FilterMenu, { FilterMenuHeader } from '../shared/FilterMenu'
 import styles from "./RegionFilter.module.scss"
 
 
@@ -33,58 +33,41 @@ const REGIONS: Region[] = [
 ];
 
 
-function Button({ region }: { region: Region }) {
+/** Icon with a menu to toggle the regions */
+export default function RegionFilterGroup() {
 
-    const [selected, setSelected] = useState(true)
     const dispatch = useAppDispatch()
-    const group_context = useContext(ButtonGroupContext)
+    const region_filter = useAppSelector(state => state.ui.filters.region) || {}
 
-    // Handle Simple Click
-    function onClick() {
-        setSelected(!selected)
+    const is_selected = (region: Region) => region_filter[region.slug] !== false
+    const hidden = REGIONS.filter(region => !is_selected(region)).length
+
+    function toggle(region: Region) {
+        dispatch(set_region_filter({ region: region.slug, value: !is_selected(region) }))
     }
 
-    // Handle Group Header Click
-    useEffect(() => {
-        if (group_context.source !== "group") { return }
-        setSelected(group_context.active)
-    }, [group_context.active])
+    const clear = () => dispatch(set_filters({ region: {} }))
 
-
-    useEffect(() => {
-        dispatch(set_region_filter({
-            region: region.slug,
-            value: selected
-        }))
-    }, [selected])
-
-
-    ////////////////////////
-    // Render
-    //
     return (
-        <div
-            className={`${styles.button} button icon-s rounded border-white ${selected ? "" : "disabled"}`}
-            onClick={onClick}
-            data-tooltip={region.name}
+        <FilterMenu
+            icon={<FaGlobe />}
+            label="Region"
+            active={hidden > 0}
+            on_clear={clear}
         >
-            {region.slug}
-        </div>
-    )
-}
-
-
-/**
- *
- *
- * @returns {ReactComponent}
- */
-export default function RegionFilterGroup() {
-    return (
-        <ButtonGroup name="Region">
-            {REGIONS.map(region => (
-                <Button key={region.id} region={region} />
-            ))}
-        </ButtonGroup>
+            <FilterMenuHeader title="Region" on_clear={hidden ? clear : undefined} />
+            <div className={styles.buttons}>
+                {REGIONS.map(region => (
+                    <div
+                        key={region.id}
+                        className={`${styles.button} button icon-s rounded border-white ${is_selected(region) ? "" : "disabled"}`}
+                        onClick={() => toggle(region)}
+                        data-tooltip={region.name}
+                    >
+                        {region.slug}
+                    </div>
+                ))}
+            </div>
+        </FilterMenu>
     )
 }

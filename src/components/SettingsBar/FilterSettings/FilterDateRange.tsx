@@ -1,15 +1,15 @@
-import { useState } from 'react'
-import { useAppDispatch } from '../../../store/store_hooks'
+import { useAppDispatch, useAppSelector } from '../../../store/store_hooks'
 
+import { FaCalendarAlt } from 'react-icons/fa'
 import { set_filters } from '../../../store/ui'
-import ButtonGroup from '../shared/ButtonGroup'
+import FilterMenu, { FilterMenuHeader } from '../shared/FilterMenu'
 import styles from './FilterDateRange.module.scss'
 
 
 export default function FilterDateRangeGroup() {
     const dispatch = useAppDispatch()
-    const [from, setFrom] = useState<string>("")
-    const [to, setTo] = useState<string>("")
+    const from = useAppSelector(state => state.ui.filters.log_date.from) || ""
+    const to = useAppSelector(state => state.ui.filters.log_date.to) || ""
 
     function update_filter(next_from: string, next_to: string) {
         dispatch(set_filters({
@@ -20,34 +20,35 @@ export default function FilterDateRangeGroup() {
         }))
     }
 
-    function on_change_from(value: string) {
-        setFrom(value)
-        update_filter(value, to)
-    }
-
-    function on_change_to(value: string) {
-        setTo(value)
-        update_filter(from, value)
-    }
+    const active = !!(from || to)
 
     return (
-        <ButtonGroup name="Date Range">
-            <div className={`d-flex gap-1 ${styles.date_range_group}`}>
+        <FilterMenu
+            icon={<FaCalendarAlt />}
+            label="Date Range"
+            active={active}
+            on_clear={() => update_filter("", "")}
+        >
+            <FilterMenuHeader title="Date Range" on_clear={active ? () => update_filter("", "") : undefined} />
+            <div className={styles.date_range_group}>
                 <input
                     type="date"
                     value={from}
-                    onChange={e => on_change_from(e.target.value)}
+                    max={to || undefined}
+                    onChange={e => update_filter(e.target.value, to)}
                     aria-label="From date"
                     className={`form-control ${styles.date_input} ${from ? styles.is_filled : styles.is_empty}`}
                 />
+                <span className={styles.separator}>–</span>
                 <input
                     type="date"
                     value={to}
-                    onChange={e => on_change_to(e.target.value)}
+                    min={from || undefined}
+                    onChange={e => update_filter(from, e.target.value)}
                     aria-label="To date"
                     className={`form-control ${styles.date_input} ${to ? styles.is_filled : styles.is_empty}`}
                 />
             </div>
-        </ButtonGroup>
+        </FilterMenu>
     )
 }

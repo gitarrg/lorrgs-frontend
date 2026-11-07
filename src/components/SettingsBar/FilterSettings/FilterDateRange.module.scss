@@ -1,10 +1,16 @@
 .date_range_group {
-    max-height: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.separator {
+    color: var(--text-muted);
 }
 
 .date_input {
     height: initial;
-    padding: 12px 4px;
+    padding: 4px;
     border-radius: 0.25rem;
     line-height: initial;
 }

@@ -1,9 +1,7 @@
 /*
     Talents icon in the Spec Ranking settings bar, with the Talent Filter menu.
-
-    Hovering opens the menu, clicking pins it open. Esc or clicking outside closes it.
 */
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { get_spec } from "../../store/specs";
 import { get_talent_tree, load_talent_tree } from "../../store/talent_trees";
@@ -12,16 +10,46 @@ import type { TalentFilter as TalentFilterValues } from "../../store/ui";
 import { URL_PARAM, cycle_talent, format_talent_filter, useTalentCounts } from "./talent_filter";
 import BuildButtons, { load_builds } from "./BuildButtons";
 import TalentFilterTree from "./TalentFilterTree";
+import FilterMenu from "../SettingsBar/shared/FilterMenu";
 import styles from "./TalentFilter.module.scss";
-import WebpImg from "../WebpImg";
 import { ASSETS } from "../../constants";
 
 
-const VIEWPORT_MARGIN = 16  // px
-const CLOSE_DELAY = 250  // ms, to move the mouse from the icon into the menu
+function useSetTalentFilter() {
+    const [, set_search_params] = useSearchParams()
+    return (next: TalentFilterValues) => {
+        set_search_params(params => {
+            const value = format_talent_filter(next)
+            value ? params.set(URL_PARAM, value) : params.delete(URL_PARAM)
+            return params
+        }, { replace: true })
+    }
+}
 
 
 export default function TalentFilter() {
+    const talent_filter = useAppSelector(state => state.ui.filters.talents)
+    const set_talent_filter = useSetTalentFilter()
+    const count = Object.keys(talent_filter).length
+
+    return (
+        <FilterMenu
+            icon={`${ASSETS}/images/spells/ability_marksmanship.jpg`}
+            label="Talents"
+            active={count > 0}
+            count={count}
+            on_clear={() => set_talent_filter({})}
+            extra={count == 0 && <span className={styles.new}>new</span>}
+            menu_className={styles.menu}
+        >
+            <TalentFilterMenu />
+        </FilterMenu>
+    )
+}
+
+
+/** only mounted while the menu is open */
+function TalentFilterMenu() {
 
     ////////////////////////////////////////////////////////////////////////////
     // Hooks
@@ -30,62 +58,16 @@ export default function TalentFilter() {
     const tree = useAppSelector(state => get_talent_tree(state, spec_slug))
     const spec = useAppSelector(state => get_spec(state, spec_slug))
     const talent_filter = useAppSelector(state => state.ui.filters.talents)
-    const [, set_search_params] = useSearchParams()
+    const set_talent_filter = useSetTalentFilter()
     const { counts, with_talents, without_talents } = useTalentCounts()
-
-    const ref = useRef<HTMLDivElement>(null)
-    const menu_ref = useRef<HTMLDivElement>(null)
-    const [open, set_open] = useState(false)
-    const [pinned, set_pinned] = useState(false)
     const [preview, set_preview] = useState<TalentFilterValues | null>(null)  // of the hovered Build button
-    const close_timer = useRef<number>(undefined)
 
-    const cancel_close = () => window.clearTimeout(close_timer.current)
-    useEffect(() => cancel_close, [])
-
-    // only once the menu shows (on hover or click): both stay cached after
+    // only once the menu shows: both stay cached after
     useEffect(() => {
-        if (!open || !spec_slug) { return }
+        if (!spec_slug) { return }
         dispatch(load_talent_tree(spec_slug))
         load_builds(spec_slug)
-    }, [open, spec_slug])
-
-    // the menu is right-aligned to the icon, which isn't at the right edge of the page: shift it back into the viewport
-    useLayoutEffect(() => {
-        const menu = menu_ref.current
-        if (!open || !menu) { return }
-        const fit = () => {
-            menu.style.transform = ""
-            const rect = menu.getBoundingClientRect()
-            const shift = rect.left < VIEWPORT_MARGIN
-                ? VIEWPORT_MARGIN - rect.left
-                : Math.min(0, window.innerWidth - VIEWPORT_MARGIN - rect.right)
-            if (shift) { menu.style.transform = `translateX(${shift}px)` }
-        }
-        fit()
-        window.addEventListener("resize", fit)
-        return () => window.removeEventListener("resize", fit)
-    }, [open, tree])
-
-    const close = () => {
-        set_open(false)
-        set_pinned(false)
-        set_preview(null)
-    }
-
-    useEffect(() => {
-        if (!open) { return }
-        const on_key_down = (event: KeyboardEvent) => { event.key == "Escape" && close() }
-        const on_pointer_down = (event: PointerEvent) => {
-            if (!ref.current?.contains(event.target as Node)) { close() }
-        }
-        document.addEventListener("keydown", on_key_down)
-        document.addEventListener("pointerdown", on_pointer_down)
-        return () => {
-            document.removeEventListener("keydown", on_key_down)
-            document.removeEventListener("pointerdown", on_pointer_down)
-        }
-    }, [open])
+    }, [spec_slug])
 
     ////////////////////////////////////////////////////////////////////////////
     // Vars
@@ -100,14 +82,6 @@ export default function TalentFilter() {
 
     ////////////////////////////////////////////////////////////////////////////
     // Handlers
-    function set_talent_filter(next: TalentFilterValues) {
-        set_search_params(params => {
-            const value = format_talent_filter(next)
-            value ? params.set(URL_PARAM, value) : params.delete(URL_PARAM)
-            return params
-        }, { replace: true })
-    }
-
     /** choice nodes only allow one of their entries: picking one drops the other */
     function on_tree_click(entry_id: number) {
         const next = cycle_talent(talent_filter, entry_id)
@@ -122,25 +96,6 @@ export default function TalentFilter() {
         const next = { ...talent_filter }
         delete next[entry_id]
         set_talent_filter(next)
-    }
-
-    function on_icon_click() {
-        cancel_close()
-        if (open && pinned) { close(); return }
-        set_open(true)
-        set_pinned(true)
-    }
-
-    function on_pointer_enter(event: React.PointerEvent) {
-        if (event.pointerType != "mouse") { return }
-        cancel_close()
-        set_open(true)
-    }
-
-    function on_pointer_leave(event: React.PointerEvent) {
-        if (event.pointerType != "mouse" || pinned) { return }
-        cancel_close()
-        close_timer.current = window.setTimeout(close, CLOSE_DELAY)
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -165,62 +120,36 @@ export default function TalentFilter() {
 
 
     return (
-        <div>
-            <div
-                ref={ref}
-                className={styles.wrap}
-                onPointerEnter={on_pointer_enter}
-                onPointerLeave={on_pointer_leave}
-            >
-                <WebpImg
-                    className={`button icon-m rounded border ${styles.icon} ${selected.length ? styles.active : ""}`}
-                    onClick={on_icon_click}
-                    onContextMenu={(event: React.MouseEvent<HTMLImageElement>) => {
-                        event.preventDefault()
-                        set_talent_filter({})
-                    }}
-                    src={`${ASSETS}/images/spells/ability_marksmanship.jpg`}
-                />
-                {selected.length > 0 && <span className={styles.badge}>{selected.length}</span>}
-                {selected.length == 0 && <span className={`${styles.badge} ${styles.new}`}>new</span>}
-                {open && <div
-                    ref={menu_ref}
-                    className={`${styles.menu} bg-dark rounded border`}
-                >
-                    <div className={styles.body}>
-                        <div className={styles.body_tree}>{tree_content}</div>
-                        <BuildButtons spec_slug={spec_slug} tree={tree} talent_filter={talent_filter} on_change={set_talent_filter} on_hover={set_preview} />
-                    </div>
-
-                    <div className={styles.selection}>
-                        {selected.map(([entry_id, mode]) => (
-                            <span key={entry_id} className={`${styles.chip} ${styles[mode]}`}>
-                                <button onClick={() => set_talent_filter(cycle_talent(talent_filter, entry_id))}>
-                                    {name(entry_id)}
-                                </button>
-                                <button onClick={() => remove_talent(entry_id)} aria-label="Remove">×</button>
-                            </span>
-                        ))}
-
-                        {/* clear button */}
-                        {selected.length > 0 && <button
-                            className={styles.link}
-                            onClick={() => set_talent_filter({})}
-                        >
-                            Clear
-                        </button>}
-
-                        {selected.length == 0 && <span className={styles.note}>{info}</span>}
-                    </div>
-
-                    {selected.length > 0 && without_talents > 0 &&
-                        <div className={styles.note}>{without_talents} fights without talent data hidden</div>
-                    }
-                </div>
-                }
+        <>
+            <div className={styles.body}>
+                <div className={styles.body_tree}>{tree_content}</div>
+                <BuildButtons spec_slug={spec_slug} tree={tree} talent_filter={talent_filter} on_change={set_talent_filter} on_hover={set_preview} />
             </div>
 
+            <div className={styles.selection}>
+                {selected.map(([entry_id, mode]) => (
+                    <span key={entry_id} className={`${styles.chip} ${styles[mode]}`}>
+                        <button onClick={() => set_talent_filter(cycle_talent(talent_filter, entry_id))}>
+                            {name(entry_id)}
+                        </button>
+                        <button onClick={() => remove_talent(entry_id)} aria-label="Remove">×</button>
+                    </span>
+                ))}
 
-        </div>
+                {/* clear button */}
+                {selected.length > 0 && <button
+                    className={styles.link}
+                    onClick={() => set_talent_filter({})}
+                >
+                    Clear
+                </button>}
+
+                {selected.length == 0 && <span className={styles.note}>{info}</span>}
+            </div>
+
+            {selected.length > 0 && without_talents > 0 &&
+                <div className={styles.note}>{without_talents} fights without talent data hidden</div>
+            }
+        </>
     )
 }

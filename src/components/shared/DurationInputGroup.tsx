@@ -14,6 +14,8 @@ import styles from "./DurationInput.module.scss"
     @param {string} placeholder_min placeholder for the min-value
     @param {string} placeholder_max placeholder for the max-value
     @param {string} className additional class to apply to the parent group
+    @param {number} start_min initial min-value, in seconds
+    @param {number} start_max initial max-value, in seconds
 
     @returns {ReactComponent} <div>
 */
@@ -22,13 +24,15 @@ export default function DurationInputGroup({
     placeholder_min="0:00",
     placeholder_max="0:00",
     className="",
-} : {onChange?: Function, placeholder_min?: string, placeholder_max?: string, className?: string}
+    start_min,
+    start_max,
+} : {onChange?: Function, placeholder_min?: string, placeholder_max?: string, className?: string, start_min?: number, start_max?: number}
 ) {
 
     /////////////////////////
     // State
-    const [value_min, set_value_min] = useState(0)
-    const [value_max, set_value_max] = useState(0)
+    const [value_min, set_value_min] = useState(start_min ?? 0)
+    const [value_max, set_value_max] = useState(start_max ?? 0)
 
     /////////////////////////
     // pass values to callback
@@ -43,9 +47,9 @@ export default function DurationInputGroup({
 
     return (
         <div className={`duration_input__group input-group ${className} ${is_empty ? "empty" : ""}`}>
-            <DurationInput onChange={set_value_min} placeholder={placeholder_min}/>
+            <DurationInput start={start_min} onChange={set_value_min} placeholder={placeholder_min}/>
             <span className={`${styles.duration_input__dash} input-group-text`}>-</span>
-            <DurationInput onChange={set_value_max} placeholder={placeholder_max} />
+            <DurationInput start={start_max} onChange={set_value_max} placeholder={placeholder_max} />
         </div>
     )
 }
