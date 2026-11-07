@@ -21,6 +21,8 @@ import type { Context } from "konva/lib/Context";
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 import type Stage from "./Stage";
+import type { Anchor } from "./Stage";
+import { get_pull_label } from "../../pulls";
 
 
 /** How dungeon runs show their pulls (the same for all fight rows of the stage) */
@@ -52,6 +54,8 @@ export default class FightRow {
     // Timestamp of the current anchor (in milliseconds)
     anchor_offset: number = 0
     anchor_ts: number = 0
+    /** run time (s) of the pull the fights are aligned on. None: aligned on a phase (or not at all) */
+    private anchor_pull?: number
 
     foreground: Konva.Group
     background: Konva.Group
@@ -268,6 +272,11 @@ export default class FightRow {
 
     /** the anchor offset */
     private update_x() {
+        if (this.anchor_pull !== undefined) {
+            // in px: the gaps before the pull have no time
+            this.x(this.anchor_offset * this.scale_x - this.time_ref.current.to_x(this.anchor_pull, this.scale_x))
+            return
+        }
         this.x(this.anchor_offset * this.scale_x)
     }
 
@@ -308,21 +317,37 @@ export default class FightRow {
         this.visible(visible)
     }
 
-    private handle_anchor_changed({ ts, name }: { ts: number, name: string }) {
+    private handle_anchor_changed({ ts, name, kind }: Anchor) {
 
         let stage = this.background.getStage() as Stage || null
         if (!stage) { return }
 
         // reset to pull
+        this.anchor_offset = 0
+        this.anchor_pull = undefined
         if (ts == 0) {
-            this.anchor_offset = 0
-            this.anchor_ts = 0
             this.update_x()
+            return
+        }
+
+        // the same pull in this run: its start lands at `ts` (see `update_x`)
+        if (kind == "pull") {
+            const pulls = this._fight_data.pulls || []
+            const pull = pulls.find((pull, i) => get_pull_label(pull, i) == name)
+            if (pull) {
+                this.anchor_offset = ts
+                this.anchor_pull = pull.start / 1000
+            }
+            this.update_x()
+            return
         }
 
         // find the same phase in this fight
         const phase_in_fight = this._fight_data.phases?.find(phase => phase.name === name)
-        if (!phase_in_fight) { return }
+        if (!phase_in_fight) {
+            this.update_x()
+            return
+        }
 
         // TODO: see if we can keep the relative screen position
         // of the object clicked on.

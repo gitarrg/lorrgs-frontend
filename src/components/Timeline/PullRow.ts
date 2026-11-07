@@ -2,6 +2,9 @@
 The row above a dungeon run: its pulls as bands, with a ruler on top.
 Each band shows the pull's name ("Pull #n", or the boss) in its top left corner.
 
+Clicking a pull aligns all runs on it (like clicking a boss phase): the same pull (by name) starts
+at the same x in every run. Clicking it again resets them all to start at 0.
+
 Drawn by a single shape (bands, ticks and timestamps), so zooming only redraws it.
 Everything is positioned through the fight row's `TimeMap`, so cropping and cut out time
 is reflected here the same way as on the casts below.
@@ -18,6 +21,7 @@ import type { Pull } from "../../types/fight"
 import type { TimeMapRef } from "./TimeMap"
 import { format_duration, get_pull_at, get_time_info, hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip"
 import type Stage from "./Stage"
+import type { Anchor } from "./Stage"
 
 
 const HEIGHT = constants.LINE_HEIGHT
@@ -32,10 +36,15 @@ const TEXT_Y = 11
 /** the pull's name in the top left of each band */
 const STRIP_HEIGHT = 12
 const STRIP_OPACITY = 0.85
+/** brightens the name's background of the pull under the pointer (it can be clicked) */
+const STRIP_HOVER_HIGHLIGHT = 0.5
 const STRIP_FONT = "bold 10px Lato"
 const STRIP_TEXT_COLOR = "black"
 /** below this width a strip has no text */
 const MIN_STRIP_TEXT_WIDTH = 14
+
+/** the pull all runs are aligned on: same as the active phase marker */
+const ANCHOR_COLOR = "#0FF"
 
 /** min. px between two timestamps (eg. left and right of a cut) */
 const MIN_TEXT_SPACING = 40
@@ -46,6 +55,10 @@ export default class PullRow {
     pulls: Pull[]
     time_ref: TimeMapRef
     selected: Set<number> = new Set()
+    /** name of the pull the runs are aligned on (see `handle_click`) */
+    private anchor_name?: string
+    /** index of the pull under the pointer */
+    private hovered?: number
 
     /** pixels per second */
     private scale_x = constants.DEFAULT_ZOOM
@@ -75,6 +88,7 @@ export default class PullRow {
         })
         this.bbox.on("mousemove", () => this.handle_mousemove())
         this.bbox.on("mouseout", () => this.handle_mouseout())
+        this.bbox.on("click tap", () => this.handle_click())
         this.bbox.on("dblclick dbltap", () => (this.bbox.getStage() as Stage | null)?.ruler.add_marker())
     }
 
@@ -134,10 +148,22 @@ export default class PullRow {
         })
         context.setAttr("globalAlpha", 1)
 
+        // the pull the runs are aligned on: its start
+        const anchored = bands.find(({ pull, i }) => get_pull_label(pull, i) == this.anchor_name)
+        if (anchored) {
+            const x = Math.round(anchored.x0) + 0.5
+            context.setAttr("strokeStyle", ANCHOR_COLOR)
+            context.setAttr("lineWidth", 3)
+            context.beginPath()
+            context.moveTo(x, 0)
+            context.lineTo(x, HEIGHT)
+            context.stroke()
+        }
+
         this.draw_ticks(context)
 
         // names: in front of the ticks
-        bands.forEach(({ pull, i, x0, x1, color }) => this.draw_strip(context, get_pull_label(pull, i), color, x0, x1))
+        bands.forEach(({ pull, i, x0, x1, color }) => this.draw_strip(context, get_pull_label(pull, i), color, x0, x1, i === this.hovered))
 
         // cuts: a double line where time was taken out (after its gap)
         context.setAttr("strokeStyle", "#ddd")
@@ -161,7 +187,7 @@ export default class PullRow {
     }
 
     /** the pull's name in the top left of its band, on a background as wide as the name */
-    private draw_strip(context: Context, text: string, color: string, x0: number, x1: number) {
+    private draw_strip(context: Context, text: string, color: string, x0: number, x1: number, hovered = false) {
         const width = x1 - x0
 
         // name cut short to fit the band (none on very narrow bands)
@@ -183,6 +209,11 @@ export default class PullRow {
         context.setAttr("globalAlpha", STRIP_OPACITY)
         context.setAttr("fillStyle", color)
         context.fillRect(x0, 1, strip_width, STRIP_HEIGHT)
+        if (hovered) {
+            context.setAttr("globalAlpha", STRIP_HOVER_HIGHLIGHT)
+            context.setAttr("fillStyle", "white")
+            context.fillRect(x0, 1, strip_width, STRIP_HEIGHT)
+        }
         context.setAttr("globalAlpha", 1)
 
         if (!label) { return }
@@ -270,10 +301,48 @@ export default class PullRow {
         const container = stage.container().getBoundingClientRect()
         const pointer = stage.getPointerPosition()!
         show_tooltip(info, { x: container.x + pointer.x, y: container.y + this.bbox.getAbsolutePosition().y })
+        stage.container().style.cursor = found ? "pointer" : "default"
+        this.set_hovered(found?.index)
     }
 
     private handle_mouseout() {
         hide_tooltip()
+        const stage = this.bbox.getStage()
+        if (stage) { stage.container().style.cursor = "default" }
+        this.set_hovered(undefined)
+    }
+
+    /** redraws the row only if the pull under the pointer changed */
+    private set_hovered(index: number | undefined) {
+        if (index === this.hovered) { return }
+        this.hovered = index
+        this.shape.getLayer()?.batchDraw()
+    }
+
+    /** align all runs on the pull under the pointer, or reset them if they already are */
+    private handle_click() {
+        const stage = this.bbox.getStage() as Stage | null
+        if (!stage) { return }
+
+        const t = this.pointer_time()
+        if (t === null) { return }
+        const found = get_pull_at(this.pulls, t)
+        if (!found) { return }
+
+        const name = get_pull_label(found.pull, found.index)
+        const current = stage.get_anchor()
+        if (current.kind == "pull" && current.name == name) {
+            stage.set_anchor(0, "pull")
+        } else {
+            // where the pull starts in this run now: it stays in place, the other runs move to it
+            const row_x = this.bbox.getParent()?.x() ?? 0
+            const x = row_x + this.time_ref.current.to_x(found.pull.start / 1000, this.scale_x)
+            stage.set_anchor(x / this.scale_x, name, "pull")
+        }
+    }
+
+    private handle_anchor_changed({ name, kind }: Anchor) {
+        this.anchor_name = kind == "pull" ? name : undefined
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -291,5 +360,6 @@ export default class PullRow {
 
     handle_event(event_name: string, payload: any) {
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
+        if (event_name === constants.EVENT_ANCHOR_CHANGED) { this.handle_anchor_changed(payload) }
     }
 }

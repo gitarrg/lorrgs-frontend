@@ -15,6 +15,15 @@ import { MODES, type FilterValues } from "../../store/ui";
 Konva.autoDrawEnabled = false;
 
 
+export type AnchorKind = "phase" | "pull"
+
+/**
+ * The time all fights are aligned on (see `EVENT_ANCHOR_CHANGED`).
+ * `ts`: where on the timeline (s) the phase/pull starts. 0: no anchor, all fights start at 0.
+ */
+export type Anchor = { ts: number, name: string, kind: AnchorKind }
+
+
 /** Run `callback` once the browser is idle. `has_time()` tells if there is idle time left to continue. */
 function on_idle(callback: (has_time: () => boolean) => void) {
     const SLICE_MS = 10 // keep each slice short, so input never waits long
@@ -52,6 +61,8 @@ export default class Stage extends Konva.Stage {
 
     anchor_ts: number = 0
     anchor_name: string = "pull"
+    /** what the anchor aligns the fights on: a boss phase, or a pull of dungeon runs (see `FightRow`) */
+    anchor_kind: AnchorKind = "phase"
 
     /** how dungeon runs show their pulls (see `set_pull_view`) */
     private pull_view: PullView = { selection: {}, hide_unselected: false, pull_time: false }
@@ -459,17 +470,19 @@ export default class Stage extends Konva.Stage {
         this.batchDraw()
     }
 
-    set_anchor(ts: number, name: string = "") {
+    set_anchor(ts: number, name: string = "", kind: AnchorKind = "phase") {
         this.anchor_ts = ts
         this.anchor_name = name
+        this.anchor_kind = kind
 
         this.handle_event(constants.EVENT_ANCHOR_CHANGED, this.get_anchor())
     }
 
-    get_anchor(): { ts: number, name: string } {
+    get_anchor(): Anchor {
         return {
             ts: this.anchor_ts,
             name: this.anchor_name,
+            kind: this.anchor_kind,
         }
     }
 
