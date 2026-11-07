@@ -24,11 +24,7 @@ export default function FightWidget({fight, label} : FightWidgetProps) {
     const pull_color = get_pull_color(fight.percent || 0)
     const className = `${styles.container} ${fight.kill ? "wow-kill": "wow-wipe"}`
 
-    // a dungeon run has no boss health: `kill` means the run was completed
-    const is_dungeon = !!fight.dungeon
-    const label_percent = is_dungeon
-        ? (fight.kill ? "Cleared ⚑ " : "Incomplete")
-        : (fight.kill ? "Kill! ⚑ " : `${format_percent(fight.percent || 0)}%`)
+    const label_percent = fight.kill ? "Kill! ⚑ " : `${format_percent(fight.percent || 0)}%`
     const label_time = timetamp_to_time(fight.start_time)
 
     // create label matching WCL Pulls
@@ -50,7 +46,7 @@ export default function FightWidget({fight, label} : FightWidgetProps) {
             <span className={styles.label_time}>{label_time}</span>
 
             <>
-            {!fight.kill && !is_dungeon &&
+            {!fight.kill &&
                 <div className={styles.pbar_outer}>
                     <div className={`${styles.pbar_inner} wow-${pull_color}`} style={{width: `${100-(fight.percent || 0)}%`}} />
                 </div>

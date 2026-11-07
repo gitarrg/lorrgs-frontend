@@ -1,0 +1,63 @@
+$in-progress-color: hsl(205, 85%, 62%);
+
+
+// the runs of one dungeon
+.runs {
+    // wider than a boss pull: fits "#1  13:00 - now  in progress"
+    --item-width: 14rem;
+
+    display: grid;
+    grid-template-columns: repeat(auto-fill, var(--item-width));
+    gap: 0.25rem;
+}
+
+
+.runs .container {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0 0.5rem;
+
+    font-size: 0.85rem;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+
+.runs .container:global(.selected) {
+    background: hsl(0, 0%, 30%);
+
+    .label { font-weight: bold; }
+    .time, .duration { color: hsl(0, 0%, 80%); }
+}
+
+
+.label {
+    color: white;
+}
+
+
+.time {
+    color: hsl(0, 0%, 60%);
+}
+
+
+.duration {
+    margin-left: auto;
+    color: hsl(0, 0%, 60%);
+}
+
+
+.in_progress {
+    border-color: $in-progress-color !important;
+}
+
+.runs .container.in_progress .duration {
+    color: $in-progress-color;  // also when selected
+}
+
+
+// (after `.in_progress`: a selected run is always white)
+.runs .container:global(.selected) {
+    border-color: white !important;
+}

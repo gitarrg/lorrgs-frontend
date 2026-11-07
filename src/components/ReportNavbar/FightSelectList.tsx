@@ -1,4 +1,5 @@
 import FightWidget from "./FightWidget"
+import DungeonRunWidget from "./DungeonRunWidget"
 import Icon from "../shared/Icon"
 import type Fight from "../../types/fight"
 import { SelectGroup } from './SelectGrid/SelectGroup'
@@ -8,11 +9,7 @@ import { get_user_report_fights } from '../../store/user_reports'
 import { group_by } from "../../utils"
 import { useAppSelector } from '../../store/store_hooks'
 import SelectGrid from "./SelectGrid/SelectGrid"
-
-
-function render_fights(fights: Fight[]) {
-    return fights.map((fight, i) => <FightWidget key={fight.fight_id} fight={fight} label={`#${i+1}`} />)
-}
+import styles from "./DungeonRunWidget.module.scss"
 
 
 function BossGroup({boss_slug, fights} : {boss_slug: string, fights: Fight[]}) {
@@ -22,26 +19,24 @@ function BossGroup({boss_slug, fights} : {boss_slug: string, fights: Fight[]}) {
 
     // Render
     const icon = <Icon spec={boss} size="m" className="button grow-when-touched" />
-    return <SelectGroup icon={icon} items={render_fights(fights)} />
+    const items = fights.map((fight, i) => <FightWidget key={fight.fight_id} fight={fight} label={`#${i+1}`} />)
+    return <SelectGroup icon={icon} items={items} />
 }
 
 
-function DungeonGroup({dungeon_slug, fights} : {dungeon_slug: string, fights: Fight[]}) {
+/** The runs of one dungeon, under its name. */
+function DungeonGrid({dungeon_slug, fights} : {dungeon_slug: string, fights: Fight[]}) {
 
     const dungeon = useAppSelector(state => get_dungeon(state, dungeon_slug))
     if (!dungeon) { return null }
 
-    // Render
-    const icon = <Icon spec={dungeon} size="m" className="button grow-when-touched" alt={dungeon.name} title={dungeon.name} />
-    return <SelectGroup icon={icon} items={render_fights(fights)} />
-}
-
-
-/** key to group a fight by: its boss or its dungeon (prefixed, so the two can't collide) */
-function group_key(fight: Fight) {
-    if (fight.boss?.boss_slug) { return `boss:${fight.boss.boss_slug}` }
-    if (fight.dungeon) { return `dungeon:${fight.dungeon}` }
-    return ""
+    return (
+        <SelectGrid title={dungeon.name}>
+            <div className={styles.runs}>
+                {fights.map((fight, i) => <DungeonRunWidget key={fight.fight_id} fight={fight} label={`#${i+1}`} />)}
+            </div>
+        </SelectGrid>
+    )
 }
 
 
@@ -51,18 +46,28 @@ export default function FightSelectList() {
     const fights = useAppSelector(state => get_user_report_fights(state))
     if (fights.length == 0) { return null }
 
-    // group fights by boss / dungeon
-    const fight_groups: {[key: string]: Fight[]} = group_by(fights, group_key)
+    // boss pulls, grouped by boss
+    const boss_fights = fights.filter(fight => fight.boss?.boss_slug)
+    const fights_by_boss: {[key: string]: Fight[]} = group_by(boss_fights, (fight: Fight) => fight.boss?.boss_slug)
+
+    // dungeon runs, grouped by dungeon
+    const dungeon_fights = fights.filter(fight => !fight.boss?.boss_slug && fight.dungeon)
+    const fights_by_dungeon: {[key: string]: Fight[]} = group_by(dungeon_fights, (fight: Fight) => fight.dungeon)
 
     // render
     return (
-        <SelectGrid title="Pulls:">
-            {Object.entries(fight_groups).map(([key, group_fights]) => {
-                const [type, slug] = key.split(/:(.*)/)
-                if (type == "boss") { return <BossGroup key={key} boss_slug={slug} fights={group_fights} /> }
-                if (type == "dungeon") { return <DungeonGroup key={key} dungeon_slug={slug} fights={group_fights} /> }
-                return null
-            })}
-        </SelectGrid>
+        <div className="d-flex flex-column gap-3">
+            {boss_fights.length > 0 &&
+                <SelectGrid title="Pulls:">
+                    {Object.keys(fights_by_boss).map(boss_slug =>
+                        <BossGroup key={boss_slug} boss_slug={boss_slug} fights={fights_by_boss[boss_slug]} />
+                    )}
+                </SelectGrid>
+            }
+
+            {Object.keys(fights_by_dungeon).map(dungeon_slug =>
+                <DungeonGrid key={dungeon_slug} dungeon_slug={dungeon_slug} fights={fights_by_dungeon[dungeon_slug]} />
+            )}
+        </div>
     )
 }
