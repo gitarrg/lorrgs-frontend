@@ -242,4 +242,10 @@ export default class Ruler extends Konva.Group {
         this.markers.push(marker)
         this.stage.marker_layer.add(marker)
     }
+
+    remove_marker(marker: TimelineMarker) {
+        this.markers = this.markers.filter(m => m !== marker)
+        marker.destroy()
+        this.stage.marker_layer.batchDraw()
+    }
 }

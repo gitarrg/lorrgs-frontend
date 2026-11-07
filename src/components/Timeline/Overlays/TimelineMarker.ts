@@ -84,10 +84,8 @@ export default class TimelineMarker extends Konva.Group {
             if (e.evt.button === 2) {
                 let stage = this.getStage() as Stage || null
 
-                if (stage && stage.marker_layer) {
-                    this.remove()
-                    stage.marker_layer.batchDraw()
-                }
+                this.hover(false)  // no mouseout once it is gone
+                stage?.ruler.remove_marker(this)
             }
         })
 
