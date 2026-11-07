@@ -94,23 +94,24 @@ export default class PullRow {
     private draw(context: Context) {
         const map = this.time_ref.current
         const s = this.scale_x
-        const width = map.duration * s
+        const width = map.width(s)
+        const start = map.gap(0)  // the row's own gap: no time
 
         // pulls outside the crop stay outside the row
         context.beginPath()
-        context.rect(0, 0, width, HEIGHT + 1)
+        context.rect(start, 0, width - start, HEIGHT + 1)
         context.clip()
 
         // background
         context.setAttr("fillStyle", BACKGROUND)
-        context.fillRect(0, 0, width, HEIGHT)
+        context.fillRect(start, 0, width - start, HEIGHT)
 
         // pulls that are shown (not cut out)
         const bands = this.pulls
             .map((pull, i) => ({
                 pull, i,
-                x0: map.to_display(pull.start / 1000) * s,
-                x1: map.to_display(pull.end / 1000) * s,
+                x0: map.to_x(pull.start / 1000, s),
+                x1: map.to_x(pull.end / 1000, s),
                 color: pull.boss ? BOSS_PULL_COLOR : PULL_COLOR,
             }))
             .filter(band => band.x1 > band.x0)
@@ -138,11 +139,11 @@ export default class PullRow {
         // names: in front of the ticks
         bands.forEach(({ pull, i, x0, x1, color }) => this.draw_strip(context, get_pull_label(pull, i), color, x0, x1))
 
-        // cuts: a double line where time was taken out
+        // cuts: a double line where time was taken out (after its gap)
         context.setAttr("strokeStyle", "#ddd")
         context.setAttr("lineWidth", 1)
-        map.breaks.forEach(d => {
-            const x = Math.round(d * s)
+        map.segment_xs(s).slice(1).forEach(({ x0 }) => {
+            const x = Math.round(x0)
             context.beginPath()
             context.moveTo(x - 1.5, 0)
             context.lineTo(x - 1.5, HEIGHT)
@@ -154,7 +155,7 @@ export default class PullRow {
         // bottom line
         context.setAttr("strokeStyle", "black")
         context.beginPath()
-        context.moveTo(0, HEIGHT + 0.5)
+        context.moveTo(start, HEIGHT + 0.5)
         context.lineTo(width, HEIGHT + 0.5)
         context.stroke()
     }
@@ -206,13 +207,14 @@ export default class PullRow {
         context.setAttr("textBaseline", "middle")
 
         let last_text_x = -Infinity
-        map.label_ranges().forEach(range => {
+        const xs = map.segment_xs(s)
+        map.label_ranges().forEach((range, index) => {
             const first = Math.ceil(range.label / tick)
             const last = Math.floor((range.label + (range.end - range.start)) / tick)
 
             for (let i = first; i <= last; i++) {
                 const t = i * tick
-                const x = Math.round((range.start + (t - range.label)) * s) + 0.5
+                const x = Math.round(xs[index].x0 + (t - range.label) * s) + 0.5
                 const big = i % ticks_per_label == 0
                 const h = big ? 10 : 5
 
@@ -238,7 +240,7 @@ export default class PullRow {
     private pointer_time(): number | null {
         const pointer = this.bbox.getRelativePointerPosition()
         if (!pointer) { return null }
-        return this.time_ref.current.to_run(pointer.x / this.scale_x)
+        return this.time_ref.current.run_at_x(pointer.x, this.scale_x)
     }
 
     private handle_mousemove() {
@@ -284,7 +286,7 @@ export default class PullRow {
 
     _handle_zoom_change(scale_x: number) {
         this.scale_x = scale_x
-        this.bbox.width(this.time_ref.current.duration * scale_x)
+        this.bbox.width(this.time_ref.current.width(scale_x))
     }
 
     handle_event(event_name: string, payload: any) {

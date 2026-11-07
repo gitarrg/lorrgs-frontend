@@ -16,11 +16,8 @@ export default class Player extends Konva.Group {
     resurrections: Resurrection[]
     player_data: Actor
 
-    /** width (px) of the gutter left of the row, for casts from before the crop (see `FightRow.update_gutter`) */
-    private gutter = 0
-
-    /** casts with an icon in the gutter (see `update_gutter_slots`) */
-    gutter_count = 0
+    /** number of casts with an icon in the gap before each segment (see `update_gutter_slots`, `FightRow.update_gaps`) */
+    gap_counts: number[] = []
 
     constructor(row: PlayerRow, player_data: Actor) {
         super()
@@ -67,26 +64,20 @@ export default class Player extends Konva.Group {
         this.update_gutter_slots()
     }
 
-    /** Place the icons of the shown casts from before the crop in the gutter: the latest next to the row. */
+    /**
+     * Place the icons of the shown carried casts (from before the crop, or from time cut out)
+     * in the gap before the segment they come into view in: the latest next to the segment.
+     */
     update_gutter_slots() {
-        const casts = this.casts.filter(cast => cast.before_row && cast.in_range && cast.visible() && cast.has_visible_bar())
+        this.gap_counts = []
         this.casts.forEach(cast => cast.gutter_slot = null)
-        casts.reverse().forEach((cast, i) => cast.gutter_slot = i)
-        this.gutter_count = casts.length
-    }
 
-    /** Make room for the gutter left of the row */
-    set_gutter(width: number) {
-        if (width == this.gutter) { return }
-        this.gutter = width
-        this.update_clip()
-        this.invalidate_cache()
-    }
-
-    /** everything the row shows: the gutter, and the row (1px less to allow the border to show) */
-    private update_clip() {
-        this.clipX(-this.gutter)
-        this.clipWidth(this.gutter + this.row.duration * this.scale_x - 1)
+        const carried = this.casts.filter(cast => cast.gap_index !== null && cast.in_range && cast.visible() && cast.has_visible_bar())
+        carried.reverse().forEach(cast => {
+            const i = cast.gap_index!
+            cast.gutter_slot = this.gap_counts[i] || 0
+            this.gap_counts[i] = cast.gutter_slot + 1
+        })
     }
 
     /** The row's look changed: redraw its cache right away if possible, else rebuild it once the browser is idle. */
@@ -196,11 +187,8 @@ export default class Player extends Konva.Group {
         this.invalidate_cache()
     }
 
-    private scale_x = constants.DEFAULT_ZOOM
-
     _handle_zoom_change(scale_x: number) {
-        this.scale_x = scale_x
-        this.update_clip()
+        this.clipWidth(this.row.time_ref.current.width(scale_x) - 1)  // 1px to allow border to show
     }
 
     _handle_time_map_changed() {

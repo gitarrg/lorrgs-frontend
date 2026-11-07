@@ -88,17 +88,14 @@ export default class Cast extends Konva.Shape {
     /** cast before the shown time, but its bars reach into it: drawn from `shown_from`, without its time */
     private carried = false
 
-    /** carried from before the row's start (not from a cut): its icon goes in the row's gutter */
-    before_row = false
+    /** carried: the segment it comes into view in. Its icon goes in the gap before it (see `TimeMap.gaps`) */
+    gap_index: number | null = null
 
-    /** position in the row's gutter (0: next to the row), set by `Player.update_gutter_slots` */
+    /** position in that gap (0: next to the segment), set by `Player.update_gutter_slots` */
     gutter_slot: number | null = null
 
     // default opacity (might be different for procs)
     _default_opacity: number = 1.0
-
-    /** pixels per second */
-    private scale_x = constants.DEFAULT_ZOOM
 
     private image?: HTMLImageElement
     private text = ""
@@ -108,6 +105,10 @@ export default class Cast extends Konva.Shape {
     // widths of the bars in display time (s): time cut out of the row doesn't count
     private cooldown_width = 0
     private duration_width = 0
+
+    // the same in px (see `_handle_zoom_change`): bars crossing a gap include it
+    private cooldown_px = 0
+    private duration_px = 0
 
     // which parts are shown (see `_handle_display_settings`)
     private show_icon = true
@@ -181,7 +182,7 @@ export default class Cast extends Konva.Shape {
         this.in_range = from !== null
         this.shown_from = from ?? t
         this.carried = from !== null && from > t
-        this.before_row = this.carried && t < map.segments[0].start
+        this.gap_index = this.carried ? map.segment_index(this.shown_from) : null
 
         // the part of each bar from `shown_from` on
         const bar_width = (length: number) => Math.max(0, map.to_display(t + length) - map.to_display(this.shown_from))
@@ -262,22 +263,20 @@ export default class Cast extends Konva.Shape {
         if (this.show_cooldown && this.has_cooldown) {
             context.setAttr("globalAlpha", alpha * this.cooldown_opacity)
             context.setAttr("fillStyle", this.spell.color)
-            context.fillRect(0, 0, this.cooldown_width * this.scale_x, BAR_HEIGHT)
+            context.fillRect(0, 0, this.cooldown_px, BAR_HEIGHT)
         }
 
         if (this.show_duration && this._duration) {
             context.setAttr("globalAlpha", alpha * this.duration_opacity)
             context.setAttr("fillStyle", this.spell.color)
-            context.fillRect(0, 0, this.duration_width * this.scale_x, BAR_HEIGHT)
+            context.fillRect(0, 0, this.duration_px, BAR_HEIGHT)
         }
 
         if (this.show_icon) {
-            // from before the row: in the gutter. Carried over a cut: dimmed, without the stroke
-            const in_gutter = this.in_gutter()
-            const dimmed = this.carried && !in_gutter
-            const x = in_gutter ? this.gutter_icon_x() : ICON_X
-            context.setAttr("globalAlpha", alpha * this.icon_opacity * (dimmed ? 0.5 : 1))
-            if (this.icon_stroke && !dimmed) {
+            // carried: in the gap before the segment
+            const x = this.in_gutter() ? this.gutter_icon_x() : ICON_X
+            context.setAttr("globalAlpha", alpha * this.icon_opacity)
+            if (this.icon_stroke) {
                 context.setAttr("lineWidth", 1)
                 context.setAttr("strokeStyle", "black")
                 context.strokeRect(x, ICON_X, ICON_SIZE, ICON_SIZE)
@@ -301,7 +300,7 @@ export default class Cast extends Konva.Shape {
     _hitFunc(context: Context) {
         if (this.carried && !this.has_visible_bar()) { return }
 
-        // from before the row: its icon in the gutter, else its bars
+        // carried: its icon in the gap, else its bars
         if (this.in_gutter() && this.show_icon) {
             context.setAttr("fillStyle", this.colorKey)
             context.fillRect(this.gutter_icon_x() - 1, 0, ICON_SIZE + 2, BAR_HEIGHT)
@@ -312,7 +311,7 @@ export default class Cast extends Konva.Shape {
         let width = 0
         if (show_text) { width = TEXT_X + this.text_width + TEXT_PADDING }
         else if (this.show_icon) { width = TEXT_X }
-        else if (this.show_duration) { width = this.duration_width * this.scale_x }
+        else if (this.show_duration) { width = this.duration_px }
         if (!width) { return }
 
         // with the icon hidden, the text starts at the same place
@@ -321,12 +320,12 @@ export default class Cast extends Konva.Shape {
         context.fillRect(x, 0, width - x, BAR_HEIGHT)
     }
 
-    /** whether the icon goes in the row's gutter */
+    /** whether the icon goes in the gap before its segment */
     private in_gutter() {
-        return this.before_row && this.gutter_slot !== null
+        return this.carried && this.gutter_slot !== null
     }
 
-    /** x of the icon in the gutter (left of the row, slot 0 next to it) */
+    /** x of the icon in the gap (left of the segment, slot 0 next to it) */
     private gutter_icon_x() {
         return -constants.GUTTER_PADDING - (this.gutter_slot! + 1) * constants.GUTTER_SLOT + (constants.GUTTER_SLOT - ICON_SIZE) / 2
     }
@@ -373,8 +372,12 @@ export default class Cast extends Konva.Shape {
     }
 
     _handle_zoom_change(scale_x: number) {
-        this.x(scale_x * this.time_ref.current.to_display(this.shown_from))
-        this.scale_x = scale_x
+        const map = this.time_ref.current
+        const x = map.to_x(this.shown_from, scale_x)
+        const bar_px = (length: number) => length > 0 ? Math.max(0, map.to_x(this.timestamp + length, scale_x) - x) : 0
+        this.x(x)
+        this.cooldown_px = this.has_cooldown ? bar_px(this.spell?.cooldown || 0) : 0
+        this.duration_px = bar_px(this._duration || 0)
     }
 
     /** @returns true if the cast was shown or hidden */

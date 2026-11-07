@@ -12,6 +12,9 @@ For a plain fight both are the same. For a dungeon run with selected pulls:
 Labels ("timestamps") show either the run time, or the "pull time":
 0:00 at the first selected pull, counting only the time shown (= the display time).
 
+Pixels: display time × zoom, plus "gaps": a fixed number of px before each segment
+(see `set_gaps`), for the icons of casts from before it (before the crop, or cut out).
+
 Pure and framework free: everything on the timeline positions itself through this.
 */
 
@@ -80,9 +83,6 @@ export default class TimeMap {
     /** run time ranges within the shown time to grey out */
     readonly dimmed: TimeRange[]
 
-    /** display times where time was cut out */
-    readonly breaks: number[]
-
     /** length of the row in display time (s) */
     readonly duration: number
 
@@ -91,12 +91,14 @@ export default class TimeMap {
     /** whether this maps anything else than "display = run time" */
     readonly is_identity: boolean
 
+    /** px before each segment (index: segment). Set by the fight row once its casts are placed. */
+    gaps: number[] = []
+
 
     constructor(segments: TimeSegment[], dimmed: TimeRange[] = [], pull_time = false) {
         this.segments = segments
         this.dimmed = dimmed
         this.pull_time = pull_time
-        this.breaks = segments.slice(1).map(segment => segment.offset)
 
         const last = segments[segments.length - 1]
         this.duration = last.offset + (last.end - last.start)
@@ -216,6 +218,66 @@ export default class TimeMap {
 
         const last = segments[segments.length - 1]
         return last.start + (d - last.offset)
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Pixels (display time × zoom, with the gaps)
+    //
+
+    /** @returns false if the gaps didn't change */
+    set_gaps(gaps: number[]): boolean {
+        const same = gaps.length == this.gaps.length && gaps.every((gap, i) => gap == this.gaps[i])
+        if (same) { return false }
+        this.gaps = gaps
+        return true
+    }
+
+    /** px before segment `i` */
+    gap(i: number): number {
+        return this.gaps[i] || 0
+    }
+
+    /** index of the segment that starts at run time `t`, or contains it (the last one before it, if cut out) */
+    segment_index(t: number): number {
+        let index = 0
+        this.segments.forEach((segment, i) => { if (t >= segment.start) { index = i } })
+        return index
+    }
+
+    /** px from the row's left edge to each segment's start and end */
+    segment_xs(scale: number): { x0: number, x1: number }[] {
+        let gaps = 0
+        return this.segments.map((segment, i) => {
+            gaps += this.gap(i)
+            const x0 = segment.offset * scale + gaps
+            return { x0, x1: x0 + (segment.end - segment.start) * scale }
+        })
+    }
+
+    /** px of a run time (s). Time cut out: at the cut (before the next gap). Before the row: left of its first gap. */
+    to_x(t: number, scale: number): number {
+        let gaps = this.gap(0)
+        for (let i = 1; i < this.segments.length; i++) {
+            if (t >= this.segments[i].start) { gaps += this.gap(i) }
+        }
+        return this.to_display(t) * scale + gaps
+    }
+
+    /** run time (s) at px `x`. In a gap: where its segment starts */
+    run_at_x(x: number, scale: number): number {
+        const xs = this.segment_xs(scale)
+        for (let i = 0; i < xs.length; i++) {
+            const segment = this.segments[i]
+            if (x < xs[i].x0) { return i == 0 ? segment.start + (x - xs[i].x0) / scale : segment.start }
+            if (x <= xs[i].x1) { return segment.start + (x - xs[i].x0) / scale }
+        }
+        const last = this.segments.length - 1
+        return this.segments[last].end + (x - xs[last].x1) / scale
+    }
+
+    /** width of the row in px */
+    width(scale: number): number {
+        return this.duration * scale + this.gaps.reduce((a, b) => a + b, 0)
     }
 
     ////////////////////////////////////////////////////////////////////////////

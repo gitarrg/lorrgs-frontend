@@ -286,7 +286,7 @@ export default class EventLine extends Konva.Group {
     }
 
     _handle_zoom_change(scale_x: number) {
-        this.x(scale_x * this.time_ref.current.to_display(this.timestamp))
+        this.x(this.time_ref.current.to_x(this.timestamp, scale_x))
     }
 
     _handle_phase_hover(payload: { state: boolean, name: string }) {

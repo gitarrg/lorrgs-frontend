@@ -67,9 +67,6 @@ export default class FightRow {
     private rows_height = 0
     private scale_x = constants.DEFAULT_ZOOM
 
-    /** width (px) left of the row for the icons of casts from before the crop (see `update_gutter`) */
-    private gutter = 0
-
 
     constructor(fight_data: Fight) {
 
@@ -175,17 +172,17 @@ export default class FightRow {
 
         context.setAttr("fillStyle", "rgba(0, 0, 0, 0.6)")
         map.dimmed.forEach(range => {
-            const x0 = map.to_display(range.start) * s
-            const x1 = map.to_display(range.end) * s
+            const x0 = map.to_x(range.start, s)
+            const x1 = map.to_x(range.end, s)
             context.fillRect(x0, top, x1 - x0, height)
         })
 
-        // cuts: dashed line through the whole run
+        // cuts: dashed line through the whole run, where the time continues (after the gap)
         context.setAttr("strokeStyle", "rgba(255, 255, 255, 0.6)")
         context.setAttr("lineWidth", 1)
         context.setLineDash([3, 3])
-        map.breaks.forEach(d => {
-            const x = Math.round(d * s) + 0.5
+        map.segment_xs(s).slice(1).forEach(({ x0 }) => {
+            const x = Math.round(x0) + 0.5
             context.beginPath()
             context.moveTo(x, top)
             context.lineTo(x, this.rows_height)
@@ -265,35 +262,35 @@ export default class FightRow {
 
     _handle_zoom_change(scale_x: number) {
         this.scale_x = scale_x
-        this.killtime_text.x(this.KILLTIME_MARGIN + (this.time_ref.current.duration * scale_x))
+        this.killtime_text.x(this.KILLTIME_MARGIN + this.time_ref.current.width(scale_x))
         this.update_x()
     }
 
-    /** the anchor offset, and the gutter in front of the row */
+    /** the anchor offset */
     private update_x() {
-        this.x(this.anchor_offset * this.scale_x + this.gutter)
+        this.x(this.anchor_offset * this.scale_x)
     }
 
     /**
-     * A cropped row starts with a gutter, with the icons of the casts from before the crop
-     * whose bars reach into it (so they don't look like they were cast at the row's start).
-     * As wide as the most such casts of a (visible) player. None: no gutter.
+     * Gaps before the segments of a cropped/cut row, with the icons of the casts from before them
+     * whose bars reach into them (so they don't look like they were cast at the segment's start).
+     * Each as wide as the most such casts of a (visible) player. None: no gap.
      */
-    private update_gutter() {
-        const count = Math.max(0, ...this.rows.filter(row => row.visible()).map(row => row.foreground.gutter_count))
-        const gutter = count ? count * constants.GUTTER_SLOT + constants.GUTTER_PADDING : 0
-        if (gutter == this.gutter) { return }
-
-        this.gutter = gutter
-        this.rows.forEach(row => {
-            row.foreground.set_gutter(gutter)
-            row.background.set_gutter(gutter)
+    private update_gaps() {
+        const map = this.time_ref.current
+        const visible = this.rows.filter(row => row.visible())
+        const gaps = map.segments.map((_, i) => {
+            const count = Math.max(0, ...visible.map(row => row.foreground.gap_counts[i] || 0))
+            return count ? count * constants.GUTTER_SLOT + constants.GUTTER_PADDING : 0
         })
-        this.update_x()
-        this.background.getStage()?.batchDraw()  // the background moved too (casts only redraw their layer)
+        if (!map.set_gaps(gaps)) { return }
+
+        // everything after a gap moves
+        this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
+        this.background.getStage()?.batchDraw()  // (casts only redraw their layer)
     }
 
-    /** events that can change which casts go in the gutter */
+    /** events that can change which casts go in the gaps */
     static GUTTER_EVENTS = new Set([
         constants.EVENT_TIME_MAP_CHANGED,
         constants.EVENT_SPELL_DISPLAY,
@@ -371,6 +368,6 @@ export default class FightRow {
 
         // postprocess after filters applied (in case height change due to child rows updating)
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_post() }
-        if (FightRow.GUTTER_EVENTS.has(event_name)) { this.update_gutter() }
+        if (FightRow.GUTTER_EVENTS.has(event_name)) { this.update_gaps() }
     }
 }
