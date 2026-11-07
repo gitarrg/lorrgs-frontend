@@ -180,6 +180,20 @@ export default class TimeMap {
         return d >= 0 && d <= this.duration && this.is_shown(t)
     }
 
+    /**
+     * First run time in `[start, end)` that is shown on the row, or null if none is.
+     * For something that starts at `start` and lasts until `end` (eg. a cooldown):
+     * `start` itself if shown (even if `end <= start`), else where it comes into view (the row's start, or the start of the segment after a cut).
+     */
+    first_shown(start: number, end: number): number | null {
+        for (const segment of this.segments) {
+            if (start > segment.end) { continue }
+            const t = Math.max(start, segment.start)
+            return (t == start || t < end) ? t : null
+        }
+        return null
+    }
+
     /** whether the run time is greyed out */
     is_dimmed(t: number): boolean {
         return this.dimmed.some(range => t > range.start && t < range.end)

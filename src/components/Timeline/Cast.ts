@@ -76,8 +76,17 @@ export default class Cast extends Konva.Shape {
     /** where on the row the cast goes (see `TimeMap`) */
     time_ref: TimeMapRef
 
-    /** false while its time is cut out of the row */
+    /** false while neither the cast nor its bars are shown on the row */
     in_range = true
+
+    /**
+     * Run time (s) the cast is drawn from: its own time, or where its bars come into view
+     * when it was cast before the shown time (before the first selected pull, or in a cut-out gap).
+     */
+    private shown_from = 0
+
+    /** cast before the shown time, but its bars reach into it: drawn from `shown_from`, without its time */
+    private carried = false
 
     // default opacity (might be different for procs)
     _default_opacity: number = 1.0
@@ -137,7 +146,6 @@ export default class Cast extends Konva.Shape {
 
         this.image = get_image(this.spell)
         this.counter = cast_data.counter
-        this.update_time()
         this.has_cooldown = !!this.spell.cooldown
 
         // Dim procs
@@ -147,6 +155,7 @@ export default class Cast extends Konva.Shape {
             this.opacity(this._default_opacity)
             this.has_cooldown = false
         }
+        this.update_time()
 
         let show = state.spells.spell_display[this.spell_id]
         show = (show === undefined) ? this.spell.show : show
@@ -158,9 +167,19 @@ export default class Cast extends Konva.Shape {
     update_time() {
         const map = this.time_ref.current
 
-        this.in_range = map.is_shown(this.timestamp)
-        this.cooldown_width = map.display_length(this.timestamp, this.spell?.cooldown || 0)
-        this.duration_width = map.display_length(this.timestamp, this._duration || 0)
+        const t = this.timestamp
+        const cooldown = this.has_cooldown ? (this.spell?.cooldown || 0) : 0
+        const duration = this._duration || 0
+
+        const from = map.first_shown(t, t + Math.max(cooldown, duration))
+        this.in_range = from !== null
+        this.shown_from = from ?? t
+        this.carried = from !== null && from > t
+
+        // the part of each bar from `shown_from` on
+        const bar_width = (length: number) => Math.max(0, map.to_display(t + length) - map.to_display(this.shown_from))
+        this.cooldown_width = bar_width(cooldown)
+        this.duration_width = bar_width(duration)
 
         if (!this.spell) { return }
         const time = map.label(this.timestamp)
@@ -185,8 +204,15 @@ export default class Cast extends Konva.Shape {
             else if (cooldown && late > -1) { lines.push({ value: "", label: "as soon as it was ready" }) }
         }
 
+        const time_info = get_time_info(this.time_ref, this.timestamp)
+        if (this.carried) {
+            // pull time has no value for time that isn't shown: use the run time
+            time_info.time = toMMSS(this.timestamp)
+            lines.unshift({ value: format_duration(this.shown_from - this.timestamp), label: "before the shown time" })
+        }
+
         return {
-            ...get_time_info(this.time_ref, this.timestamp),
+            ...time_info,
             icon: this.spell.icon_path,
             title: this.spell.name + (this.counter ? ` #${this.counter}` : ""),
             title_color: this.spell.color || undefined,
@@ -216,7 +242,14 @@ export default class Cast extends Konva.Shape {
     // Drawing
     //
 
+    /** whether a carried cast still shows a bar (else there is nothing to tie its icon to) */
+    private has_visible_bar() {
+        return (this.show_cooldown && this.has_cooldown && this.cooldown_width > 0)
+            || (this.show_duration && this.duration_width > 0)
+    }
+
     _sceneFunc(context: Context) {
+        if (this.carried && !this.has_visible_bar()) { return }
         const alpha = context._context.globalAlpha // the cast's own opacity, set by Konva
 
         if (this.show_cooldown && this.has_cooldown) {
@@ -232,8 +265,9 @@ export default class Cast extends Konva.Shape {
         }
 
         if (this.show_icon) {
-            context.setAttr("globalAlpha", alpha * this.icon_opacity)
-            if (this.icon_stroke) {
+            // carried: dimmed, without the stroke
+            context.setAttr("globalAlpha", alpha * this.icon_opacity * (this.carried ? 0.5 : 1))
+            if (this.icon_stroke && !this.carried) {
                 context.setAttr("lineWidth", 1)
                 context.setAttr("strokeStyle", "black")
                 context.strokeRect(ICON_X, ICON_X, ICON_SIZE, ICON_SIZE)
@@ -243,7 +277,7 @@ export default class Cast extends Konva.Shape {
             }
         }
 
-        if (this.show_text) {
+        if (this.show_text && !this.carried) {
             context.setAttr("globalAlpha", alpha)
             context.setAttr("font", this.text_bold ? CAST_TEXT_FONT_BOLD : CAST_TEXT_FONT)
             context.setAttr("textBaseline", "middle")
@@ -255,14 +289,17 @@ export default class Cast extends Konva.Shape {
 
     /** The area that receives mouse events: the visible label parts, else the duration bar. */
     _hitFunc(context: Context) {
+        if (this.carried && !this.has_visible_bar()) { return }
+        const show_text = this.show_text && !this.carried
+
         let width = 0
-        if (this.show_text) { width = TEXT_X + this.text_width + TEXT_PADDING }
+        if (show_text) { width = TEXT_X + this.text_width + TEXT_PADDING }
         else if (this.show_icon) { width = TEXT_X }
         else if (this.show_duration) { width = this.duration_width * this.scale_x }
         if (!width) { return }
 
         // with the icon hidden, the text starts at the same place
-        const x = (this.show_icon || !this.show_text) ? 0 : TEXT_X
+        const x = (this.show_icon || !show_text) ? 0 : TEXT_X
         context.setAttr("fillStyle", this.colorKey)
         context.fillRect(x, 0, width - x, BAR_HEIGHT)
     }
@@ -309,7 +346,7 @@ export default class Cast extends Konva.Shape {
     }
 
     _handle_zoom_change(scale_x: number) {
-        this.x(scale_x * this.time_ref.current.to_display(this.timestamp))
+        this.x(scale_x * this.time_ref.current.to_display(this.shown_from))
         this.scale_x = scale_x
     }
 
