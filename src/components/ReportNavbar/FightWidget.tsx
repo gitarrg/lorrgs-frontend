@@ -38,7 +38,7 @@ export default function FightWidget({fight, label} : FightWidgetProps) {
     // Render
     return (
 
-        <SelectGridItem field_name={field_name} className={className}>
+        <SelectGridItem field_name={field_name} className={className} link={{kind: "fight", id: fight.fight_id}}>
             <span className={styles.label_pull}>{label}</span>
             <span className={styles.label_duration}>({toMMSS(fight.duration/1000) })</span>
 

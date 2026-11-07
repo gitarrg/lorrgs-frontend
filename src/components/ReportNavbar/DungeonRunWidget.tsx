@@ -34,6 +34,7 @@ export default function DungeonRunWidget({fight, label} : {fight: Fight, label: 
     return (
         <SelectGridItem
             field_name={`fight[${fight.fight_id}]`}
+            link={{kind: "fight", id: fight.fight_id}}
             className={`${styles.container} ${in_progress ? styles.in_progress : ""}`}
         >
             <span className={styles.label}>{label}</span>

@@ -5,7 +5,7 @@ import type Actor from '../../types/actor'
 import type Role from '../../types/role'
 import { SelectGroup } from './SelectGrid/SelectGroup'
 import { get_player_roles } from '../../store/roles'
-import { get_user_report_players } from  '../../store/user_reports'
+import { get_shown_players } from '../../store/report_links'
 import { group_by } from '../../utils'
 import { useAppSelector } from '../../store/store_hooks'
 import { get_specs } from '../../store/specs'
@@ -13,7 +13,7 @@ import { ASSETS } from '../../constants'
 
 
 /** Group for players whose spec we don't know. */
-const UNKNOWN_ROLE: Role = {
+export const UNKNOWN_ROLE: Role = {
     id: 0,
     code: "unknown",
     name: "Unknown",
@@ -37,7 +37,7 @@ function RoleGroup({role, players} : {role: Role, players: Actor[]}) {
 
 export default function PlayerSelectList() {
 
-    const players = useAppSelector(get_user_report_players)
+    const players = useAppSelector(get_shown_players)
     const roles = useAppSelector(get_player_roles)
     const specs = useAppSelector(get_specs)
     if (players.length == 0) { return null }

@@ -1,0 +1,84 @@
+// Links between the pulls and players on the user report selection page (see `store/report_links`).
+
+// tune the look here
+:global(:root) {
+    --report-link-outline: 1px solid white;
+    --report-link-dim-opacity: 0.45;
+    --report-link-grey-opacity: 0.35;
+}
+
+
+.linked {
+    outline: var(--report-link-outline);
+}
+
+.dim {
+    opacity: var(--report-link-dim-opacity);
+}
+
+.grey {
+    filter: grayscale(1);
+    opacity: var(--report-link-grey-opacity);
+}
+
+// a hovered item may be both dimmed and greyed: grey wins
+.dim.grey {
+    opacity: var(--report-link-grey-opacity);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Tooltip
+
+.tooltip {
+    position: fixed;
+    z-index: 1000;
+    max-width: 30rem;
+    padding: 0.4rem 0.6rem;
+
+    background: hsl(0, 0%, 10%);
+    border: 1px solid hsl(0, 0%, 35%);
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+
+    font-size: 0.85rem;
+    pointer-events: none;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: bold;
+}
+
+.muted {
+    color: hsl(0, 0%, 60%);
+    font-weight: normal;
+}
+
+.row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4rem;
+
+    img {
+        flex-shrink: 0;
+    }
+}
+
+.row_items {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 0.6rem;
+    row-gap: 0.1rem;
+    padding-top: 1px;
+}
+
+.pull {
+    white-space: nowrap;
+}

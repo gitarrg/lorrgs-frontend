@@ -4,6 +4,8 @@ import { type JSX, useContext, useEffect } from "react";
 import { SelectGroupContext } from "./SelectGroup";
 import { SelectGridContext } from "./SelectGrid";
 import useUser from "../../../routes/auth/useUser";
+import useLinkItem from "../FightPlayerLinks/useLinkItem";
+import type { LinkItem } from "../../../store/report_links";
 
 
 type SelectGridItemProps = {
@@ -11,11 +13,13 @@ type SelectGridItemProps = {
     field_name: string
     className?: string
     children: JSX.Element | JSX.Element[]
+    /** the pull/player this item is: to show who was in which pull */
+    link?: LinkItem
 }
 
 
 
-export default function SelectGridItem({field_name, className="", children}: SelectGridItemProps) {
+export default function SelectGridItem({field_name, className="", children, link}: SelectGridItemProps) {
 
     ////////////////////////////////
     // Hooks
@@ -27,6 +31,7 @@ export default function SelectGridItem({field_name, className="", children}: Sel
     const user = useUser()
     const user_can_multiselect = user.permissions.includes("user_reports")
     const field_parent = field_name.split("[")[0]
+    const link_props = useLinkItem(link)
 
     ////////////////////////////////
     // Callbacks
@@ -54,8 +59,10 @@ export default function SelectGridItem({field_name, className="", children}: Sel
     // Render
     return (
         <div
-            className={`${styles.item__container} ${className} bg-dark border rounded ${selected ? "selected" : ""}`}
+            className={`${styles.item__container} ${className} bg-dark border rounded ${selected ? "selected" : ""} ${link_props.className || ""}`}
             onClick={onClick}
+            onMouseEnter={link_props.onMouseEnter}
+            onMouseLeave={link_props.onMouseLeave}
         >
             {children}
         </div>

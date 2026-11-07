@@ -21,7 +21,7 @@ export default function PlayerWidget({player} : {player: Actor}) {
     ////////////////////////////////
     // Render
     return (
-        <SelectGridItem field_name={field_name} className={className}>
+        <SelectGridItem field_name={field_name} className={className} link={{kind: "player", id: player.source_id!}}>
             <div className={styles.background}></div>
             {/* (neither is known while the specs/classes of the report's Game Version load) */}
             {(spec || wow_class) && <Icon spec={spec || wow_class} size="s" />}

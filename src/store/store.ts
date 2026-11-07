@@ -10,6 +10,7 @@ import classes_reducer from "./classes"
 import dungeons_reducer from "./dungeons"
 import fights_reducer from "./fights"
 import game_versions_reducer, { SWITCH_GAME_VERSION } from "./game_versions"
+import report_links_reducer from "./report_links"
 import roles_reducer from "./roles"
 import seasons_reducer from "./seasons"
 import specs_reducer from "./specs"
@@ -27,6 +28,7 @@ const combined_reducer = combineReducers({
     dungeons: dungeons_reducer,
     fights: fights_reducer,
     game_versions: game_versions_reducer,
+    report_links: report_links_reducer,
     roles: roles_reducer,
     seasons: seasons_reducer,
     specs: specs_reducer,
@@ -42,8 +44,8 @@ const combined_reducer = combineReducers({
 /** Switching the Game Version drops everything that is specific to one: only these slices stay. */
 function root_reducer(state: ReturnType<typeof combined_reducer> | undefined, action: UnknownAction) {
     if (state && action.type == SWITCH_GAME_VERSION) {
-        const { game_versions, ui, user, user_report } = state
-        state = { game_versions, ui, user, user_report } as typeof state  // the rest starts from its initial state
+        const { game_versions, report_links, ui, user, user_report } = state
+        state = { game_versions, report_links, ui, user, user_report } as typeof state  // the rest starts from its initial state
     }
     return combined_reducer(state, action)
 }

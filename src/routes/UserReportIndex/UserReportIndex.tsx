@@ -12,6 +12,9 @@ import { get_is_loading } from "../../store/user_reports"
 import { useAppSelector } from "../../store/store_hooks"
 import { useForm, FormProvider } from "react-hook-form";
 import useReportGameVersion from "../UserReport/useReportGameVersion"
+import LinkSelectionSync from "../../components/ReportNavbar/FightPlayerLinks/LinkSelectionSync"
+import LinkTooltip from "../../components/ReportNavbar/FightPlayerLinks/LinkTooltip"
+import ViewSettings from "./ViewSettings"
 
 
 export default function UserReportIndex() {
@@ -63,13 +66,16 @@ export default function UserReportIndex() {
                         </a>
                     </div> }
 
-                    <div className="ml-auto">
+                    <div className="ml-auto d-flex gap-2">
+                        <ViewSettings />
                         <SubmitButton />
                     </div>
 
                 </div>
 
+                <LinkSelectionSync />
             </form>
+            <LinkTooltip />
             </FormProvider>
         </div>
     )

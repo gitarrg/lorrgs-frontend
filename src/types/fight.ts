@@ -17,6 +17,10 @@ export default interface Fight {
     /** slug of the Dungeon, for a whole dungeon run (which has no boss) */
     dungeon?: string | null
     players: Actor[]
+
+    /** source ids of every player that took part in the fight (from the report overview) */
+    player_ids?: number[]
+
     phases: Phase[]
 
     pinned?: boolean
