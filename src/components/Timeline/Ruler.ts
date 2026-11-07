@@ -5,6 +5,7 @@ import Konva from "konva"
 import Stage from "./Stage";
 import TimelineMarker from "./Overlays/TimelineMarker";
 import { LEVELS, level_for_scale } from "./ruler_levels";
+import { hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip";
 
 
 
@@ -47,6 +48,8 @@ export default class Ruler extends Konva.Group {
         //////////////////////////
         //
         this.bbox.on("dblclick dbltap", () => this.add_marker())
+        this.bbox.on("mousemove", () => this.handle_mousemove())
+        this.bbox.on("mouseout", () => hide_tooltip())
     }
 
     /** Show or hide the ruler (eg. when every shown fight has its own pull row). Keeps its height for the layout. */
@@ -208,6 +211,20 @@ export default class Ruler extends Konva.Group {
     ////////////////////////////////////////////////////////////////////////////
     // Interaction
     //
+
+    /** tooltip with the time under the pointer (relative to the anchor, like the timestamps) */
+    private handle_mousemove() {
+        const pointer = this.stage.getPointerPosition()
+        if (!pointer) { return }
+
+        const { ts, name } = this.stage.get_anchor()
+        const time = (pointer.x - this.stage.x()) / this.stage.scale_x - ts
+        const info: TooltipInfo = { time: toMMSS(time) }
+        if (ts) { info.time_detail = `from ${name || toMMSS(ts)}` }
+
+        const container = this.stage.container().getBoundingClientRect()
+        show_tooltip(info, { x: container.x + pointer.x, y: container.y + this.bbox.getAbsolutePosition().y })
+    }
 
     add_marker() {
 

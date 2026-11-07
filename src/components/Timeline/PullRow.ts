@@ -11,12 +11,12 @@ import Konva from "konva"
 import type { Context } from "konva/lib/Context"
 
 import * as constants from "./constants"
-import store from "../../store/store"
 import { toMMSS } from "../../utils"
 import { level_for_scale } from "./ruler_levels"
 import { BOSS_PULL_COLOR, PULL_COLOR, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type { TimeMapRef } from "./TimeMap"
+import { format_duration, get_pull_at, get_time_info, hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip"
 import type Stage from "./Stage"
 
 
@@ -24,9 +24,6 @@ const HEIGHT = constants.LINE_HEIGHT
 const BAND_OPACITY = 0.2
 const BAND_OPACITY_SELECTED = 0.6
 const BACKGROUND = "#1a1a1a"
-/** darkens the time between the selected pulls (drawn by the `FightRow`, over this row too) */
-export const DIM_COLOR = "black"
-export const DIM_OPACITY = 0.6
 /** ticks and timestamps: same as the main `Ruler` */
 const TEXT_COLOR = "white"
 const FONT = "14px Lato"
@@ -42,14 +39,6 @@ const MIN_STRIP_TEXT_WIDTH = 14
 
 /** min. px between two timestamps (eg. left and right of a cut) */
 const MIN_TEXT_SPACING = 40
-
-
-/** `color` drawn with `opacity` over `base` (both "#rrggbb") */
-function mix(base: string, color: string, opacity: number) {
-    const channel = (hex: string, i: number) => parseInt(hex.slice(1 + 2 * i, 3 + 2 * i), 16)
-    const rgb = [0, 1, 2].map(i => Math.round(channel(base, i) * (1 - opacity) + channel(color, i) * opacity))
-    return `rgb(${rgb.join(", ")})`
-}
 
 
 export default class PullRow {
@@ -241,24 +230,6 @@ export default class PullRow {
         })
     }
 
-    /** the colour of the row at `d` (display time): background, tinted by the pull band there and dimmed */
-    background_at(d: number): string {
-        const map = this.time_ref.current
-        let color = BACKGROUND
-
-        // the last band drawn there
-        this.pulls.forEach((pull, i) => {
-            const x0 = map.to_display(pull.start / 1000)
-            const x1 = map.to_display(pull.end / 1000)
-            if (x1 <= x0 || d < x0 || d > x1) { return }
-            const opacity = this.selected.has(i) ? BAND_OPACITY_SELECTED : BAND_OPACITY
-            color = mix(BACKGROUND, pull.boss ? BOSS_PULL_COLOR : PULL_COLOR, opacity)
-        })
-
-        if (map.is_dimmed(map.to_run(d))) { color = mix(color, "#000000", DIM_OPACITY) }
-        return color
-    }
-
     ////////////////////////////////////////////////////////////////////////////
     // Mouse
     //
@@ -278,35 +249,27 @@ export default class PullRow {
         if (t === null) { return }
         const map = this.time_ref.current
 
-        // pulls at that time (they might overlap)
-        const lines = this.pulls
-            .map((pull, i) => ({ pull, i }))
-            .filter(({ pull }) => t * 1000 >= pull.start && t * 1000 <= pull.end)
-            .map(({ pull, i }) => {
-                const name = get_pull_label(pull, i)
-                const label = pull.boss ? `<span class=wow-boss>${name}</span>` : `#${i + 1}`
-                const start = map.label(pull.start / 1000)
-                const end = start + map.display_length(pull.start / 1000, (pull.end - pull.start) / 1000)
-                return `${label}: ${toMMSS(start)} - ${toMMSS(end)}`
-            })
-
-        const time = `${toMMSS(map.label(t))}${map.pull_time ? ` <small>(run ${toMMSS(t)})</small>` : ""}`
-        const content = [time, ...lines].join("<br>")
+        // the pull at that time: its name and times
+        const info: TooltipInfo = get_time_info(this.time_ref, t)
+        const found = get_pull_at(this.pulls, t)
+        if (found) {
+            const { pull, index } = found
+            const start = map.label(pull.start / 1000)
+            const duration = (pull.end - pull.start) / 1000
+            const end = start + map.display_length(pull.start / 1000, duration)
+            info.title = get_pull_label(pull, index)
+            info.title_color = pull.boss ? BOSS_PULL_COLOR : PULL_COLOR
+            info.lines = [{ value: `${toMMSS(start)} - ${toMMSS(end)}`, label: `(${format_duration(duration)})` }]
+        }
 
         // anchor above the pointer
         const container = stage.container().getBoundingClientRect()
         const pointer = stage.getPointerPosition()!
-        store.dispatch({
-            type: constants.EVENT_SHOW_TOOLTIP,
-            payload: {
-                content,
-                position: { x: container.x + pointer.x, y: container.y + this.bbox.getAbsolutePosition().y },
-            },
-        })
+        show_tooltip(info, { x: container.x + pointer.x, y: container.y + this.bbox.getAbsolutePosition().y })
     }
 
     private handle_mouseout() {
-        store.dispatch({ type: constants.EVENT_SHOW_TOOLTIP, payload: { content: "", position: { x: 0, y: 0 } } })
+        hide_tooltip()
     }
 
     ////////////////////////////////////////////////////////////////////////////

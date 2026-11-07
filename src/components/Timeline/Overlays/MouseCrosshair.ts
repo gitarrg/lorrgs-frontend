@@ -2,77 +2,27 @@ import Konva from "konva"
 import * as constants from "../constants"
 
 
-/** The time under the pointer, shown on the ruler of the fight the pointer is over. */
-export type TimeIndicator = {
-    text: string
-    /** top of that ruler (stage coords) */
-    y: number
-    /** of that ruler: hides the timestamps under the indicator */
-    background: string
-}
-
-
-/** px of background left and right of the indicator's text (half of it above and below) */
-const INDICATOR_PADDING = 4
-
-
-/**
- * Vertical line following the pointer across all timelines (see `Stage._update_crosshair`),
- * with a time indicator on the ruler of the hovered fight.
- */
-export default class MouseCrosshair extends Konva.Group {
+/** Vertical line following the pointer across all timelines (see `Stage._update_crosshair`). */
+export default class MouseCrosshair extends Konva.Line {
 
     // last known pointer position in seconds on the timeline
     private time = 0
 
-    private line: Konva.Line
-    private indicator: Konva.Group
-    private indicator_background: Konva.Rect
-    private indicator_text: Konva.Text
-
     constructor() {
         super({
             name: "mouse_crosshair",
-            listening: false,
-            visible: false,
-            transformsEnabled: "position",
-        })
-
-        this.line = new Konva.Line({
             points: [0.5, 0, 0.5, 0],  // see `set_height`
             stroke: "white",
             strokeWidth: 0.5,
             listening: false,
-            transformsEnabled: "none",
-        })
-
-        // a timestamp like the ruler's (see `Ruler.create_ticks`), on the ruler's background to hide the timestamps below it
-        this.indicator = new Konva.Group({ listening: false, visible: false, transformsEnabled: "position" })
-        this.indicator_background = new Konva.Rect({
-            // the text's line box (4 to 18, see below) plus the padding
-            y: 4 - INDICATOR_PADDING / 2,
-            height: 14 + INDICATOR_PADDING,
-            listening: false,
+            visible: false,
             transformsEnabled: "position",
         })
-        this.indicator_text = new Konva.Text({
-            y: -10,
-            height: constants.LINE_HEIGHT,
-            verticalAlign: "bottom",
-            fontSize: 14,
-            fontFamily: "Lato",
-            fill: "white",
-            listening: false,
-            transformsEnabled: "position",
-        })
-        this.indicator.add(this.indicator_background, this.indicator_text)
-
-        this.add(this.line, this.indicator)
     }
 
     /** cover all timelines */
     set_height(height: number) {
-        this.line.points([0.5, 0, 0.5, height])
+        this.points([0.5, 0, 0.5, height])
     }
 
     private update_position() {
@@ -80,24 +30,11 @@ export default class MouseCrosshair extends Konva.Group {
         this.x(this.time * (stage?.scale_x || constants.DEFAULT_ZOOM))
     }
 
-    /** Move to `time` (seconds on the stage), with the time of the hovered fight on its ruler. */
-    move_to(time: number, indicator: TimeIndicator | null) {
+    /** Move to `time` (seconds on the stage) */
+    move_to(time: number) {
         this.time = time
         this.update_position()
         this.visible(true)
-
-        this.indicator.visible(!!indicator)
-        if (indicator) {
-            this.indicator.y(indicator.y)
-            this.indicator_text.text(indicator.text)
-            this.indicator_background.fill(indicator.background)
-
-            // centered on the line
-            const width = this.indicator_text.width()
-            this.indicator_text.x(Math.round(-width / 2))
-            this.indicator_background.x(Math.round(-width / 2) - INDICATOR_PADDING)
-            this.indicator_background.width(width + 2 * INDICATOR_PADDING)
-        }
     }
 
     hide_crosshair() {

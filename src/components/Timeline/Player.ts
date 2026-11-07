@@ -35,6 +35,13 @@ export default class Player extends Konva.Group {
         this.casts = (player_data.casts || []).map(cast_data => new Cast(cast_data, time_ref))
         this.casts = this.casts.filter(cast => cast.spell)
 
+        // link each cast to the previous one of the same spell
+        const last_cast: { [spell_id: number]: Cast } = {}
+        this.casts.forEach(cast => {
+            cast.previous = last_cast[cast.spell_id]
+            last_cast[cast.spell_id] = cast
+        })
+
         // sub events
         this.deaths = (player_data.deaths || []).map(death_data => new Death(player_data, death_data))
         this.resurrections = (player_data.resurrects || []).map(resurrect_data => new Resurrection(player_data, resurrect_data))

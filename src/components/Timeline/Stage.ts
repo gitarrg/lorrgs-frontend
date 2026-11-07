@@ -3,7 +3,6 @@ import type { StageConfig } from "konva/lib/Stage";
 
 import Ruler from "./Ruler"
 import MouseCrosshair from "./Overlays/MouseCrosshair"
-import { toMMSS } from "../../utils"
 import * as constants from "./constants";
 import FightRow, { type PullView } from "./FightRow";
 import type Fight from "../../types/fight";
@@ -167,48 +166,13 @@ export default class Stage extends Konva.Stage {
         this.crosshair.set_height(this.height())
     }
 
-    /** the fight under `y`: its pull row above it counts, as does the shared ruler for the first fight */
-    private _row_at(y: number): FightRow | undefined {
-        const rows = this.rows.filter(row => row.height() > 0)
-        let found = rows[0]
-        rows.forEach(row => {
-            const start = row.has_pull_row() ? row.ruler_y() : row.top
-            if (start <= y) { found = row }
-        })
-        return found
-    }
-
-    /** move the crosshair to the pointer, with the hovered fight's time on its ruler */
+    /** move the crosshair to the pointer */
     _update_crosshair() {
         const pointer = this.getPointerPosition()
         if (!pointer) { return }
-
-        const time = (pointer.x - this.x()) / this.scale_x
-        const row = this._row_at(pointer.y)
-        const fight_time = row?.time_at(time) ?? null
-        const indicator = row && fight_time !== null ? {
-            text: toMMSS(fight_time),
-            y: row.ruler_y(),
-            background: row.ruler_background_at(time) ?? this._page_background(),
-        } : null
-
-        this.crosshair.move_to(time, indicator)
+        this.crosshair.move_to((pointer.x - this.x()) / this.scale_x)
         this.overlay_layer.batchDraw()
     }
-
-    /** the colour behind the canvas (and so behind the shared ruler) */
-    private _page_background(): string {
-        if (this.page_background) { return this.page_background }
-
-        let element: HTMLElement | null = this.container()
-        while (element) {
-            const color = getComputedStyle(element).backgroundColor
-            if (color && color != "transparent" && color != "rgba(0, 0, 0, 0)") { return this.page_background = color }
-            element = element.parentElement
-        }
-        return this.page_background = "black"
-    }
-    private page_background?: string
 
     _hide_crosshair() {
         this.crosshair.hide_crosshair()

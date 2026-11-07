@@ -15,6 +15,8 @@ Labels ("timestamps") show either the run time, or the "pull time":
 Pure and framework free: everything on the timeline positions itself through this.
 */
 
+import type { Pull } from "../../types/fight"
+
 
 /** A pull of a dungeon run, as sent by the API (milliseconds since the run started). */
 export interface PullData {
@@ -230,8 +232,11 @@ export default class TimeMap {
 }
 
 
-/** Shared by everything in a fight row, so a new map reaches all of them at once. */
-export type TimeMapRef = { current: TimeMap }
+/**
+ * Shared by everything in a fight row, so a new map reaches all of them at once.
+ * `pulls`: the pulls of a dungeon run (for tooltips)
+ */
+export type TimeMapRef = { current: TimeMap, pulls?: Pull[] }
 
 /** for anything that is not part of a fight row (yet) */
 export const IDENTITY_REF: TimeMapRef = { current: TimeMap.identity() }

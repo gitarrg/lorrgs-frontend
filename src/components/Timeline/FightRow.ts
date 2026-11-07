@@ -14,7 +14,7 @@ import filter_logic from "../../filter_logic";
 import Konva from "konva";
 import PhaseMarker from "./PhaseMarker";
 import PlayerRow from "./PlayerRow";
-import PullRow, { DIM_COLOR, DIM_OPACITY } from "./PullRow";
+import PullRow from "./PullRow";
 import TimeMap, { type TimeMapRef } from "./TimeMap";
 import { get_run_key } from "../../store/ui";
 import type { Context } from "konva/lib/Context";
@@ -75,7 +75,7 @@ export default class FightRow {
         // input data
         this._fight_data = fight_data
         this.duration = Math.ceil(fight_data.duration / 1000); // ms to s
-        this.time_ref = { current: TimeMap.identity(this.duration) }
+        this.time_ref = { current: TimeMap.identity(this.duration), pulls: fight_data.pulls || undefined }
         this.run_key = get_run_key(fight_data)
 
         // Groups
@@ -170,14 +170,12 @@ export default class FightRow {
         const top = -(this.pull_row?.height() ?? 0)
         const height = this.rows_height - top
 
-        context.setAttr("fillStyle", DIM_COLOR)
-        context.setAttr("globalAlpha", DIM_OPACITY)
+        context.setAttr("fillStyle", "rgba(0, 0, 0, 0.6)")
         map.dimmed.forEach(range => {
             const x0 = map.to_display(range.start) * s
             const x1 = map.to_display(range.end) * s
             context.fillRect(x0, top, x1 - x0, height)
         })
-        context.setAttr("globalAlpha", 1)
 
         // cuts: dashed line through the whole run
         context.setAttr("strokeStyle", "rgba(255, 255, 255, 0.6)")
@@ -239,11 +237,7 @@ export default class FightRow {
         return heights.reduce((a, b) => a + b, 0)
     }
 
-    /** y of the row on the stage (see `y`) */
-    top = 0
-
     y(y: number) {
-        this.top = y
         // forward changes y-coord changes to both children
         this.background.y(y)
         this.foreground.y(y)
@@ -254,24 +248,6 @@ export default class FightRow {
         this.background.x(x)
         this.foreground.x(x)
         this.overlay.x(x)
-    }
-
-    /** top of the ruler showing this fight's time: its pull row, or the shared ruler */
-    ruler_y(): number {
-        return this.pull_row ? this.top - this.pull_row.height() : 0
-    }
-
-    /** colour of this fight's ruler at `time` seconds on the stage (`null`: the shared ruler) */
-    ruler_background_at(time: number): string | null {
-        return this.pull_row ? this.pull_row.background_at(time - this.anchor_offset) : null
-    }
-
-    /** this fight's time (as labelled on its ruler) at `time` seconds on the stage, or null outside the fight */
-    time_at(time: number): number | null {
-        const map = this.time_ref.current
-        const d = time - this.anchor_offset
-        if (d < 0 || d > map.duration) { return null }
-        return map.label_at_display(d)
     }
 
     destroy() {

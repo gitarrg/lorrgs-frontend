@@ -9,6 +9,7 @@ import type Spell from "../../types/spell"
 import type CastType from "../../types/cast"
 import type Stage from "./Stage"
 import { IDENTITY_REF, type TimeMapRef } from "./TimeMap"
+import { format_duration, get_time_info, show_tooltip, type TooltipInfo } from "./tooltip"
 
 /** simple cache to reuse existing images */
 export const IMAGES: {[key: number]: HTMLImageElement} = {}
@@ -67,8 +68,10 @@ export default class Cast extends Konva.Shape {
     hovering: boolean
     selected: boolean
 
-    tooltip_content?: string
     private counter?: number
+
+    /** the cast of the same spell before this one, by the same player (see `Player`) */
+    previous?: Cast
 
     /** where on the row the cast goes (see `TimeMap`) */
     time_ref: TimeMapRef
@@ -166,13 +169,28 @@ export default class Cast extends Konva.Shape {
             this.text = text
             this.text_width = measure_text(this.text)
         }
+    }
 
-        this.tooltip_content = `${this.spell.name}`
-        this.tooltip_content += this.counter ? ` #${this.counter}` : ""
-        this.tooltip_content += "<br>"
-        this.tooltip_content += `${text}`
-        if (this._duration > 0) {
-            this.tooltip_content += ` - ${toMMSS(time + this._duration)}`
+    /** time, spell, and the time since the previous cast and since it was ready again */
+    get_tooltip(): TooltipInfo {
+        const lines: TooltipInfo["lines"] = []
+
+        if (this.previous) {
+            const since = this.timestamp - this.previous.timestamp
+            lines.push({ value: format_duration(since), label: "since the last cast" })
+
+            const cooldown = this.spell.cooldown || 0
+            const late = since - cooldown
+            if (cooldown && late >= 1) { lines.push({ value: format_duration(late), label: "after it was ready" }) }
+            else if (cooldown && late > -1) { lines.push({ value: "", label: "as soon as it was ready" }) }
+        }
+
+        return {
+            ...get_time_info(this.time_ref, this.timestamp),
+            icon: this.spell.icon_path,
+            title: this.spell.name + (this.counter ? ` #${this.counter}` : ""),
+            title_color: this.spell.color || undefined,
+            lines,
         }
     }
 
@@ -343,13 +361,7 @@ export default class Cast extends Konva.Shape {
         position.y += container_position.y
 
         position.x += ICON_X + (ICON_SIZE / 2) // center above the icon
-        store.dispatch({
-            type: constants.EVENT_SHOW_TOOLTIP,
-            payload: {
-                content: this.hovering ? this.tooltip_content : "",
-                position: position
-            },
-        })
+        show_tooltip(this.hovering ? this.get_tooltip() : "", position)
     }
 
     select(event: Konva.KonvaEventObject<MouseEvent>) {

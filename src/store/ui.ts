@@ -4,6 +4,7 @@ import { DEFAULT_DIFFICULTY } from '../constants'
 import Actor from '../types/actor'
 import type { RootState } from './store'
 import type Fight from '../types/fight'
+import type { TooltipContent } from '../components/Timeline/tooltip'
 
 
 // modes to switch some page related features
@@ -143,7 +144,7 @@ export interface UiSliceState {
     filters: FilterValues
 
     tooltip: {
-        content: string
+        content: TooltipContent
         position: { x: number, y: number }
     }
 
