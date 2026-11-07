@@ -94,6 +94,9 @@ export default class Cast extends Konva.Shape {
     /** position in that gap (0: next to the segment), set by `Player.update_gutter_slots` */
     gutter_slot: number | null = null
 
+    /** carried, but a later cast of the same spell is carried into the same gap: not drawn */
+    superseded = false
+
     // default opacity (might be different for procs)
     _default_opacity: number = 1.0
 
@@ -256,8 +259,13 @@ export default class Cast extends Konva.Shape {
             || (this.show_duration && this.duration_width > 0)
     }
 
+    /** carried, but nothing to show: no bar left, or a later cast of the spell is shown instead */
+    private hidden_carried() {
+        return this.carried && (this.superseded || !this.has_visible_bar())
+    }
+
     _sceneFunc(context: Context) {
-        if (this.carried && !this.has_visible_bar()) { return }
+        if (this.hidden_carried()) { return }
         const alpha = context._context.globalAlpha // the cast's own opacity, set by Konva
 
         if (this.show_cooldown && this.has_cooldown) {
@@ -298,7 +306,7 @@ export default class Cast extends Konva.Shape {
 
     /** The area that receives mouse events: the visible label parts, else the duration bar. */
     _hitFunc(context: Context) {
-        if (this.carried && !this.has_visible_bar()) { return }
+        if (this.hidden_carried()) { return }
 
         // carried: its icon in the gap, else its bars
         if (this.in_gutter() && this.show_icon) {

@@ -67,14 +67,24 @@ export default class Player extends Konva.Group {
     /**
      * Place the icons of the shown carried casts (from before the crop, or from time cut out)
      * in the gap before the segment they come into view in: the latest next to the segment.
+     * Only the latest of each spell per gap: our cooldowns can be longer than in game
+     * (talents, cooldown reduction), so older casts may well be ready again. Those are dropped.
      */
     update_gutter_slots() {
         this.gap_counts = []
-        this.casts.forEach(cast => cast.gutter_slot = null)
+        this.casts.forEach(cast => {
+            cast.gutter_slot = null
+            cast.superseded = false
+        })
 
         const carried = this.casts.filter(cast => cast.gap_index !== null && cast.in_range && cast.visible() && cast.has_visible_bar())
+        const seen = new Set<string>()  // gap and spell
         carried.reverse().forEach(cast => {
             const i = cast.gap_index!
+            const key = `${i}:${cast.spell_id}`
+            if (seen.has(key)) { cast.superseded = true; return }
+            seen.add(key)
+
             cast.gutter_slot = this.gap_counts[i] || 0
             this.gap_counts[i] = cast.gutter_slot + 1
         })
