@@ -2,6 +2,8 @@ import Konva from "konva"
 import type { StageConfig } from "konva/lib/Stage";
 
 import Ruler from "./Ruler"
+import MouseCrosshair from "./Overlays/MouseCrosshair"
+import { toMMSS } from "../../utils"
 import * as constants from "./constants";
 import FightRow, { type PullView } from "./FightRow";
 import type Fight from "../../types/fight";
@@ -64,6 +66,7 @@ export default class Stage extends Konva.Stage {
     overlay_layer: Konva.Layer  // general overlays (MouseCrossHair / Timeline Markers)
     overlay_layer2: Konva.Layer  // additional overlays
     ruler: Ruler
+    private crosshair: MouseCrosshair
 
     /** Duration of the longest fight. Used to set things such as the the Length of the Ruler and overall width. */
     longest_fight = 0
@@ -111,6 +114,11 @@ export default class Stage extends Konva.Stage {
         this.ruler = new Ruler(this);
         this.back_layer.add(this.ruler)
 
+        this.crosshair = new MouseCrosshair()
+        this.overlay_layer.add(this.crosshair)
+        this.on("mousemove", () => this._update_crosshair())
+        this.container().addEventListener("mouseleave", () => this._hide_crosshair())
+
         // update canvas on window resize
         this.on("dragmove", this.on_dragmove)
         this.on("wheel", this.on_wheel)
@@ -156,6 +164,37 @@ export default class Stage extends Konva.Stage {
             }
         })
         this.height(y + 1) // 1 extra to show the border
+        this.crosshair.set_height(this.height())
+    }
+
+    /** the fight under `y`: its pull row above it counts, as does the shared ruler for the first fight */
+    private _row_at(y: number): FightRow | undefined {
+        const rows = this.rows.filter(row => row.height() > 0)
+        let found = rows[0]
+        rows.forEach(row => {
+            const start = row.has_pull_row() ? row.ruler_y() : row.top
+            if (start <= y) { found = row }
+        })
+        return found
+    }
+
+    /** move the crosshair to the pointer, with the hovered fight's time on its ruler */
+    _update_crosshair() {
+        const pointer = this.getPointerPosition()
+        if (!pointer) { return }
+
+        const time = (pointer.x - this.x()) / this.scale_x
+        const row = this._row_at(pointer.y)
+        const fight_time = row?.time_at(time) ?? null
+        const indicator = row && fight_time !== null ? { text: toMMSS(fight_time), y: row.ruler_y() } : null
+
+        this.crosshair.move_to(time, indicator)
+        this.overlay_layer.batchDraw()
+    }
+
+    _hide_crosshair() {
+        this.crosshair.hide_crosshair()
+        this.overlay_layer.batchDraw()
     }
 
     /**
@@ -316,6 +355,7 @@ export default class Stage extends Konva.Stage {
 
         // pass to children
         this.ruler.handle_event(event_name, payload)
+        this.crosshair.handle_event(event_name, payload)
         this.rows.forEach(row => row.handle_event(event_name, payload))
 
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters(payload) }

@@ -237,7 +237,11 @@ export default class FightRow {
         return heights.reduce((a, b) => a + b, 0)
     }
 
+    /** y of the row on the stage (see `y`) */
+    top = 0
+
     y(y: number) {
+        this.top = y
         // forward changes y-coord changes to both children
         this.background.y(y)
         this.foreground.y(y)
@@ -248,6 +252,19 @@ export default class FightRow {
         this.background.x(x)
         this.foreground.x(x)
         this.overlay.x(x)
+    }
+
+    /** top of the ruler showing this fight's time: its pull row, or the shared ruler */
+    ruler_y(): number {
+        return this.pull_row ? this.top - this.pull_row.height() : 0
+    }
+
+    /** this fight's time (as labelled on its ruler) at `time` seconds on the stage, or null outside the fight */
+    time_at(time: number): number | null {
+        const map = this.time_ref.current
+        const d = time - this.anchor_offset
+        if (d < 0 || d > map.duration) { return null }
+        return map.label_at_display(d)
     }
 
     destroy() {

@@ -23,8 +23,10 @@ import type Stage from "./Stage"
 const HEIGHT = constants.LINE_HEIGHT
 const BAND_OPACITY = 0.35
 const BAND_OPACITY_SELECTED = 0.6
+/** ticks and timestamps: same as the main `Ruler` */
 const TEXT_COLOR = "white"
-const FONT = "11px Lato"
+const FONT = "14px Lato"
+const TEXT_Y = 11
 
 /** the strip with the pull's name, along the top of each band */
 const STRIP_HEIGHT = 12
@@ -50,7 +52,7 @@ export default class PullRow {
     /** bands and ruler (in the fight's background) */
     shape: Konva.Shape
 
-    /** catches the mouse (in the fight's overlay): tooltip, crosshair and markers like the main ruler */
+    /** catches the mouse (in the fight's overlay): tooltip and markers like the main ruler */
     bbox: Konva.Rect
 
     constructor(pulls: Pull[], time_ref: TimeMapRef) {
@@ -102,14 +104,19 @@ export default class PullRow {
         context.setAttr("fillStyle", "#1a1a1a")
         context.fillRect(0, 0, width, HEIGHT)
 
-        // bands
-        this.pulls.forEach((pull, i) => {
-            const x0 = map.to_display(pull.start / 1000) * s
-            const x1 = map.to_display(pull.end / 1000) * s
-            if (x1 <= x0) { return }  // cut out
+        // pulls that are shown (not cut out)
+        const bands = this.pulls
+            .map((pull, i) => ({
+                pull, i,
+                x0: map.to_display(pull.start / 1000) * s,
+                x1: map.to_display(pull.end / 1000) * s,
+                color: pull.boss ? BOSS_PULL_COLOR : PULL_COLOR,
+            }))
+            .filter(band => band.x1 > band.x0)
 
+        // bands: behind the ticks
+        bands.forEach(({ i, x0, x1, color }) => {
             const selected = this.selected.has(i)
-            const color = pull.boss ? BOSS_PULL_COLOR : PULL_COLOR
             context.setAttr("globalAlpha", selected ? BAND_OPACITY_SELECTED : BAND_OPACITY)
             context.setAttr("fillStyle", color)
             context.fillRect(x0, 1, x1 - x0, HEIGHT - 1)
@@ -122,12 +129,13 @@ export default class PullRow {
             context.moveTo(Math.round(x0) + 0.5, 1)
             context.lineTo(Math.round(x0) + 0.5, HEIGHT)
             context.stroke()
-
-            this.draw_strip(context, get_pull_label(pull, i), color, x0, x1)
         })
         context.setAttr("globalAlpha", 1)
 
         this.draw_ticks(context)
+
+        // names: in front of the ticks
+        bands.forEach(({ pull, i, x0, x1, color }) => this.draw_strip(context, get_pull_label(pull, i), color, x0, x1))
 
         // cuts: a double line where time was taken out
         context.setAttr("strokeStyle", "#ddd")
@@ -189,7 +197,7 @@ export default class PullRow {
         context.setAttr("lineWidth", 1)
         context.setAttr("font", FONT)
         context.setAttr("textAlign", "left")
-        context.setAttr("textBaseline", "alphabetic")
+        context.setAttr("textBaseline", "middle")
 
         let last_text_x = -Infinity
         map.label_ranges().forEach(range => {
@@ -200,7 +208,7 @@ export default class PullRow {
                 const t = i * tick
                 const x = Math.round((range.start + (t - range.label)) * s) + 0.5
                 const big = i % ticks_per_label == 0
-                const h = big ? 8 : 4
+                const h = big ? 10 : 5
 
                 context.beginPath()
                 context.moveTo(x, HEIGHT - h)
@@ -208,8 +216,8 @@ export default class PullRow {
                 context.stroke()
 
                 if (big && x - last_text_x >= MIN_TEXT_SPACING) {
-                    // right of the tick, below the strips
-                    context.fillText(toMMSS(t), x + 3, HEIGHT - 3)
+                    // starts at the tick, like the main ruler
+                    context.fillText(toMMSS(t), x - 0.5, TEXT_Y)
                     last_text_x = x
                 }
             }
@@ -230,7 +238,6 @@ export default class PullRow {
     private handle_mousemove() {
         const stage = this.bbox.getStage() as Stage | null
         if (!stage) { return }
-        stage.ruler.show_crosshair(true)
 
         const t = this.pointer_time()
         if (t === null) { return }
@@ -264,8 +271,6 @@ export default class PullRow {
     }
 
     private handle_mouseout() {
-        const stage = this.bbox.getStage() as Stage | null
-        stage?.ruler.show_crosshair(false)
         store.dispatch({ type: constants.EVENT_SHOW_TOOLTIP, payload: { content: "", position: { x: 0, y: 0 } } })
     }
 

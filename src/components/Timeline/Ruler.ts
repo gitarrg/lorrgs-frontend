@@ -2,7 +2,6 @@ import { LINE_HEIGHT } from "../../constants";
 import { toMMSS } from "../../utils";
 import * as constants from "./constants"
 import Konva from "konva"
-import MouseCrosshair from "./Overlays/MouseCrosshair";
 import Stage from "./Stage";
 import TimelineMarker from "./Overlays/TimelineMarker";
 import { LEVELS, level_for_scale } from "./ruler_levels";
@@ -20,7 +19,6 @@ export default class Ruler extends Konva.Group {
     private stage: Stage
     private markers: TimelineMarker[]
     private bbox: Konva.Rect
-    private mouse_crosshair: MouseCrosshair
     private bottom_line?: Konva.Line
     private zero_timestamp?: Konva.Text
 
@@ -47,14 +45,6 @@ export default class Ruler extends Konva.Group {
         this.stage.overlay_layer.add(this.bbox)
 
         //////////////////////////
-        // MouseCrosshair
-        this.mouse_crosshair = new MouseCrosshair()
-        this.bbox.on("mouseover", () => { this.mouse_crosshair.visible(true) })
-        this.bbox.on("mouseout", () => { this.mouse_crosshair.visible(false) })
-        this.bbox.on("mousemove", () => { this.handle_mousemove() })
-        stage.overlay_layer.add(this.mouse_crosshair)
-
-        //////////////////////////
         //
         this.bbox.on("dblclick dbltap", () => this.add_marker())
     }
@@ -63,14 +53,6 @@ export default class Ruler extends Konva.Group {
     set_shown(state: boolean) {
         this.visible(state)
         this.bbox.visible(state)
-        if (!state) { this.mouse_crosshair.visible(false) }
-    }
-
-    /** Show the crosshair while the pointer is over another ruler-like row (see `PullRow`) */
-    show_crosshair(state: boolean) {
-        this.mouse_crosshair.visible(state)
-        if (state) { this.mouse_crosshair.handle_mousemove() }
-        this.stage.overlay_layer.batchDraw()
     }
 
     private create_ticks() {
@@ -220,18 +202,12 @@ export default class Ruler extends Konva.Group {
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this.handle_zoom_change(payload) }
         if (event_name === constants.EVENT_ANCHOR_CHANGED) { this.handle_anchor_changed(payload) }
 
-        this.mouse_crosshair.handle_event(event_name, payload)
         this.markers.forEach(marker => marker.handle_event(event_name, payload))
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Interaction
     //
-
-    private handle_mousemove() {
-        this.mouse_crosshair.handle_mousemove()
-        this.stage.overlay_layer.batchDraw()
-    }
 
     add_marker() {
 
