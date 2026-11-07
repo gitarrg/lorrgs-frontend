@@ -1,6 +1,6 @@
 /*
 The row above a dungeon run: its pulls as bands, with a ruler on top.
-Each band has a strip along its top with the pull's name ("Pull #n", or the boss).
+Each band shows the pull's name ("Pull #n", or the boss) in its top left corner.
 
 Drawn by a single shape (bands, ticks and timestamps), so zooming only redraws it.
 Everything is positioned through the fight row's `TimeMap`, so cropping and cut out time
@@ -28,7 +28,7 @@ const TEXT_COLOR = "white"
 const FONT = "14px Lato"
 const TEXT_Y = 11
 
-/** the strip with the pull's name, along the top of each band */
+/** the pull's name in the top left of each band */
 const STRIP_HEIGHT = 12
 const STRIP_OPACITY = 0.85
 const STRIP_FONT = "bold 10px Lato"
@@ -158,30 +158,35 @@ export default class PullRow {
         context.stroke()
     }
 
-    /** the strip along the top of a band, with the pull's name (cut short to fit) */
+    /** the pull's name in the top left of its band, on a background as wide as the name */
     private draw_strip(context: Context, text: string, color: string, x0: number, x1: number) {
         const width = x1 - x0
 
+        // name cut short to fit the band (none on very narrow bands)
+        context.setAttr("font", STRIP_FONT)
+        let label = ""
+        if (width >= MIN_STRIP_TEXT_WIDTH) {
+            const max_width = width - 6
+            label = text
+            if (context.measureText(label).width > max_width) {
+                while (label.length > 1 && context.measureText(label + "…").width > max_width) {
+                    label = label.slice(0, -1)
+                }
+                label = label + "…"
+            }
+        }
+
+        // background: only as wide as the name
+        const strip_width = label ? Math.min(width, context.measureText(label).width + 6) : width
         context.setAttr("globalAlpha", STRIP_OPACITY)
         context.setAttr("fillStyle", color)
-        context.fillRect(x0, 1, width, STRIP_HEIGHT)
+        context.fillRect(x0, 1, strip_width, STRIP_HEIGHT)
         context.setAttr("globalAlpha", 1)
 
-        const max_width = width - 6
-        if (width < MIN_STRIP_TEXT_WIDTH) { return }
-
-        context.setAttr("font", STRIP_FONT)
+        if (!label) { return }
         context.setAttr("fillStyle", STRIP_TEXT_COLOR)
         context.setAttr("textAlign", "left")
         context.setAttr("textBaseline", "middle")
-
-        let label = text
-        if (context.measureText(label).width > max_width) {
-            while (label.length > 1 && context.measureText(label + "…").width > max_width) {
-                label = label.slice(0, -1)
-            }
-            label = label + "…"
-        }
         context.fillText(label, x0 + 3, 1 + STRIP_HEIGHT / 2 + 0.5)
     }
 
