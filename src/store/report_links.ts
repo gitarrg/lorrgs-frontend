@@ -223,6 +223,13 @@ export const get_shown_players = createSelector(
 )
 
 
+/** ids of the items of the other kind linked to `item`: the players of a pull / the pulls of a player */
+export function get_linked_ids(state: RootState, item: LinkItem): number[] {
+    const ids = item.kind == "fight" ? get_player_ids_by_fight(state)[item.id] : get_fight_ids_by_player(state)[item.id]
+    return [...(ids || [])]
+}
+
+
 /** the items linked to the hovered one, while hovering highlights anything */
 const get_hover_links = createSelector(
     get_hovered,

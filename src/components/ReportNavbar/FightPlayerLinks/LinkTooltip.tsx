@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useCanSelectLinks } from "./useLinkItem"
 import Icon from "../../shared/Icon"
 import styles from "./FightPlayerLinks.module.scss"
 import type Actor from "../../../types/actor"
@@ -137,6 +138,17 @@ function PlayerTooltipContent({ player_id }: { player_id: number }) {
 }
 
 
+/** how to select an item with its links (see `useLinkItem`) */
+function SelectHint({ kind }: { kind: LinkHover["kind"] }) {
+    const linked = kind == "fight" ? "its players" : "their pulls"
+    return (
+        <div className={styles.hint}>
+            Alt+click: select with {linked} · Shift+Alt+click: add to selection
+        </div>
+    )
+}
+
+
 /** Places the tooltip under the item, growing away from the closer screen edge. */
 function get_position(hovered: LinkHover): React.CSSProperties {
     const { left, right, bottom } = hovered.anchor
@@ -154,6 +166,7 @@ export default function LinkTooltip() {
     const hovered = useAppSelector(get_hovered)
     const enabled = useAppSelector(get_view_settings).tooltip
     const [shown, set_shown] = useState<LinkHover | null>(null)
+    const can_select_links = useCanSelectLinks()
     const shown_ref = useRef(shown)
     shown_ref.current = shown
 
@@ -174,6 +187,7 @@ export default function LinkTooltip() {
                 ? <FightTooltipContent fight_id={shown.id} />
                 : <PlayerTooltipContent player_id={shown.id} />
             }
+            {can_select_links && <SelectHint kind={shown.kind} />}
         </div>
     )
 }

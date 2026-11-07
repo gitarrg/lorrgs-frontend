@@ -35,7 +35,13 @@ export default function SelectGridItem({field_name, className="", children, link
 
     ////////////////////////////////
     // Callbacks
-    function onClick() {
+    function onClick(event: React.MouseEvent) {
+
+        // Alt+click: with its linked pulls/players (Shift: added to the selection)
+        if (event.altKey && link_props.select_with_links) {
+            link_props.select_with_links(event.shiftKey)
+            return
+        }
 
         // force deseletion for free users
         if (!user_can_multiselect) {
