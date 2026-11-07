@@ -3,7 +3,7 @@ import type { StageConfig } from "konva/lib/Stage";
 
 import Ruler from "./Ruler"
 import * as constants from "./constants";
-import FightRow from "./FightRow";
+import FightRow, { type PullView } from "./FightRow";
 import type Fight from "../../types/fight";
 import Cast, { IMAGES } from "./Cast";
 import type Player from "./Player";
@@ -51,6 +51,9 @@ export default class Stage extends Konva.Stage {
 
     anchor_ts: number = 0
     anchor_name: string = "pull"
+
+    /** how dungeon runs show their pulls (see `set_pull_view`) */
+    private pull_view: PullView = { selection: {}, hide_unselected: false, pull_time: false }
 
     /** filters last applied (see `EVENT_APPLY_FILTERS`) */
     private applied_filters?: FilterValues
@@ -136,6 +139,11 @@ export default class Stage extends Konva.Stage {
     }
 
     layout_children() {
+
+        // the shared ruler is only needed for fights without their own (see `PullRow`).
+        // (keeps its space: the names column shows the first fight's info next to it)
+        const visible_rows = this.rows.filter(row => row.visible())
+        this.ruler.set_shown(visible_rows.length == 0 || visible_rows.some(row => !row.has_pull_row()))
 
         let y = this.ruler.height()
 
@@ -380,9 +388,10 @@ export default class Stage extends Konva.Stage {
         // create fresh instances
         new_fights.forEach((fight) => {
             const row = new FightRow(fight)
-            this.longest_fight = Math.max(this.longest_fight, row.duration)
+            row.set_pull_view(this.pull_view)
             this.rows.push(row)
         })
+        this.longest_fight = this.get_longest_fight()
 
         // resize before adding the rows: Konva redraws every layer on resize, and the new rows aren't cached yet
         this.layout_children()
@@ -398,6 +407,34 @@ export default class Stage extends Konva.Stage {
         this.handle_event(constants.EVENT_CHECK_IMAGES_LOADED)
 
         this._update_phase_marker_headers()
+    }
+
+    /** length of the longest row (in display time: dungeon runs can be cropped) */
+    private get_longest_fight() {
+        return Math.max(0, ...this.rows.map(row => row.time_ref.current.duration))
+    }
+
+    /** Change how dungeon runs show their pulls: selection, cut out or dimmed, run or pull time. */
+    set_pull_view(view: PullView) {
+        const previous = this.pull_view
+        this.pull_view = view
+
+        let changed = false
+        this.rows.forEach(row => {
+            const run_changed = previous.hide_unselected != view.hide_unselected
+                || previous.pull_time != view.pull_time
+                || previous.selection[row.run_key] !== view.selection[row.run_key]
+            if (run_changed) { changed = row.set_pull_view(view) || changed }
+        })
+        if (!changed) { return }
+
+        const longest = this.get_longest_fight()
+        if (longest != this.longest_fight) {
+            this.longest_fight = longest
+            this.ruler.update_duration(longest)
+            this.ruler.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
+        }
+        this.batchDraw()
     }
 
     set_anchor(ts: number, name: string = "") {

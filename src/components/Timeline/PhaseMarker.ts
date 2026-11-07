@@ -89,7 +89,7 @@ export default class PhaseMarker extends EventLine {
     }
 
     private handle_display_settings(settings: { [key: string]: boolean }) {
-        this.visible(settings.show_phases)
+        this.set_shown(settings.show_phases)
     }
 
     private handle_anchor_changed({ ts, name }: { ts: number, name: string }) {

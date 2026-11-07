@@ -43,7 +43,15 @@ export interface ViewSettings {
     grey_out: boolean
     /** tooltip listing the players of a pull / the pulls of a player */
     tooltip: boolean
+
+    /** dungeon runs: cut the time between the selected pulls out of the timeline (instead of dimming it) */
+    hide_unselected_pulls: boolean
+    /** dungeon runs: timestamps since the run started, or since the first selected pull ("pull time") */
+    timestamps: "run" | "pull"
 }
+
+/** the View Settings that are on/off */
+export type ViewSettingToggle = { [K in keyof ViewSettings]: ViewSettings[K] extends boolean ? K : never }[keyof ViewSettings]
 
 /** how an item shows, from the hovered and selected items: space separated, eg. "dim grey" */
 export type LinkState = `${"" | "linked" | "dim"}${"" | " grey"}`
@@ -60,6 +68,8 @@ export const DEFAULT_VIEW_SETTINGS: ViewSettings = {
     hover_player: true,
     grey_out: false,
     tooltip: true,
+    hide_unselected_pulls: false,
+    timestamps: "run",
 }
 
 
@@ -105,8 +115,8 @@ const SLICE = createSlice({
     initialState: INITIAL_STATE,
 
     reducers: {
-        set_view_setting_value: (state, action: PayloadAction<{ key: keyof ViewSettings, value: boolean }>) => {
-            state.settings[action.payload.key] = action.payload.value
+        set_view_setting_value: (state, action: PayloadAction<Partial<ViewSettings>>) => {
+            state.settings = { ...state.settings, ...action.payload }
         },
 
         set_hovered: (state, action: PayloadAction<LinkHover | null>) => {
@@ -126,9 +136,9 @@ export const { set_hovered, set_selection } = SLICE.actions
 
 
 /** change one View Setting and remember it */
-export function set_view_setting(key: keyof ViewSettings, value: boolean) {
+export function set_view_setting<K extends keyof ViewSettings>(key: K, value: ViewSettings[K]) {
     return (dispatch: AppDispatch, getState: () => RootState) => {
-        dispatch(SLICE.actions.set_view_setting_value({ key, value }))
+        dispatch(SLICE.actions.set_view_setting_value({ [key]: value }))
         store_view_settings(getState().report_links.settings)
     }
 }

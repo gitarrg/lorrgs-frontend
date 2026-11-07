@@ -38,6 +38,19 @@ export function get_filters(state: RootState) {
 }
 
 
+/** key of a fight in `pull_selection` */
+export function get_run_key(fight: Fight) {
+    return `${fight.report_id}/${fight.fight_id}`
+}
+
+const NO_PULLS: number[] = []
+
+/** the selected pulls of a dungeon run (indices into its `pulls`) */
+export function get_pull_selection(state: RootState, fight: Fight): number[] {
+    return state.ui.pull_selection[get_run_key(fight)] ?? NO_PULLS
+}
+
+
 export const get_is_loading = createSelector(
     (state: RootState) => state.ui._loading, // dependency
     (loading_state) => {
@@ -134,6 +147,12 @@ export interface UiSliceState {
         position: { x: number, y: number }
     }
 
+    /**
+     * Selected pulls of each dungeon run, as indices into its `pulls`. Missing/empty: the whole run.
+     * Keyed by `get_run_key`. Only for this session (not in the url).
+     */
+    pull_selection: { [run_key: string]: number[] }
+
     // CopyNote Options
     show_copynote: boolean
     copynote_player: Actor | null
@@ -183,6 +202,8 @@ const INITIAL_STATE: UiSliceState = {
         content: "",
         position: { x: 0, y: 0 }
     },
+
+    pull_selection: {},
 
     show_copynote: false,
     copynote_player: null,
@@ -266,6 +287,22 @@ const SLICE = createSlice({
             return state
         },
 
+        set_pull_selection: (state, action: PayloadAction<{ run_key: string, indices: number[] }>) => {
+            const { run_key, indices } = action.payload
+            state.pull_selection[run_key] = [...indices].sort((a, b) => a - b)
+            return state
+        },
+
+        /** select/deselect a single pull of a run */
+        toggle_pull: (state, action: PayloadAction<{ run_key: string, index: number }>) => {
+            const { run_key, index } = action.payload
+            const selected = state.pull_selection[run_key] || []
+            state.pull_selection[run_key] = selected.includes(index)
+                ? selected.filter(i => i != index)
+                : [...selected, index].sort((a, b) => a - b)
+            return state
+        },
+
         set_show_copynote: (state, action: PayloadAction<boolean>) => {
             state.show_copynote = action.payload
             return state
@@ -296,6 +333,8 @@ export const {
     set_mode,
     set_spec_slug,
     set_tooltip,
+    set_pull_selection,
+    toggle_pull,
     update_settings,
     set_show_copynote,
     set_copynote_player,

@@ -1,16 +1,22 @@
 import styles from "./ViewSettings.module.scss"
 import { FaCog } from "react-icons/fa"
-import { get_view_settings, set_view_setting, type ViewSettings as ViewSettingsType } from "../../store/report_links"
+import { get_view_settings, set_view_setting, type ViewSettingToggle } from "../../store/report_links"
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import { get_user_report_fights } from "../../store/user_reports"
 import { useEffect, useRef, useState } from "react"
 
 
-const OPTIONS: { key: keyof ViewSettingsType, label: string }[] = [
+const OPTIONS: { key: ViewSettingToggle, label: string }[] = [
     { key: "hover_fight", label: "Hover a pull to see its players" },
     { key: "hover_player", label: "Hover a player to see their pulls" },
     { key: "grey_out", label: "Grey out what isn't in the selection" },
     { key: "tooltip", label: "Tooltip with players / pulls" },
+]
+
+
+const TIMESTAMP_OPTIONS: { value: "run" | "pull", label: string }[] = [
+    { value: "run", label: "Timestamps: run time" },
+    { value: "pull", label: "Timestamps: pull time (from the first selected pull)" },
 ]
 
 
@@ -64,6 +70,26 @@ export default function ViewSettings() {
                                 type="checkbox"
                                 checked={settings[option.key]}
                                 onChange={event => dispatch(set_view_setting(option.key, event.target.checked))}
+                            />
+                            {option.label}
+                        </label>
+                    ))}
+
+                    <div className={styles.title}>Dungeon runs</div>
+                    <label className={styles.option}>
+                        <input
+                            type="checkbox"
+                            checked={settings.hide_unselected_pulls}
+                            onChange={event => dispatch(set_view_setting("hide_unselected_pulls", event.target.checked))}
+                        />
+                        Hide unselected pulls (instead of dimming them)
+                    </label>
+                    {TIMESTAMP_OPTIONS.map(option => (
+                        <label key={option.value} className={styles.option}>
+                            <input
+                                type="radio"
+                                checked={settings.timestamps == option.value}
+                                onChange={() => dispatch(set_view_setting("timestamps", option.value))}
                             />
                             {option.label}
                         </label>

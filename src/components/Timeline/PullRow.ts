@@ -1,0 +1,249 @@
+/*
+The row above a dungeon run: its pulls as bands, with a ruler on top.
+
+Drawn by a single shape (bands, ticks and timestamps), so zooming only redraws it.
+Everything is positioned through the fight row's `TimeMap`, so cropping and cut out time
+is reflected here the same way as on the casts below.
+*/
+
+import Konva from "konva"
+import type { Context } from "konva/lib/Context"
+
+import * as constants from "./constants"
+import store from "../../store/store"
+import { toMMSS } from "../../utils"
+import { level_for_scale } from "./ruler_levels"
+import { BOSS_PULL_COLOR, PULL_COLOR, get_pull_label } from "./PullMarker"
+import type { Pull } from "../../types/fight"
+import type { TimeMapRef } from "./TimeMap"
+import type Stage from "./Stage"
+
+
+const HEIGHT = constants.LINE_HEIGHT
+const BAND_OPACITY = 0.35
+const BAND_OPACITY_SELECTED = 0.6
+const TEXT_COLOR = "white"
+const FONT = "12px Lato"
+
+/** min. px between two timestamps (eg. left and right of a cut) */
+const MIN_TEXT_SPACING = 40
+
+
+export default class PullRow {
+
+    pulls: Pull[]
+    time_ref: TimeMapRef
+    selected: Set<number> = new Set()
+
+    /** pixels per second */
+    private scale_x = constants.DEFAULT_ZOOM
+
+    /** bands and ruler (in the fight's background) */
+    shape: Konva.Shape
+
+    /** catches the mouse (in the fight's overlay): tooltip, crosshair and markers like the main ruler */
+    bbox: Konva.Rect
+
+    constructor(pulls: Pull[], time_ref: TimeMapRef) {
+        this.pulls = pulls
+        this.time_ref = time_ref
+
+        this.shape = new Konva.Shape({
+            name: "PullRow",
+            listening: false,
+            transformsEnabled: "position",
+            perfectDrawEnabled: false,
+            sceneFunc: (context) => this.draw(context),
+        })
+
+        this.bbox = new Konva.Rect({
+            height: HEIGHT,
+            width: 0,  // see `_handle_zoom_change`
+            transformsEnabled: "position",
+        })
+        this.bbox.on("mousemove", () => this.handle_mousemove())
+        this.bbox.on("mouseout", () => this.handle_mouseout())
+        this.bbox.on("dblclick dbltap", () => (this.bbox.getStage() as Stage | null)?.ruler.add_marker())
+    }
+
+    height() {
+        return HEIGHT
+    }
+
+    destroy() {
+        this.shape.destroy()
+        this.bbox.destroy()
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Drawing
+    //
+
+    private draw(context: Context) {
+        const map = this.time_ref.current
+        const s = this.scale_x
+        const width = map.duration * s
+
+        // pulls outside the crop stay outside the row
+        context.beginPath()
+        context.rect(0, 0, width, HEIGHT + 1)
+        context.clip()
+
+        // background
+        context.setAttr("fillStyle", "#1a1a1a")
+        context.fillRect(0, 0, width, HEIGHT)
+
+        // bands
+        this.pulls.forEach((pull, i) => {
+            const x0 = map.to_display(pull.start / 1000) * s
+            const x1 = map.to_display(pull.end / 1000) * s
+            if (x1 <= x0) { return }  // cut out
+
+            const selected = this.selected.has(i)
+            const color = pull.boss ? BOSS_PULL_COLOR : PULL_COLOR
+            context.setAttr("globalAlpha", selected ? BAND_OPACITY_SELECTED : BAND_OPACITY)
+            context.setAttr("fillStyle", color)
+            context.fillRect(x0, 1, x1 - x0, HEIGHT - 1)
+
+            // edges
+            context.setAttr("globalAlpha", 1)
+            context.setAttr("strokeStyle", color)
+            context.setAttr("lineWidth", 1)
+            context.beginPath()
+            context.moveTo(Math.round(x0) + 0.5, 1)
+            context.lineTo(Math.round(x0) + 0.5, HEIGHT)
+            context.stroke()
+        })
+        context.setAttr("globalAlpha", 1)
+
+        this.draw_ticks(context)
+
+        // cuts: a double line where time was taken out
+        context.setAttr("strokeStyle", "#ddd")
+        context.setAttr("lineWidth", 1)
+        map.breaks.forEach(d => {
+            const x = Math.round(d * s)
+            context.beginPath()
+            context.moveTo(x - 1.5, 0)
+            context.lineTo(x - 1.5, HEIGHT)
+            context.moveTo(x + 1.5, 0)
+            context.lineTo(x + 1.5, HEIGHT)
+            context.stroke()
+        })
+
+        // bottom line
+        context.setAttr("strokeStyle", "black")
+        context.beginPath()
+        context.moveTo(0, HEIGHT + 0.5)
+        context.lineTo(width, HEIGHT + 0.5)
+        context.stroke()
+    }
+
+    /** ticks and timestamps like the main `Ruler`, in the labels of the time map (run or pull time) */
+    private draw_ticks(context: Context) {
+        const map = this.time_ref.current
+        const s = this.scale_x
+        const { label, tick } = level_for_scale(s)
+        const ticks_per_label = Math.round(label / tick)
+
+        context.setAttr("strokeStyle", TEXT_COLOR)
+        context.setAttr("fillStyle", TEXT_COLOR)
+        context.setAttr("lineWidth", 1)
+        context.setAttr("font", FONT)
+        context.setAttr("textAlign", "center")
+        context.setAttr("textBaseline", "alphabetic")
+
+        let last_text_x = -Infinity
+        map.label_ranges().forEach(range => {
+            const first = Math.ceil(range.label / tick)
+            const last = Math.floor((range.label + (range.end - range.start)) / tick)
+
+            for (let i = first; i <= last; i++) {
+                const t = i * tick
+                const x = Math.round((range.start + (t - range.label)) * s) + 0.5
+                const big = i % ticks_per_label == 0
+                const h = big ? 8 : 4
+
+                context.beginPath()
+                context.moveTo(x, HEIGHT - h)
+                context.lineTo(x, HEIGHT)
+                context.stroke()
+
+                if (big && x - last_text_x >= MIN_TEXT_SPACING) {
+                    context.fillText(toMMSS(t), x, HEIGHT - 10)
+                    last_text_x = x
+                }
+            }
+        })
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Mouse
+    //
+
+    /** the run time under the pointer (inverse of the time map) */
+    private pointer_time(): number | null {
+        const pointer = this.bbox.getRelativePointerPosition()
+        if (!pointer) { return null }
+        return this.time_ref.current.to_run(pointer.x / this.scale_x)
+    }
+
+    private handle_mousemove() {
+        const stage = this.bbox.getStage() as Stage | null
+        if (!stage) { return }
+        stage.ruler.show_crosshair(true)
+
+        const t = this.pointer_time()
+        if (t === null) { return }
+        const map = this.time_ref.current
+
+        // pulls at that time (they might overlap)
+        const lines = this.pulls
+            .map((pull, i) => ({ pull, i }))
+            .filter(({ pull }) => t * 1000 >= pull.start && t * 1000 <= pull.end)
+            .map(({ pull, i }) => {
+                const name = get_pull_label(pull, i)
+                const label = pull.boss ? `<span class=wow-boss>${name}</span>` : `#${i + 1}`
+                const start = map.label(pull.start / 1000)
+                const end = start + map.display_length(pull.start / 1000, (pull.end - pull.start) / 1000)
+                return `${label}: ${toMMSS(start)} - ${toMMSS(end)}`
+            })
+
+        const time = `${toMMSS(map.label(t))}${map.pull_time ? ` <small>(run ${toMMSS(t)})</small>` : ""}`
+        const content = [time, ...lines].join("<br>")
+
+        // anchor above the pointer
+        const container = stage.container().getBoundingClientRect()
+        const pointer = stage.getPointerPosition()!
+        store.dispatch({
+            type: constants.EVENT_SHOW_TOOLTIP,
+            payload: {
+                content,
+                position: { x: container.x + pointer.x, y: container.y + this.bbox.getAbsolutePosition().y },
+            },
+        })
+    }
+
+    private handle_mouseout() {
+        const stage = this.bbox.getStage() as Stage | null
+        stage?.ruler.show_crosshair(false)
+        store.dispatch({ type: constants.EVENT_SHOW_TOOLTIP, payload: { content: "", position: { x: 0, y: 0 } } })
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Events
+    //
+
+    set_selected(indices: number[]) {
+        this.selected = new Set(indices)
+    }
+
+    _handle_zoom_change(scale_x: number) {
+        this.scale_x = scale_x
+        this.bbox.width(this.time_ref.current.duration * scale_x)
+    }
+
+    handle_event(event_name: string, payload: any) {
+        if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
+    }
+}

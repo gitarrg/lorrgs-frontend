@@ -2,6 +2,13 @@ import type Actor from "./actor";
 import type Phase from "./phase";
 
 
+export interface Pull {
+    start: number
+    end: number
+    boss: string | null
+}
+
+
 export default interface Fight {
 
 
@@ -22,6 +29,13 @@ export default interface Fight {
     player_ids?: number[]
 
     phases: Phase[]
+
+    /**
+     * The pulls of a dungeon run, in Warcraft Logs order (empty/missing otherwise).
+     * `start`/`end`: milliseconds since the run started (same clock as the casts).
+     * `boss`: name of the boss for a boss pull, null for trash.
+     */
+    pulls?: Pull[]
 
     pinned?: boolean
 

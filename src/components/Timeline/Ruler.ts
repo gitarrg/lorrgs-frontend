@@ -5,26 +5,8 @@ import Konva from "konva"
 import MouseCrosshair from "./Overlays/MouseCrosshair";
 import Stage from "./Stage";
 import TimelineMarker from "./Overlays/TimelineMarker";
+import { LEVELS, level_for_scale } from "./ruler_levels";
 
-
-/**
- * Available ruler resolutions, from fine to coarse.
- * `label`: seconds between timestamps, `tick`: seconds between ticks.
- * `label` must be a multiple of `tick`.
- */
-const LEVELS = [
-    { label: 1, tick: 0.5 },
-    { label: 5, tick: 1 },
-    { label: 15, tick: 5 },
-    { label: 30, tick: 10 },
-    { label: 60, tick: 15 },
-    { label: 120, tick: 30 },
-    { label: 300, tick: 60 },
-    { label: 600, tick: 120 },
-]
-
-/** Minimum distance between two timestamps in px. At the default zoom (4px/s) this results in 30s steps (120px). */
-const MIN_LABEL_SPACING = 80
 
 
 export default class Ruler extends Konva.Group {
@@ -77,9 +59,18 @@ export default class Ruler extends Konva.Group {
         this.bbox.on("dblclick dbltap", () => this.add_marker())
     }
 
-    /** Pick the finest level whose timestamps are at least `MIN_LABEL_SPACING` apart. */
-    private static level_for_scale(scale_x: number) {
-        return LEVELS.find(level => level.label * scale_x >= MIN_LABEL_SPACING) ?? LEVELS[LEVELS.length - 1]
+    /** Show or hide the ruler (eg. when every shown fight has its own pull row). Keeps its height for the layout. */
+    set_shown(state: boolean) {
+        this.visible(state)
+        this.bbox.visible(state)
+        if (!state) { this.mouse_crosshair.visible(false) }
+    }
+
+    /** Show the crosshair while the pointer is over another ruler-like row (see `PullRow`) */
+    show_crosshair(state: boolean) {
+        this.mouse_crosshair.visible(state)
+        if (state) { this.mouse_crosshair.handle_mousemove() }
+        this.stage.overlay_layer.batchDraw()
     }
 
     private create_ticks() {
@@ -155,7 +146,7 @@ export default class Ruler extends Konva.Group {
 
     update_duration(duration: number) {
         this.duration = duration;
-        this.level = Ruler.level_for_scale(this.stage.scale_x)
+        this.level = level_for_scale(this.stage.scale_x)
         this.create_ticks()
     }
 
@@ -165,7 +156,7 @@ export default class Ruler extends Konva.Group {
     private handle_zoom_change(scale_x: number) {
 
         // switch to a finer/coarser resolution if needed
-        const level = Ruler.level_for_scale(scale_x)
+        const level = level_for_scale(scale_x)
         if (level !== this.level) {
             this.level = level
             this.create_ticks()

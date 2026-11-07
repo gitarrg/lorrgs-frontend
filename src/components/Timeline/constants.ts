@@ -30,3 +30,6 @@ export const EVENT_SHOW_TOOLTIP = "ui/set_tooltip"
 export const EVENT_PHASE_HOVER = "phase/hover"
 
 export const EVENT_ANCHOR_CHANGED = "stage/anchor_changed"
+
+// the time map of a fight row changed (see `TimeMap`): sent to the row's children, followed by a zoom change to reposition them
+export const EVENT_TIME_MAP_CHANGED = "time_map_changed"

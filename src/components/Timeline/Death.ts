@@ -19,7 +19,7 @@ export default class Death extends PlayerEventLine {
     }
 
     _handle_display_settings(settings: { [key: string]: boolean }) {
-        this.visible(settings.show_deaths)
+        this.set_shown(settings.show_deaths)
     }
 
     handle_event(event_name: string, payload: any) {

@@ -31,12 +31,15 @@ export default class Player extends Konva.Group {
         this.player_data = player_data
 
         // load casts
-        this.casts = (player_data.casts || []).map(cast_data => new Cast(cast_data))
+        const time_ref = this.row.time_ref
+        this.casts = (player_data.casts || []).map(cast_data => new Cast(cast_data, time_ref))
         this.casts = this.casts.filter(cast => cast.spell)
 
         // sub events
         this.deaths = (player_data.deaths || []).map(death_data => new Death(player_data, death_data))
         this.resurrections = (player_data.resurrects || []).map(resurrect_data => new Resurrection(player_data, resurrect_data))
+        this.deaths.forEach(event => event.time_ref = time_ref)
+        this.resurrections.forEach(event => event.time_ref = time_ref)
         this.layout_children()
     }
 
@@ -44,7 +47,7 @@ export default class Player extends Konva.Group {
 
         // Rebuild the child list in one pass instead of moveToTop() per cast (O(n) each).
         // Casts are sorted by time, so adding them in order fixes overlaps; deaths and resurrections go on top.
-        const visible_casts = this.casts.filter(cast => cast.spell && cast.visible())
+        const visible_casts = this.casts.filter(cast => cast.spell && cast.visible() && cast.in_range)
 
         this.removeChildren()
         this.add(...visible_casts, ...this.deaths, ...this.resurrections)
@@ -161,10 +164,16 @@ export default class Player extends Konva.Group {
         this.clipWidth((this.row.duration * scale_x) - 1)  // 1px to allow border to show
     }
 
+    _handle_time_map_changed() {
+        this.casts.forEach(cast => cast.update_time())
+        this.layout_children()  // casts whose time was cut out drop out
+    }
+
     handle_event(event_name: string, payload: any) {
         // only concerns casts, and only the rows with toggled casts need a new cache
         if (event_name === constants.EVENT_SPELL_DISPLAY) { return this._handle_spell_display(payload) }
 
+        if (event_name === constants.EVENT_TIME_MAP_CHANGED) { this._handle_time_map_changed() }
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         this.casts.forEach(cast => cast.handle_event(event_name, payload))
         this.deaths.forEach(event => event.handle_event(event_name, payload))

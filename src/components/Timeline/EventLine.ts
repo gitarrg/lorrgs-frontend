@@ -5,6 +5,7 @@ import Konva from "konva"
 import store from "./../../store/store"
 import type Event from "../../types/event"
 import type Stage from "./Stage"
+import { IDENTITY_REF, type TimeMapRef } from "./TimeMap"
 
 
 const ICON_ROOT = `${ASSETS}/images/spells`
@@ -60,6 +61,13 @@ export default class EventLine extends Konva.Group {
     tooltip_content: string
 
     config: EventLineConfig = {}
+
+    /** where on the row the event goes (see `TimeMap`) */
+    time_ref: TimeMapRef = IDENTITY_REF
+
+    // shown: by the display settings, and while its time isn't cut out of the row
+    private shown_by_settings = true
+    private in_range = true
 
 
     // Child objects
@@ -223,7 +231,21 @@ export default class EventLine extends Konva.Group {
     }
 
     _get_text_label() {
-        return toMMSS(this.timestamp)
+        return toMMSS(this.time_ref.current.label(this.timestamp))
+    }
+
+    /** show/hide from the display settings */
+    set_shown(state: boolean) {
+        this.shown_by_settings = state
+        this.visible(this.shown_by_settings && this.in_range)
+    }
+
+    /** Apply the current time map: texts and whether the time is shown (position: see `_handle_zoom_change`) */
+    update_time() {
+        this.in_range = this.time_ref.current.is_in_row(this.timestamp)
+        this.visible(this.shown_by_settings && this.in_range)
+        this.label?.text(this._get_text_label())
+        this.tooltip_content = this._get_text_tooltip()
     }
 
     show_label(visible: boolean) {
@@ -245,7 +267,7 @@ export default class EventLine extends Konva.Group {
         const items: any = {}
         const ed = this.event_data
 
-        items["time"] = toMMSS(this.timestamp)
+        items["time"] = toMMSS(this.time_ref.current.label(this.timestamp))
 
         // 18px is the native size of the "small"-images
         items["icon"] = ed.spell_icon ? `<img src="${ICON_ROOT}/${ed.spell_icon}" width="18px" height="auto">` : ""
@@ -264,7 +286,7 @@ export default class EventLine extends Konva.Group {
     }
 
     _handle_zoom_change(scale_x: number) {
-        this.x(scale_x * this.timestamp)
+        this.x(scale_x * this.time_ref.current.to_display(this.timestamp))
     }
 
     _handle_phase_hover(payload: { state: boolean, name: string }) {
@@ -279,6 +301,7 @@ export default class EventLine extends Konva.Group {
     }
 
     handle_event(event_name: string, payload: any) {
+        if (event_name === constants.EVENT_TIME_MAP_CHANGED) { this.update_time() }
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         if (event_name === constants.EVENT_PHASE_HOVER) { this._handle_phase_hover(payload) }
     }

@@ -20,21 +20,23 @@ import {
 } from "./constants";
 import type Fight from "../../types/fight";
 import type Actor from "../../types/actor";
+import type { TimeMapRef } from "./TimeMap";
 
 
 export default class PlayerRow {
 
-    duration: number
     fight: Fight
+    /** the fight row's time map (see `TimeMap`) */
+    time_ref: TimeMapRef
     foreground: Player
     background: PlayerRowBackground
 
     // latest payload per event received while hidden
     _pending_events: Map<string, any> = new Map()
 
-    constructor(fight: Fight, player: Actor) {
+    constructor(fight: Fight, player: Actor, time_ref: TimeMapRef) {
         this.fight = fight
-        this.duration = Math.ceil(fight.duration / 1000); // ms to s
+        this.time_ref = time_ref
 
         // Groups
         this.foreground = new Player(this, player)
@@ -44,6 +46,11 @@ export default class PlayerRow {
     //////////////////////////////
     // Attributes
     //
+
+    /** length of the row in display time (s) */
+    get duration() {
+        return this.time_ref.current.duration
+    }
 
     visible(value?: boolean) {
 

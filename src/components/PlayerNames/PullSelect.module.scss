@@ -1,0 +1,67 @@
+// same size as a player name, so it lines up with the pull row of the timeline
+.pull_select {
+    width: 175px;
+    height: calc(var(--timeline-height) + 1px);
+
+    border: 1px solid black;
+    background: #1a1a1a;
+    margin-bottom: -1px;  // 1px overlap on border (like the player names)
+}
+
+.button {
+    width: 100%;
+    height: 100%;
+    padding: 0 6px;
+
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    background: none;
+    border: none;
+    color: hsl(0, 0%, 85%);
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &:hover {
+        color: white;
+        background: hsl(0, 0%, 25%);
+    }
+}
+
+.caret {
+    margin-left: auto;
+    opacity: 0.7;
+}
+
+.menu {
+    max-height: 60vh;
+    min-width: 220px;
+
+    // (the global menu style greys out checked items)
+    :global(.szh-menu__item--checked) span:not(.check) {
+        color: inherit !important;
+    }
+}
+
+.check {
+    width: 1.1em;
+    flex-shrink: 0;
+    color: var(--success) !important;  // (see .menu)
+}
+
+.boss {
+    color: #e6b422;
+    font-weight: bold;
+}
+
+.time {
+    margin-left: auto;
+    padding-left: 1rem;
+    opacity: 0.6;
+}

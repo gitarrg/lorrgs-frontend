@@ -8,6 +8,7 @@ import { toMMSS } from "../../utils"
 import type Spell from "../../types/spell"
 import type CastType from "../../types/cast"
 import type Stage from "./Stage"
+import { IDENTITY_REF, type TimeMapRef } from "./TimeMap"
 
 /** simple cache to reuse existing images */
 export const IMAGES: {[key: number]: HTMLImageElement} = {}
@@ -67,6 +68,13 @@ export default class Cast extends Konva.Shape {
     selected: boolean
 
     tooltip_content?: string
+    private counter?: number
+
+    /** where on the row the cast goes (see `TimeMap`) */
+    time_ref: TimeMapRef
+
+    /** false while its time is cut out of the row */
+    in_range = true
 
     // default opacity (might be different for procs)
     _default_opacity: number = 1.0
@@ -78,6 +86,10 @@ export default class Cast extends Konva.Shape {
     private text = ""
     private text_width = 0
     private has_cooldown = false
+
+    // widths of the bars in display time (s): time cut out of the row doesn't count
+    private cooldown_width = 0
+    private duration_width = 0
 
     // which parts are shown (see `_handle_display_settings`)
     private show_icon = true
@@ -94,7 +106,7 @@ export default class Cast extends Konva.Shape {
     private text_fill = "white"
 
 
-    constructor(cast_data: CastType) {
+    constructor(cast_data: CastType, time_ref: TimeMapRef = IDENTITY_REF) {
         super({
             name: "Cast",
             y: 1, // for the background stroke
@@ -107,6 +119,7 @@ export default class Cast extends Konva.Shape {
         const state = store.getState()
 
         // Cast & Spell Info
+        this.time_ref = time_ref
         this.spell_id = cast_data.id;
         this.timestamp = cast_data.ts / 1000;
         this.spell = state.spells.all_spells[this.spell_id];
@@ -120,8 +133,8 @@ export default class Cast extends Konva.Shape {
         if (!this.spell) { return }
 
         this.image = get_image(this.spell)
-        this.text = toMMSS(this.timestamp)
-        this.text_width = measure_text(this.text)
+        this.counter = cast_data.counter
+        this.update_time()
         this.has_cooldown = !!this.spell.cooldown
 
         // Dim procs
@@ -136,14 +149,30 @@ export default class Cast extends Konva.Shape {
         show = (show === undefined) ? this.spell.show : show
         this.visible(show)
 
-        // prepare the tooltip content, as it doesn't change
+    }
+
+    /** Apply the current time map: bar widths and the times shown (position: see `_handle_zoom_change`) */
+    update_time() {
+        const map = this.time_ref.current
+
+        this.in_range = map.is_shown(this.timestamp)
+        this.cooldown_width = map.display_length(this.timestamp, this.spell?.cooldown || 0)
+        this.duration_width = map.display_length(this.timestamp, this._duration || 0)
+
+        if (!this.spell) { return }
+        const time = map.label(this.timestamp)
+        const text = toMMSS(time)
+        if (text !== this.text) {
+            this.text = text
+            this.text_width = measure_text(this.text)
+        }
+
         this.tooltip_content = `${this.spell.name}`
-        this.tooltip_content += cast_data.counter ? ` #${cast_data.counter}` : ""
+        this.tooltip_content += this.counter ? ` #${this.counter}` : ""
         this.tooltip_content += "<br>"
-        this.tooltip_content += `${toMMSS(this.timestamp)}`
+        this.tooltip_content += `${text}`
         if (this._duration > 0) {
-            let end_time = this.timestamp + this._duration;
-            this.tooltip_content += ` - ${toMMSS(end_time)}`
+            this.tooltip_content += ` - ${toMMSS(time + this._duration)}`
         }
     }
 
@@ -175,13 +204,13 @@ export default class Cast extends Konva.Shape {
         if (this.show_cooldown && this.has_cooldown) {
             context.setAttr("globalAlpha", alpha * this.cooldown_opacity)
             context.setAttr("fillStyle", this.spell.color)
-            context.fillRect(0, 0, this.spell.cooldown * this.scale_x, BAR_HEIGHT)
+            context.fillRect(0, 0, this.cooldown_width * this.scale_x, BAR_HEIGHT)
         }
 
         if (this.show_duration && this._duration) {
             context.setAttr("globalAlpha", alpha * this.duration_opacity)
             context.setAttr("fillStyle", this.spell.color)
-            context.fillRect(0, 0, this._duration * this.scale_x, BAR_HEIGHT)
+            context.fillRect(0, 0, this.duration_width * this.scale_x, BAR_HEIGHT)
         }
 
         if (this.show_icon) {
@@ -211,7 +240,7 @@ export default class Cast extends Konva.Shape {
         let width = 0
         if (this.show_text) { width = TEXT_X + this.text_width + TEXT_PADDING }
         else if (this.show_icon) { width = TEXT_X }
-        else if (this.show_duration) { width = this._duration * this.scale_x }
+        else if (this.show_duration) { width = this.duration_width * this.scale_x }
         if (!width) { return }
 
         // with the icon hidden, the text starts at the same place
@@ -262,7 +291,7 @@ export default class Cast extends Konva.Shape {
     }
 
     _handle_zoom_change(scale_x: number) {
-        this.x(scale_x * this.timestamp)
+        this.x(scale_x * this.time_ref.current.to_display(this.timestamp))
         this.scale_x = scale_x
     }
 
