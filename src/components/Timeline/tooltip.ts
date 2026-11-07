@@ -2,7 +2,7 @@
 import store from "../../store/store"
 import * as constants from "./constants"
 import { toMMSS } from "../../utils"
-import { get_pull_label } from "../../pulls"
+import { BOSS_PULL_COLOR, PULL_COLOR, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type { TimeMapRef } from "./TimeMap"
 
@@ -10,13 +10,14 @@ import type { TimeMapRef } from "./TimeMap"
 /**
  * A structured tooltip:
  *
- *     02:22  0:35 into Pull #3        <- time, time_detail
  *     [icon] Wild Growth #4           <- icon, title
+ *     02:22  35s into Pull #3         <- time, time_detail, time_pull (in the pull's colour)
  *     45s    since the last cast      <- lines
  */
 export type TooltipInfo = {
     time?: string
     time_detail?: string
+    time_pull?: { name: string, color: string }
     icon?: string
     title?: string
     title_color?: string
@@ -54,7 +55,7 @@ export function get_pull_at(pulls: Pull[] | undefined, t: number): { pull: Pull,
 
 
 /** The time line of a tooltip at `t` (run time, seconds): as labelled on the row, and how far into its pull. */
-export function get_time_info(time_ref: TimeMapRef, t: number): Pick<TooltipInfo, "time" | "time_detail"> {
+export function get_time_info(time_ref: TimeMapRef, t: number): Pick<TooltipInfo, "time" | "time_detail" | "time_pull"> {
     const time = toMMSS(time_ref.current.label(t))
 
     const pulls = time_ref.pulls
@@ -64,5 +65,12 @@ export function get_time_info(time_ref: TimeMapRef, t: number): Pick<TooltipInfo
     if (!found) { return { time, time_detail: "between pulls" } }
 
     const into = t - found.pull.start / 1000
-    return { time, time_detail: `${format_duration(into)} into ${get_pull_label(found.pull, found.index)}` }
+    return {
+        time,
+        time_detail: `${format_duration(into)} into`,
+        time_pull: {
+            name: get_pull_label(found.pull, found.index),
+            color: found.pull.boss ? BOSS_PULL_COLOR : PULL_COLOR,
+        },
+    }
 }

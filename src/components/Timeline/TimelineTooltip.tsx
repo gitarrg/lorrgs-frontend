@@ -22,17 +22,20 @@ const TOOLTIP_DELAY = 500
 
 function TooltipBody({ info }: { info: TooltipInfo }) {
     return <>
-        {info.time && (
-            <div className={styles.time}>
-                <span>{info.time}</span>
-                {info.time_detail && <span className={styles.muted}>{info.time_detail}</span>}
-            </div>
-        )}
-
         {info.title && (
             <div className={styles.title} style={{ color: info.title_color }}>
                 {info.icon && <img className={styles.icon} src={info.icon} alt="" />}
                 <span>{info.title}</span>
+            </div>
+        )}
+
+        {info.time && (
+            <div className={styles.time}>
+                <span>{info.time}</span>
+                {info.time_detail && <span className={styles.muted}>
+                    {info.time_detail}
+                    {info.time_pull && <> <span style={{ color: info.time_pull.color }}>{info.time_pull.name}</span></>}
+                </span>}
             </div>
         )}
 

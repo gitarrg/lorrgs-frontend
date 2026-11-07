@@ -258,6 +258,8 @@ export default class PullRow {
             const duration = (pull.end - pull.start) / 1000
             const end = start + map.display_length(pull.start / 1000, duration)
             info.title = get_pull_label(pull, index)
+            info.time_detail = `(${format_duration(t - pull.start / 1000)} in)`
+            info.time_pull = undefined
             info.title_color = pull.boss ? BOSS_PULL_COLOR : PULL_COLOR
             info.lines = [{ value: `${toMMSS(start)} - ${toMMSS(end)}`, label: `(${format_duration(duration)})` }]
         }
