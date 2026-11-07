@@ -293,15 +293,6 @@ const SLICE = createSlice({
             return state
         },
 
-        /** select/deselect a single pull of a run */
-        toggle_pull: (state, action: PayloadAction<{ run_key: string, index: number }>) => {
-            const { run_key, index } = action.payload
-            const selected = state.pull_selection[run_key] || []
-            state.pull_selection[run_key] = selected.includes(index)
-                ? selected.filter(i => i != index)
-                : [...selected, index].sort((a, b) => a - b)
-            return state
-        },
 
         set_show_copynote: (state, action: PayloadAction<boolean>) => {
             state.show_copynote = action.payload
@@ -334,7 +325,6 @@ export const {
     set_spec_slug,
     set_tooltip,
     set_pull_selection,
-    toggle_pull,
     update_settings,
     set_show_copynote,
     set_copynote_player,

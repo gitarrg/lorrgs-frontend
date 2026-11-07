@@ -1,5 +1,6 @@
 /*
 The row above a dungeon run: its pulls as bands, with a ruler on top.
+Each band has a strip along its top with the pull's name ("Pull #n", or the boss).
 
 Drawn by a single shape (bands, ticks and timestamps), so zooming only redraws it.
 Everything is positioned through the fight row's `TimeMap`, so cropping and cut out time
@@ -13,7 +14,7 @@ import * as constants from "./constants"
 import store from "../../store/store"
 import { toMMSS } from "../../utils"
 import { level_for_scale } from "./ruler_levels"
-import { BOSS_PULL_COLOR, PULL_COLOR, get_pull_label } from "./PullMarker"
+import { BOSS_PULL_COLOR, PULL_COLOR, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type { TimeMapRef } from "./TimeMap"
 import type Stage from "./Stage"
@@ -23,7 +24,15 @@ const HEIGHT = constants.LINE_HEIGHT
 const BAND_OPACITY = 0.35
 const BAND_OPACITY_SELECTED = 0.6
 const TEXT_COLOR = "white"
-const FONT = "12px Lato"
+const FONT = "11px Lato"
+
+/** the strip with the pull's name, along the top of each band */
+const STRIP_HEIGHT = 12
+const STRIP_OPACITY = 0.85
+const STRIP_FONT = "bold 10px Lato"
+const STRIP_TEXT_COLOR = "black"
+/** below this width a strip has no text */
+const MIN_STRIP_TEXT_WIDTH = 14
 
 /** min. px between two timestamps (eg. left and right of a cut) */
 const MIN_TEXT_SPACING = 40
@@ -113,6 +122,8 @@ export default class PullRow {
             context.moveTo(Math.round(x0) + 0.5, 1)
             context.lineTo(Math.round(x0) + 0.5, HEIGHT)
             context.stroke()
+
+            this.draw_strip(context, get_pull_label(pull, i), color, x0, x1)
         })
         context.setAttr("globalAlpha", 1)
 
@@ -139,6 +150,33 @@ export default class PullRow {
         context.stroke()
     }
 
+    /** the strip along the top of a band, with the pull's name (cut short to fit) */
+    private draw_strip(context: Context, text: string, color: string, x0: number, x1: number) {
+        const width = x1 - x0
+
+        context.setAttr("globalAlpha", STRIP_OPACITY)
+        context.setAttr("fillStyle", color)
+        context.fillRect(x0, 1, width, STRIP_HEIGHT)
+        context.setAttr("globalAlpha", 1)
+
+        const max_width = width - 6
+        if (width < MIN_STRIP_TEXT_WIDTH) { return }
+
+        context.setAttr("font", STRIP_FONT)
+        context.setAttr("fillStyle", STRIP_TEXT_COLOR)
+        context.setAttr("textAlign", "left")
+        context.setAttr("textBaseline", "middle")
+
+        let label = text
+        if (context.measureText(label).width > max_width) {
+            while (label.length > 1 && context.measureText(label + "…").width > max_width) {
+                label = label.slice(0, -1)
+            }
+            label = label + "…"
+        }
+        context.fillText(label, x0 + 3, 1 + STRIP_HEIGHT / 2 + 0.5)
+    }
+
     /** ticks and timestamps like the main `Ruler`, in the labels of the time map (run or pull time) */
     private draw_ticks(context: Context) {
         const map = this.time_ref.current
@@ -150,7 +188,7 @@ export default class PullRow {
         context.setAttr("fillStyle", TEXT_COLOR)
         context.setAttr("lineWidth", 1)
         context.setAttr("font", FONT)
-        context.setAttr("textAlign", "center")
+        context.setAttr("textAlign", "left")
         context.setAttr("textBaseline", "alphabetic")
 
         let last_text_x = -Infinity
@@ -170,10 +208,8 @@ export default class PullRow {
                 context.stroke()
 
                 if (big && x - last_text_x >= MIN_TEXT_SPACING) {
-                    // keep the first timestamp inside the row
-                    const text = toMMSS(t)
-                    const half = context.measureText(text).width / 2
-                    context.fillText(text, Math.max(x, half + 2), HEIGHT - 10)
+                    // right of the tick, below the strips
+                    context.fillText(toMMSS(t), x + 3, HEIGHT - 3)
                     last_text_x = x
                 }
             }

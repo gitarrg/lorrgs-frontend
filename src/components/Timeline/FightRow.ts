@@ -2,8 +2,7 @@
 
 This basically just wraps a number of Boss/Player Rows.
 
-Dungeon runs with pulls also get a `PullRow` above the players, a `PullMarker` at the start of each pull,
-and can be cropped to some of their pulls. Everything on the row goes through the row's `TimeMap`
+Dungeon runs with pulls also get a `PullRow` above the players, and can be cropped to some of their pulls. Everything on the row goes through the row's `TimeMap`
 (`time_ref`) to turn the time of an event into its position.
 
 */
@@ -15,7 +14,6 @@ import filter_logic from "../../filter_logic";
 import Konva from "konva";
 import PhaseMarker from "./PhaseMarker";
 import PlayerRow from "./PlayerRow";
-import PullMarker from "./PullMarker";
 import PullRow from "./PullRow";
 import TimeMap, { type TimeMapRef } from "./TimeMap";
 import { get_run_key } from "../../store/ui";
@@ -64,7 +62,6 @@ export default class FightRow {
 
     // dungeon runs
     pull_row?: PullRow
-    pull_markers: PullMarker[] = []
     /** greys out the time between the selected pulls, and marks cut out time */
     dim_shape: Konva.Shape
     private rows_height = 0
@@ -109,14 +106,6 @@ export default class FightRow {
             this.pull_row = new PullRow(pulls, this.time_ref)
             this.background.add(this.pull_row.shape)
             this.overlay.add(this.pull_row.bbox)
-
-            this.pull_markers = pulls.map((pull, i) => {
-                const marker = new PullMarker(pull, i, this.run_key)
-                marker.time_ref = this.time_ref
-                marker.update_time()  // labels/tooltip in the current map
-                this.overlay.add(marker)
-                return marker
-            })
         }
 
         this.dim_shape = new Konva.Shape({
@@ -126,7 +115,7 @@ export default class FightRow {
             sceneFunc: (context) => this.draw_dim(context),
         })
         this.overlay.add(this.dim_shape)
-        this.dim_shape.moveToBottom()  // below the markers
+        this.dim_shape.moveToBottom()  // below the phase markers
 
         this.layout_children()
     }
@@ -172,7 +161,6 @@ export default class FightRow {
 
         this.killtime_text.y(top)
         this.phases.forEach(phase => { phase.y(top); phase.set_height(y - top) })
-        this.pull_markers.forEach(marker => { marker.y(top); marker.set_height(y - top) })
     }
 
     /** grey out the time between the selected pulls, and mark where time was cut out (in the overlay) */
@@ -344,7 +332,6 @@ export default class FightRow {
         this.rows.forEach(child => child.handle_event(event_name, payload))
         this.phases.forEach(child => child.handle_event(event_name, payload))
         this.pull_row?.handle_event(event_name, payload)
-        this.pull_markers.forEach(child => child.handle_event(event_name, payload))
 
         // postprocess after filters applied (in case height change due to child rows updating)
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_post() }

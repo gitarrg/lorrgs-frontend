@@ -14,12 +14,6 @@ const OPTIONS: { key: ViewSettingToggle, label: string }[] = [
 ]
 
 
-const TIMESTAMP_OPTIONS: { value: "run" | "pull", label: string }[] = [
-    { value: "run", label: "Timestamps: run time" },
-    { value: "pull", label: "Timestamps: pull time (from the first selected pull)" },
-]
-
-
 /** Cog with a popover to switch how pulls and players link up on the selection page. */
 export default function ViewSettings() {
 
@@ -70,26 +64,6 @@ export default function ViewSettings() {
                                 type="checkbox"
                                 checked={settings[option.key]}
                                 onChange={event => dispatch(set_view_setting(option.key, event.target.checked))}
-                            />
-                            {option.label}
-                        </label>
-                    ))}
-
-                    <div className={styles.title}>Dungeon runs</div>
-                    <label className={styles.option}>
-                        <input
-                            type="checkbox"
-                            checked={settings.hide_unselected_pulls}
-                            onChange={event => dispatch(set_view_setting("hide_unselected_pulls", event.target.checked))}
-                        />
-                        Hide unselected pulls (instead of dimming them)
-                    </label>
-                    {TIMESTAMP_OPTIONS.map(option => (
-                        <label key={option.value} className={styles.option}>
-                            <input
-                                type="radio"
-                                checked={settings.timestamps == option.value}
-                                onChange={() => dispatch(set_view_setting("timestamps", option.value))}
                             />
                             {option.label}
                         </label>

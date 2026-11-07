@@ -1,67 +1,138 @@
-// same size as a player name, so it lines up with the pull row of the timeline
-.pull_select {
+// The pull row of a dungeon run, in the name column (see `PullSelect`).
+// Colours match the pull bands on the timeline (see `PullRow`).
+
+.container {
+    position: relative;
     width: 175px;
     height: calc(var(--timeline-height) + 1px);
 
-    border: 1px solid black;
-    background: #1a1a1a;
-    margin-bottom: -1px;  // 1px overlap on border (like the player names)
+    & + :global(*) {
+        margin-top: -1px;  // 1px overlap on border, like the player names
+    }
 }
 
 .button {
     width: 100%;
     height: 100%;
-    padding: 0 6px;
+    padding: 0 6px 0 4px;
 
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 0.25rem;
 
-    background: none;
-    border: none;
-    color: hsl(0, 0%, 85%);
+    background: hsl(0, 0%, 20%);
+    border: 1px solid black;
+    color: hsl(0, 0%, 80%);
     font-size: 0.9rem;
     text-align: left;
-    cursor: pointer;
 
+    &:hover,
+    &.open {
+        background: hsl(0, 0%, 30%);
+        color: white;
+    }
+}
+
+.summary {
+    flex-grow: 1;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.popover {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    z-index: 100;
+
+    width: 26rem;
+    max-width: 80vw;
+    padding: 0.5rem 0.6rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-weight: bold;
+}
+
+.hint {
+    flex-grow: 1;
+    font-size: 0.75rem;
+    font-weight: normal;
+    opacity: 0.6;
+}
+
+.clear {
+    padding: 0 0.5rem;
+    background: transparent;
+    border: 1px solid hsl(0, 0%, 50%);
+    border-radius: 3px;
+    color: inherit;
+    font-weight: normal;
+
+    &:disabled {
+        opacity: 0.4;
+    }
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+// like the chips of the pull/player tooltips (see `FightPlayerLinks.module.scss`)
+.chip {
+    --chip-color: #5b9bd5;  // PULL_COLOR
+
+    display: flex;
+    gap: 0.4em;
+    align-items: baseline;
+    padding: 0 0.4em;
+
+    background: hsl(0, 0%, 17%);
+    border: 1px solid var(--chip-color);
+    border-radius: 3px;
+    color: hsl(0, 0%, 85%);
+    white-space: nowrap;
+    user-select: none;
 
     &:hover {
         color: white;
         background: hsl(0, 0%, 25%);
     }
-}
 
-.caret {
-    margin-left: auto;
-    opacity: 0.7;
-}
+    &.boss {
+        --chip-color: #e6b422;  // BOSS_PULL_COLOR
+    }
 
-.menu {
-    max-height: 60vh;
-    min-width: 220px;
-
-    // (the global menu style greys out checked items)
-    :global(.szh-menu__item--checked) span:not(.check) {
-        color: inherit !important;
+    &.selected {
+        color: white;
+        background: color-mix(in srgb, var(--chip-color) 45%, black);
     }
 }
 
-.check {
-    width: 1.1em;
-    flex-shrink: 0;
-    color: var(--success) !important;  // (see .menu)
-}
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.85rem;
 
-.boss {
-    color: #e6b422;
-    font-weight: bold;
-}
-
-.time {
-    margin-left: auto;
-    padding-left: 1rem;
-    opacity: 0.6;
+    label {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0;
+        cursor: pointer;
+        user-select: none;
+    }
 }
