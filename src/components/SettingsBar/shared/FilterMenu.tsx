@@ -112,7 +112,7 @@ export default function FilterMenu({ icon, label, active, count, on_clear, extra
     ////////////////////////////////////////////////////////////////////////////
     // Render
     const icon_props = {
-        className: `button icon-s rounded border ${styles.icon} ${active ? styles.active : ""}`,
+        className: `button icon-m rounded border ${styles.icon} ${active ? styles.active : ""}`,
         onClick: on_icon_click,
         onContextMenu: (event: React.MouseEvent) => {
             if (!on_clear) { return }

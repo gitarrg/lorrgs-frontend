@@ -1,0 +1,5 @@
+// close together, so they read as one group (without the background of the other groups)
+.icons {
+    display: flex;
+    gap: 2px;
+}
