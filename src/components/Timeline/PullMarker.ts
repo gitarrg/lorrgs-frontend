@@ -47,7 +47,6 @@ export default class PullMarker extends EventLine {
 
     constructor(pull: Pull, index: number, run_key: string, config: EventLineConfig = {}) {
 
-
         const text = get_pull_label(pull, index)
         const width = label_width(text)
         const boss = !!pull.boss
@@ -109,6 +108,7 @@ export default class PullMarker extends EventLine {
     private handle_mousedown(event: Konva.KonvaEventObject<MouseEvent>) {
         if (event.evt.button != 0) { return }
         event.cancelBubble = true  // no stage drag
+        this.hover(false)  // the row is about to change under the pointer
         const { run_key, index } = this.event_data
         store.dispatch(toggle_pull({ run_key, index }))
     }

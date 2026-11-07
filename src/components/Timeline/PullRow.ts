@@ -170,7 +170,10 @@ export default class PullRow {
                 context.stroke()
 
                 if (big && x - last_text_x >= MIN_TEXT_SPACING) {
-                    context.fillText(toMMSS(t), x, HEIGHT - 10)
+                    // keep the first timestamp inside the row
+                    const text = toMMSS(t)
+                    const half = context.measureText(text).width / 2
+                    context.fillText(text, Math.max(x, half + 2), HEIGHT - 10)
                     last_text_x = x
                 }
             }
