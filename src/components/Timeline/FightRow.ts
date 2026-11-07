@@ -2,7 +2,7 @@
 
 This basically just wraps a number of Boss/Player Rows.
 
-Dungeon runs with pulls also get a `PullRow` above the players, and can be cropped to some of their pulls. Everything on the row goes through the row's `TimeMap`
+Dungeon runs with pulls also get a `PullRow` above the row (in the gap/ruler space next to the run's info), and can be cropped to some of their pulls. Everything on the row goes through the row's `TimeMap`
 (`time_ref`) to turn the time of an event into its position.
 
 */
@@ -103,7 +103,10 @@ export default class FightRow {
         // Pulls (dungeon runs)
         const pulls = fight_data.pulls || []
         if (pulls.length) {
+            // above the row, next to the run's info in the names column (where the shared ruler is for the first fight)
             this.pull_row = new PullRow(pulls, this.time_ref)
+            this.pull_row.shape.y(-this.pull_row.height())
+            this.pull_row.bbox.y(-this.pull_row.height())
             this.background.add(this.pull_row.shape)
             this.overlay.add(this.pull_row.bbox)
         }
@@ -149,31 +152,29 @@ export default class FightRow {
 
     layout_children() {
 
-        // the pull row goes on top
-        const top = this.pull_row?.height() ?? 0
-
-        let y = top // accumulate the height over time, to take into account visibility
+        let y = 0 // accumulate the height over time, to take into account visibility
         this.rows.forEach((row) => {
             row.y(y)
             y += row.height()
         })
-        this.rows_height = y - top
+        this.rows_height = y
 
-        this.killtime_text.y(top)
-        this.phases.forEach(phase => { phase.y(top); phase.set_height(y - top) })
+        this.phases.forEach(phase => { phase.set_height(y) })
     }
 
     /** grey out the time between the selected pulls, and mark where time was cut out (in the overlay) */
     private draw_dim(context: Context) {
         const map = this.time_ref.current
         const s = this.scale_x
-        const height = (this.pull_row?.height() ?? 0) + this.rows_height
+        // (the pull row sits above the row)
+        const top = -(this.pull_row?.height() ?? 0)
+        const height = this.rows_height - top
 
         context.setAttr("fillStyle", "rgba(0, 0, 0, 0.6)")
         map.dimmed.forEach(range => {
             const x0 = map.to_display(range.start) * s
             const x1 = map.to_display(range.end) * s
-            context.fillRect(x0, 0, x1 - x0, height)
+            context.fillRect(x0, top, x1 - x0, height)
         })
 
         // cuts: dashed line through the whole run
@@ -183,8 +184,8 @@ export default class FightRow {
         map.breaks.forEach(d => {
             const x = Math.round(d * s) + 0.5
             context.beginPath()
-            context.moveTo(x, 0)
-            context.lineTo(x, height)
+            context.moveTo(x, top)
+            context.lineTo(x, this.rows_height)
             context.stroke()
         })
         context.setLineDash([])
@@ -233,7 +234,7 @@ export default class FightRow {
     height(): number {
         if (!this._visible) { return 0 }
         const heights = this.rows.map(row => row.height())
-        return heights.reduce((a, b) => a + b, this.pull_row?.height() ?? 0)
+        return heights.reduce((a, b) => a + b, 0)
     }
 
     y(y: number) {

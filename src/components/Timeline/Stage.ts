@@ -140,10 +140,10 @@ export default class Stage extends Konva.Stage {
 
     layout_children() {
 
-        // the shared ruler is only needed for fights without their own (see `PullRow`).
-        // (keeps its space: the names column shows the first fight's info next to it)
-        const visible_rows = this.rows.filter(row => row.visible())
-        this.ruler.set_shown(visible_rows.length == 0 || visible_rows.some(row => !row.has_pull_row()))
+        // a dungeon run's pull row sits where the ruler is when it is the first fight (see `PullRow`).
+        // (the ruler keeps its space: the names column shows the first fight's info next to it)
+        const first_row = this.rows.find(row => row.visible())
+        this.ruler.set_shown(!first_row?.has_pull_row())
 
         let y = this.ruler.height()
 

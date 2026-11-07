@@ -4,6 +4,7 @@ import styles from "./PullSelect.module.scss"
 import { get_pull_label, get_pull_time_info } from "../../pulls"
 import { get_pull_selection, get_run_key, set_pull_selection } from "../../store/ui"
 import { get_view_settings, set_view_setting } from "../../store/report_links"
+import { toMMSS } from "../../utils"
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import type Fight from "../../types/fight"
 import type { Pull } from "../../types/fight"
@@ -18,7 +19,7 @@ function get_summary(pulls: Pull[], selected: number[]) {
 
 
 /**
- * Names column cell next to the `PullRow` of a dungeon run: picks the pulls the timeline shows,
+ * Dropdown in the `DungeonInfo` of a dungeon run: picks the pulls the timeline shows,
  * and how the others show (dimmed or hidden) and which timestamps.
  * Click a pull to toggle it, Shift+click to select all pulls up to it. Nothing selected = the whole run.
  */
@@ -80,6 +81,7 @@ export default function PullSelect({ fight }: { fight: Fight }) {
                 title="Select the pulls to show"
             >
                 <span className={styles.summary}>{get_summary(pulls, selected)}</span>
+                {selected.length == 0 && <span className={styles.duration}>{toMMSS(fight.duration / 1000)}</span>}
                 <FaCaretDown />
             </button>
 

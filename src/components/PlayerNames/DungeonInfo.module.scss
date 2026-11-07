@@ -1,0 +1,46 @@
+// like the `FightInfo` it replaces for dungeon runs
+.container {
+    width: 175px;
+    height: 28px; // fixed height, like FightInfo
+
+    display: flex;
+    align-items: stretch;
+
+    background: #222;
+    border: 1px solid black;
+    border-top-left-radius: 0.25rem;
+}
+
+.icon_link {
+    flex-shrink: 0;
+    width: 26px;
+    border-right: 1px solid black;
+    overflow: hidden;
+    border-top-left-radius: 0.25rem;
+}
+
+.icon {
+    width: 26px;
+    height: 26px;
+    display: block;
+}
+
+.no_pulls {
+    flex-grow: 1;
+    min-width: 0;
+    padding: 0 6px 0 4px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+
+    color: hsl(0, 0%, 80%);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+
+    span {
+        opacity: 0.7;
+    }
+}

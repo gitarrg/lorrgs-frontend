@@ -3,7 +3,7 @@ import styles from "./PlayerName.module.scss"
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 import { FightInfo } from "./FightInfo";
-import PullSelect from "./PullSelect";
+import { DungeonInfo } from "./DungeonInfo";
 import { PlayerName, BossName} from "./PlayerName"
 
 
@@ -30,8 +30,7 @@ function PlayerNamesFight( {fight} : {fight: Fight} ) {
     return (
         <div className={styles.fight}>
             <div>
-                <FightInfo fight={fight} />
-                <PullSelect fight={fight} />
+                {fight.dungeon && !fight.boss?.boss_slug ? <DungeonInfo fight={fight} /> : <FightInfo fight={fight} />}
                 {create_boss(fight)}
                 {create_players(fight)}
             </div>
