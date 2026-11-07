@@ -261,7 +261,7 @@ export default class PullRow {
             info.time_detail = `(${format_duration(t - pull.start / 1000)} in)`
             info.time_pull = undefined
             info.title_color = pull.boss ? BOSS_PULL_COLOR : PULL_COLOR
-            info.lines = [{ value: `${toMMSS(start)} - ${toMMSS(end)}`, label: `(${format_duration(duration)})` }]
+            info.title_detail = `${toMMSS(start)} - ${toMMSS(end)} (${format_duration(duration)})`
         }
 
         // anchor above the pointer

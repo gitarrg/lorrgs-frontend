@@ -26,6 +26,7 @@ function TooltipBody({ info }: { info: TooltipInfo }) {
             <div className={styles.title} style={{ color: info.title_color }}>
                 {info.icon && <img className={styles.icon} src={info.icon} alt="" />}
                 <span>{info.title}</span>
+                {info.title_detail && <span className={styles.title_detail}>{info.title_detail}</span>}
             </div>
         )}
 

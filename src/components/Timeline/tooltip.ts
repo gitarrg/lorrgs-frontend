@@ -10,7 +10,7 @@ import type { TimeMapRef } from "./TimeMap"
 /**
  * A structured tooltip:
  *
- *     [icon] Wild Growth #4           <- icon, title
+ *     [icon] Wild Growth #4           <- icon, title, title_detail
  *     02:22  35s into Pull #3         <- time, time_detail, time_pull (in the pull's colour)
  *     45s    since the last cast      <- lines
  */
@@ -21,6 +21,8 @@ export type TooltipInfo = {
     icon?: string
     title?: string
     title_color?: string
+    /** next to the title, eg. a pull's times */
+    title_detail?: string
     lines?: { value: string, label: string }[]
 }
 
