@@ -18,6 +18,8 @@ export interface EventLineConfig {
     color_hover?: string
     color_active?: string
 
+    line_width?: number
+
     // Label
     label?: {
         show?: boolean
@@ -111,7 +113,7 @@ export default class EventLine extends Konva.Group {
                 constants.LINE_HEIGHT,
             ],
             stroke: this.color,
-            strokeWidth: 2,
+            strokeWidth: config.line_width ?? 2,
             transformsEnabled: "none",
         })
         this.add(this.line)

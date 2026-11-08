@@ -25,6 +25,7 @@ export default class PhaseMarker extends EventLine {
             color: PHASE_COLOR,
             color_hover: "#17e67f",
             color_active: "#0FF",
+            line_width: 1,
 
             label: { show: false },
             label_background: { show: false },
