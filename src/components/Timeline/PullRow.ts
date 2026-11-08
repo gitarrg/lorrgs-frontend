@@ -51,11 +51,18 @@ const MIN_STRIP_TEXT_WIDTH = 14
 const ANCHOR_COLOR = "#0FF"
 /** phase labels: under the pointer (same as a hovered phase marker) */
 const PHASE_HOVER_COLOR = "#17e67f"
-/** px a phase label's gradient takes to fade out, after the name */
-const PHASE_FADE = 40
+/** phases starting before this (ms) are "on pull": no label */
+const MIN_PHASE_START = 1000
 
 /** min. px between two timestamps (eg. left and right of a cut) */
 const MIN_TEXT_SPACING = 40
+
+
+/** "#rrggbb" as "rgba(r, g, b, alpha)" */
+function rgba(color: string, alpha: number) {
+    const n = parseInt(color.slice(1), 16)
+    return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
+}
 
 
 export default class PullRow {
@@ -71,6 +78,8 @@ export default class PullRow {
     readonly is_phases: boolean
     /** where the runs are aligned on a phase (kind "phase": see `Stage.get_anchor`). ts 0: not aligned */
     private phase_anchor?: { name: string, ts: number }
+    /** the phase whose line in a row is under the pointer */
+    private hovered_phase?: string
 
     /** pixels per second */
     private scale_x = constants.DEFAULT_ZOOM
@@ -156,13 +165,25 @@ export default class PullRow {
                 x1: map.to_x(pull.end / 1000, s),
                 color: get_pull_color(pull),
             }))
-            .filter(band => band.x1 > band.x0)
+            // (phases: not the one the fight starts in, "on pull" has no label)
+            .filter(band => band.x1 > band.x0 && !(this.is_phases && band.pull.start < MIN_PHASE_START))
+            .map(band => ({ ...band, color: this.tint(band.color, band.pull, band.i) }))
 
-        // bands: behind the ticks (phases: only the labels, see `draw_phase_label`)
+        // bands: behind the ticks
         const draw_band = ({ i, x0, x1, color }: typeof bands[number]) => {
             const selected = this.selected.has(i)
-            context.setAttr("globalAlpha", selected ? BAND_OPACITY_SELECTED : BAND_OPACITY)
-            context.setAttr("fillStyle", color)
+            const alpha = selected ? BAND_OPACITY_SELECTED : BAND_OPACITY
+            context.setAttr("globalAlpha", this.is_phases ? 1 : alpha)
+            if (this.is_phases) {
+                // phases: fades out (no downtime between them), unless highlighted
+                const highlighted = this.is_highlighted(i)
+                const gradient = context.createLinearGradient(x0, 0, x1, 0)
+                gradient.addColorStop(0, rgba(color, highlighted ? BAND_OPACITY_SELECTED : alpha))
+                gradient.addColorStop(1, rgba(color, highlighted ? BAND_OPACITY_SELECTED : 0))
+                context.setAttr("fillStyle", gradient)
+            } else {
+                context.setAttr("fillStyle", color)
+            }
             context.fillRect(x0, 1, x1 - x0, HEIGHT - 1)
 
             // edges
@@ -174,7 +195,7 @@ export default class PullRow {
             context.lineTo(Math.round(x0) + 0.5, HEIGHT)
             context.stroke()
         }
-        if (!this.is_phases) { bands.forEach(draw_band) }
+        bands.forEach(draw_band)
         context.setAttr("globalAlpha", 1)
 
         // the pull the runs are aligned on: its start
@@ -193,10 +214,7 @@ export default class PullRow {
 
         // names: in front of the ticks
         bands.forEach(({ pull, i, x0, x1, color }) => {
-            const label = get_pull_label(pull, i)
-            if (!this.is_phases) { return this.draw_strip(context, label, color, x0, x1, i === this.hovered) }
-            const active = this.phase_anchor?.name == label
-            this.draw_phase_label(context, label, active ? ANCHOR_COLOR : i === this.hovered ? PHASE_HOVER_COLOR : color, x0, x1)
+            this.draw_strip(context, get_pull_label(pull, i), color, x0, x1, !this.is_phases && i === this.hovered)
         })
 
         // bottom line
@@ -246,30 +264,15 @@ export default class PullRow {
         context.fillText(label, x0 + 3, 1 + STRIP_HEIGHT / 2 + 0.5)
     }
 
-    /** a phase's name at its start: on a background that fades out to the right */
-    private draw_phase_label(context: Context, text: string, color: string, x0: number, x1: number) {
-        context.setAttr("font", STRIP_FONT)
-        const text_width = context.measureText(text).width + 6
-        const width = Math.min(x1 - x0, text_width + PHASE_FADE)
-        if (width < MIN_STRIP_TEXT_WIDTH) { return }
+    /** phases: cyan if the runs are aligned on it, green if highlighted (hovered here, or its line in a row) */
+    private tint(color: string, pull: Pull, index: number) {
+        if (!this.is_phases) { return color }
+        if (this.phase_anchor?.ts && this.phase_anchor.name == pull.name) { return ANCHOR_COLOR }
+        return this.is_highlighted(index) ? PHASE_HOVER_COLOR : color
+    }
 
-        const rgb = (alpha: number) => {
-            const n = parseInt(color.slice(1), 16)
-            return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
-        }
-        const solid = Math.min(text_width / width, 1)
-        const gradient = context.createLinearGradient(x0, 0, x0 + width, 0)
-        gradient.addColorStop(0, rgb(STRIP_OPACITY))
-        gradient.addColorStop(solid, rgb(STRIP_OPACITY))
-        gradient.addColorStop(1, rgb(0))
-        context.setAttr("fillStyle", gradient)
-        context.fillRect(x0, 1, width, STRIP_HEIGHT)
-
-        if (width < text_width) { return }
-        context.setAttr("fillStyle", STRIP_TEXT_COLOR)
-        context.setAttr("textAlign", "left")
-        context.setAttr("textBaseline", "middle")
-        context.fillText(text, x0 + 3, 1 + STRIP_HEIGHT / 2 + 0.5)
+    private is_highlighted(index: number) {
+        return index === this.hovered || (this.hovered_phase !== undefined && this.hovered_phase == this.pulls[index]?.name)
     }
 
     /** ticks and timestamps like the main `Ruler`, in the labels of the time map (run or pull time) */
@@ -432,5 +435,11 @@ export default class PullRow {
     handle_event(event_name: string, payload: any) {
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         if (event_name === constants.EVENT_ANCHOR_CHANGED) { this.handle_anchor_changed(payload) }
+        if (event_name === constants.EVENT_PHASE_HOVER && this.is_phases) { this.handle_phase_hover(payload) }
+    }
+
+    private handle_phase_hover({ state, name }: { state: boolean, name: string }) {
+        this.hovered_phase = state ? name : undefined
+        this.shape.getLayer()?.batchDraw()
     }
 }

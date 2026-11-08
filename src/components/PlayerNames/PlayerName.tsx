@@ -103,7 +103,7 @@ export function BossName({ fight, boss }: { fight: Fight; boss: Actor }) {
             {card_anchor && phases.length > 0 && (
                 <BossPhaseCard
                     fight={fight}
-                    boss_name={boss_type.name}
+                    boss_name={boss_type.full_name || boss_type.name}
                     icon_path={boss_type.icon_path}
                     phases={phases}
                     anchor={card_anchor}

@@ -125,6 +125,17 @@ export default function BossPhaseCard({ boss_name, icon_path, phases, anchor, on
                     </select>
                     unselected phases
                 </label>
+                <label>
+                    Time relative to
+                    <select
+                        className={styles.select}
+                        value={settings.timestamps}
+                        onChange={event => dispatch(set_view_setting("timestamps", event.target.value as "run" | "pull"))}
+                    >
+                        <option value="run">Pull start</option>
+                        <option value="pull">First selected phase</option>
+                    </select>
+                </label>
             </div>
         </div>,
         document.body,

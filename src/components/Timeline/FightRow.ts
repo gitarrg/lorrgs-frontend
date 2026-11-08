@@ -232,7 +232,8 @@ export default class FightRow {
             pulls: phases ? this.phase_spans : this._fight_data.pulls,
             selected,
             hide_unselected: view.hide_unselected,
-            pull_time: phases || view.pull_time,  // phases start at different times in each fight: count from the first selected one
+            keep_end: phases,
+            pull_time: view.pull_time,
         })
         this.pull_row.set_selected(selected)
         this.time_ref.current = map

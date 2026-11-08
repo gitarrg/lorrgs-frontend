@@ -54,6 +54,8 @@ export interface TimeMapOptions {
     selected?: number[]
     /** cut out the time between the selected pulls (instead of dimming it) */
     hide_unselected?: boolean
+    /** dimmed: show (and dim) the time after the last selected pull too, instead of cutting it off (phases) */
+    keep_end?: boolean
     /** label times relative to the first selected pull, counting only the time shown */
     pull_time?: boolean
 }
@@ -110,7 +112,7 @@ export default class TimeMap {
         return new TimeMap([{ start: 0, end: duration, offset: 0 }])
     }
 
-    static build({ duration, pulls = [], selected = [], hide_unselected = false, pull_time = false }: TimeMapOptions) {
+    static build({ duration, pulls = [], selected = [], hide_unselected = false, keep_end = false, pull_time = false }: TimeMapOptions) {
 
         const ranges = selected
             .map(i => pulls[i])
@@ -138,7 +140,9 @@ export default class TimeMap {
         for (let i = 1; i < shown.length; i++) {
             dimmed.push({ start: shown[i - 1].end, end: shown[i].start })
         }
-        return new TimeMap([{ ...crop, offset: 0 }], dimmed, pull_time)
+        const end = keep_end ? Math.max(crop.end, ...pulls.map(pull => pull.end / 1000)) : crop.end
+        if (end > crop.end) { dimmed.push({ start: crop.end, end }) }
+        return new TimeMap([{ start: crop.start, end, offset: 0 }], dimmed, pull_time)
     }
 
     ////////////////////////////////////////////////////////////////////////////
