@@ -23,7 +23,7 @@ import type Fight from "../../types/fight";
 import type { Pull } from "../../types/fight";
 import type Stage from "./Stage";
 import type { Anchor } from "./Stage";
-import { get_phase_spans, get_pull_label } from "../../pulls";
+import { get_phase_spans, get_pull_label, MIN_PHASE_TS } from "../../pulls";
 
 
 /** How dungeon runs show their pulls (the same for all fight rows of the stage) */
@@ -108,7 +108,7 @@ export default class FightRow {
         this.foreground.add(this.killtime_text)
 
         // Phases
-        fight_data.phases?.forEach(phase_data => {
+        fight_data.phases?.filter(phase_data => phase_data.ts >= MIN_PHASE_TS).forEach(phase_data => {
             const phase = new PhaseMarker(phase_data)
             phase.time_ref = this.time_ref
             this.phases.push(phase)

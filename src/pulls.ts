@@ -26,11 +26,14 @@ export function get_pull_color(pull: Pull) {
  * so they go through the same `TimeMap` as the pulls of a dungeon run.
  * Empty for dungeon runs and fights without phases.
  */
+/** phases starting before 0:01 are noise (eg. a "P1" marker at 0:00) */
+export const MIN_PHASE_TS = 1000
+
 export function get_phase_spans(fight: Fight): Pull[] {
     const phases = fight.phases || []
     if (!phases.length || fight.pulls?.length) { return [] }
 
-    const bounds = [{ name: "P1", ts: 0 }, ...phases.filter(phase => phase.ts > 0)]
+    const bounds = [{ name: "P1", ts: 0 }, ...phases.filter(phase => phase.ts >= MIN_PHASE_TS)]
     return bounds.map((phase, i) => ({
         start: phase.ts,
         end: i + 1 < bounds.length ? bounds[i + 1].ts : Math.max(fight.duration, phase.ts),
