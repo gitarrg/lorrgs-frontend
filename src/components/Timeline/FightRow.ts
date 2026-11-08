@@ -232,7 +232,7 @@ export default class FightRow {
             pulls: phases ? this.phase_spans : this._fight_data.pulls,
             selected,
             hide_unselected: view.hide_unselected,
-            keep_end: phases,
+            show_all: phases,
             pull_time: view.pull_time,
         })
         this.pull_row.set_selected(selected)

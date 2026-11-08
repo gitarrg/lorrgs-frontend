@@ -54,8 +54,8 @@ export interface TimeMapOptions {
     selected?: number[]
     /** cut out the time between the selected pulls (instead of dimming it) */
     hide_unselected?: boolean
-    /** dimmed: show (and dim) the time after the last selected pull too, instead of cutting it off (phases) */
-    keep_end?: boolean
+    /** dimmed: show the whole fight (the unselected time dimmed) instead of cropping it to the selected pulls (phases) */
+    show_all?: boolean
     /** label times relative to the first selected pull, counting only the time shown */
     pull_time?: boolean
 }
@@ -90,6 +90,9 @@ export default class TimeMap {
 
     readonly pull_time: boolean
 
+    /** pull time: the display time (s) labelled 0:00 (not the row's start when it shows more than the selected pulls) */
+    readonly label_origin: number
+
     /** whether this maps anything else than "display = run time" */
     readonly is_identity: boolean
 
@@ -97,10 +100,11 @@ export default class TimeMap {
     gaps: number[] = []
 
 
-    constructor(segments: TimeSegment[], dimmed: TimeRange[] = [], pull_time = false) {
+    constructor(segments: TimeSegment[], dimmed: TimeRange[] = [], pull_time = false, label_origin = 0) {
         this.segments = segments
         this.dimmed = dimmed
         this.pull_time = pull_time
+        this.label_origin = label_origin
 
         const last = segments[segments.length - 1]
         this.duration = last.offset + (last.end - last.start)
@@ -112,7 +116,7 @@ export default class TimeMap {
         return new TimeMap([{ start: 0, end: duration, offset: 0 }])
     }
 
-    static build({ duration, pulls = [], selected = [], hide_unselected = false, keep_end = false, pull_time = false }: TimeMapOptions) {
+    static build({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, pull_time = false }: TimeMapOptions) {
 
         const ranges = selected
             .map(i => pulls[i])
@@ -140,9 +144,18 @@ export default class TimeMap {
         for (let i = 1; i < shown.length; i++) {
             dimmed.push({ start: shown[i - 1].end, end: shown[i].start })
         }
-        const end = keep_end ? Math.max(crop.end, ...pulls.map(pull => pull.end / 1000)) : crop.end
-        if (end > crop.end) { dimmed.push({ start: crop.end, end }) }
-        return new TimeMap([{ start: crop.start, end, offset: 0 }], dimmed, pull_time)
+        if (show_all) {
+            const end = Math.max(crop.end, duration, ...pulls.map(pull => pull.end / 1000))
+            const all: TimeRange[] = []
+            let t = 0
+            shown.forEach(range => {
+                if (range.start > t) { all.push({ start: t, end: range.start }) }
+                t = range.end
+            })
+            if (end > t) { all.push({ start: t, end }) }
+            return new TimeMap([{ start: 0, end, offset: 0 }], all, pull_time, crop.start)
+        }
+        return new TimeMap([{ ...crop, offset: 0 }], dimmed, pull_time)
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -290,12 +303,12 @@ export default class TimeMap {
 
     /** The time to show for a run time (s): itself, or the pull time */
     label(t: number): number {
-        return this.pull_time ? this.to_display(t) : t
+        return this.pull_time ? this.to_display(t) - this.label_origin : t
     }
 
     /** The time to show at a display time (s) */
     label_at_display(d: number): number {
-        return this.pull_time ? d : this.to_run(d)
+        return this.pull_time ? d - this.label_origin : this.to_run(d)
     }
 
     /**
@@ -306,7 +319,7 @@ export default class TimeMap {
         return this.segments.map(segment => ({
             start: segment.offset,
             end: segment.offset + (segment.end - segment.start),
-            label: this.pull_time ? segment.offset : segment.start,
+            label: this.pull_time ? segment.offset - this.label_origin : segment.start,
         }))
     }
 }

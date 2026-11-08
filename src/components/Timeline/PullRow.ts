@@ -165,8 +165,7 @@ export default class PullRow {
                 x1: map.to_x(pull.end / 1000, s),
                 color: get_pull_color(pull),
             }))
-            // (phases: not the one the fight starts in, "on pull" has no label)
-            .filter(band => band.x1 > band.x0 && !(this.is_phases && band.pull.start < MIN_PHASE_START))
+            .filter(band => band.x1 > band.x0)
             .map(band => ({ ...band, color: this.tint(band.color, band.pull, band.i) }))
 
         // bands: behind the ticks
@@ -214,6 +213,7 @@ export default class PullRow {
 
         // names: in front of the ticks
         bands.forEach(({ pull, i, x0, x1, color }) => {
+            if (this.is_phases && pull.start < MIN_PHASE_START) { return }  // "on pull": no label (the band can still be clicked)
             this.draw_strip(context, get_pull_label(pull, i), color, x0, x1, !this.is_phases && i === this.hovered)
         })
 
@@ -318,7 +318,7 @@ export default class PullRow {
                         context.setAttr("fillStyle", ANCHOR_COLOR)
                         context.setAttr("font", `bold ${FONT}`)
                     }
-                    context.fillText(is_anchor ? anchor!.name : toMMSS(t), x - 0.5, TEXT_Y)
+                    context.fillText(is_anchor ? (anchor_span!.start < MIN_PHASE_START ? "Pull" : anchor!.name) : toMMSS(t), x - 0.5, TEXT_Y)
                     if (is_anchor) {
                         context.setAttr("fillStyle", TEXT_COLOR)
                         context.setAttr("font", FONT)
