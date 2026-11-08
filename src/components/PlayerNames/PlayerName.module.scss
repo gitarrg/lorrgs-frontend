@@ -31,6 +31,7 @@
 
     overflow: hidden;
     position: relative;
+    isolation: isolate;  // keeps the copy icon's z-index inside the row, so it can't poke through popovers (e.g. the pull select)
 }
 
 
