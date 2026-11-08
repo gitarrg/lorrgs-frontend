@@ -45,6 +45,9 @@ function on_idle(callback: (has_time: () => boolean) => void) {
 }
 
 
+/** where a phase was first seen: time (ms) in the fight (row) that reached it */
+export interface SeenPhase { ts: number, row: FightRow }
+
 export default class Stage extends Konva.Stage {
 
     static ZOOM_RATE = 1.1
@@ -82,6 +85,8 @@ export default class Stage extends Konva.Stage {
 
     /** Duration of the longest fight. Used to set things such as the the Length of the Ruler and overall width. */
     longest_fight = 0
+    /** spec rankings: where each phase was first seen (see `get_seen_phases`) */
+    seen_phases = new Map<string, SeenPhase>()
 
     /** Players whose cache needs rebuilding. Done in small slices while the browser is idle (see `_update_caches`). */
     private uncached_players = new Set<Player>()
@@ -170,6 +175,8 @@ export default class Stage extends Konva.Stage {
         this.ruler.set_shown(!first_row?.has_pull_row())
         this.rows.forEach(row => {
             row.has_phases() && row.set_ruler_shown(this.MODE == MODES.USER_REPORT || row === first_row)
+            // spec rankings: the one ruler covers the longest fight and all its phases
+            row.set_ruler_extent(this.MODE != MODES.USER_REPORT && row === first_row ? this.seen_phases : undefined, this.longest_fight)
         })
 
         let y = this.ruler.height()
@@ -435,6 +442,7 @@ export default class Stage extends Konva.Stage {
             this.rows.push(row)
         })
         this.longest_fight = this.get_longest_fight()
+        this.seen_phases = this.get_seen_phases()
 
         // resize before adding the rows: Konva redraws every layer on resize, and the new rows aren't cached yet
         this.layout_children()
@@ -448,6 +456,18 @@ export default class Stage extends Konva.Stage {
         this.ruler.update_duration(this.longest_fight)
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
         this.handle_event(constants.EVENT_CHECK_IMAGES_LOADED)
+    }
+
+    /**
+     * Where each phase was first seen: the time (ms) in the best ranked fight that reaches it (the rows are in ranking order).
+     * The ruler of the first fight shows the phases it lacks there (see `FightRow.set_ruler_extent`).
+     */
+    private get_seen_phases() {
+        const seen = new Map<string, SeenPhase>()
+        this.rows.forEach(row => row.phase_spans.forEach(span => {
+            if (!seen.has(span.name!)) { seen.set(span.name!, { ts: span.start, row }) }
+        }))
+        return seen
     }
 
     /** length of the longest row (in display time: dungeon runs can be cropped) */

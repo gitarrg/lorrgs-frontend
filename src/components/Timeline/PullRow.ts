@@ -91,6 +91,12 @@ export default class PullRow {
     /** the phase whose line in a row is under the pointer */
     private hovered_phase?: string
 
+    /** the pulls of the fight itself (`pulls` also has `extra_pulls`) */
+    private own_pulls: Pull[]
+    /** spec rankings (ruler of the first fight): phases it lacks, and how far the ruler reaches (run time, s). See `set_extent` */
+    private extra_pulls: Pull[] = []
+    private extra_end = 0
+
     /** pixels per second */
     private scale_x = constants.DEFAULT_ZOOM
 
@@ -103,6 +109,7 @@ export default class PullRow {
     constructor(pulls: Pull[], time_ref: TimeMapRef, boss_slug?: string) {
         this.boss_slug = boss_slug
         this.pulls = pulls
+        this.own_pulls = pulls
         this.time_ref = time_ref
         this.is_phases = !!pulls[0]?.name
 
@@ -149,7 +156,7 @@ export default class PullRow {
         const s = this.scale_x
         const width = map.width(s)
         // the stretches with background: the segments, the gutters (before the crop, at cuts) stay empty
-        const spans = map.segment_xs(s)
+        const spans = this.segment_xs(map, s)
 
         // black border at both ends of every segment (also around the gutters)
         context.setAttr("strokeStyle", "black")
@@ -307,12 +314,13 @@ export default class PullRow {
         const anchor_span = anchor?.ts ? this.pulls.find(pull => pull.name == anchor.name) : undefined
         const intervals = this.label_intervals(map, anchor_span?.start)
 
-        const xs = map.segment_xs(s)
+        const xs = this.segment_xs(map, s)
         const runs: PullRun[] = []
         map.segments.forEach((segment, index) => {
             intervals.forEach(interval => {
                 const lo = Math.max(segment.start, interval.start)
-                const hi = Math.min(segment.end, interval.end)
+                const end = index == map.segments.length - 1 ? Math.max(segment.end, this.extra_end) : segment.end
+                const hi = Math.min(end, interval.end)
                 if (hi < lo) { return }
                 runs.push({
                     from: lo - interval.origin,
@@ -330,6 +338,39 @@ export default class PullRow {
         })
     }
 
+    /** px of the segments: the last one reaches as far as the ruler does (see `set_extent`) */
+    private segment_xs(map: TimeMap, scale: number) {
+        const xs = map.segment_xs(scale)
+        const last = xs[xs.length - 1]
+        if (this.extra_end > 0) { last.x1 = Math.max(last.x1, map.to_x(this.extra_end, scale)) }
+        return xs
+    }
+
+    /** width of the row in px, including what the ruler reaches beyond the fight */
+    private width_px(scale: number) {
+        const map = this.time_ref.current
+        return Math.max(map.width(scale), this.extra_end > 0 ? map.to_x(this.extra_end, scale) : 0)
+    }
+
+    /**
+     * Spec rankings, ruler of the first fight: also cover the longest fight, and the phases it doesn't reach.
+     * `extra`: those phases (after the last one, which is stretched up to them), `end`: run time (s) the ruler reaches.
+     */
+    set_extent(extra: Pull[], end: number) {
+        const same = end == this.extra_end && extra.length == this.extra_pulls.length
+            && extra.every((pull, i) => pull.name == this.extra_pulls[i].name && pull.start == this.extra_pulls[i].start && pull.end == this.extra_pulls[i].end)
+        if (same) { return }
+        this.extra_pulls = extra
+        this.extra_end = end
+        // the last phase of the fight lasts until the next one is seen (or the ruler ends)
+        const own = this.own_pulls.map(pull => ({ ...pull }))
+        const last = own[own.length - 1]
+        if (last) { last.end = Math.max(last.end, extra[0]?.start ?? end * 1000) }
+        this.pulls = [...own, ...extra]
+        this.bbox.width(this.width_px(this.scale_x))
+        this.shape.getLayer()?.batchDraw()
+    }
+
     /** run time ranges (s) and the run time (s) they count from, for the timestamps setting */
     private label_intervals(map: TimeMap, aligned_start?: number): { start: number, end: number, origin: number }[] {
         const whole = { start: -Infinity, end: Infinity }
@@ -340,7 +381,8 @@ export default class PullRow {
         // each phase (dungeon run: pull) from its start, in between (and before/after): the run time
         const intervals: { start: number, end: number, origin: number }[] = []
         let t = -Infinity
-        map.phase_ranges.forEach(range => {
+        const ranges = this.pulls.map(pull => ({ start: pull.start / 1000, end: pull.end / 1000 }))
+        ranges.forEach(range => {
             if (range.start > t) { intervals.push({ start: t, end: range.start, origin: 0 }) }
             intervals.push({ ...range, origin: range.start })
             t = range.end
@@ -473,7 +515,7 @@ export default class PullRow {
 
     _handle_zoom_change(scale_x: number) {
         this.scale_x = scale_x
-        this.bbox.width(this.time_ref.current.width(scale_x))
+        this.bbox.width(this.width_px(scale_x))
     }
 
     handle_event(event_name: string, payload: any) {

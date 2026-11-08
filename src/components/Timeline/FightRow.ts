@@ -15,6 +15,7 @@ import Konva from "konva";
 import PhaseMarker from "./PhaseMarker";
 import PlayerRow from "./PlayerRow";
 import PullRow from "./PullRow";
+import type { SeenPhase } from "./Stage";
 import TimeMap, { type TimeMapRef, type TimestampMode } from "./TimeMap";
 import { get_run_key } from "../../store/ui";
 import type { Context } from "konva/lib/Context";
@@ -23,7 +24,7 @@ import type Fight from "../../types/fight";
 import type { Pull } from "../../types/fight";
 import type Stage from "./Stage";
 import type { Anchor } from "./Stage";
-import { get_phase_spans, get_pull_label, MIN_PHASE_TS } from "../../pulls";
+import { get_extra_phase_spans, get_phase_spans, get_pull_label, MIN_PHASE_TS } from "../../pulls";
 
 
 /** How dungeon runs show their pulls (the same for all fight rows of the stage) */
@@ -215,6 +216,16 @@ export default class FightRow {
     /** a boss fight with phases: its ruler is shown for the first fight only (in spec rankings, see `Stage.layout_children`) */
     has_phases() {
         return this.phase_spans.length > 0
+    }
+
+    /**
+     * spec rankings: the ruler (first fight) covers the longest fight, and the phases this one doesn't reach (at the time they were first seen).
+     * `seen`: see `Stage.get_seen_phases`. None: reset
+     */
+    set_ruler_extent(seen?: Map<string, SeenPhase>, end = 0) {
+        if (!this.pull_row || !this.has_phases()) { return }
+        const times = new Map([...(seen || [])].map(([name, phase]) => [name, phase.ts]))
+        this.pull_row.set_extent(get_extra_phase_spans(this.phase_spans, times, end * 1000), Math.max(this.duration, end))
     }
 
     set_ruler_shown(state: boolean) {

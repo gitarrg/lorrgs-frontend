@@ -43,6 +43,28 @@ export function get_phase_spans(fight: Fight): Pull[] {
 }
 
 
+/** the phase's number: "P2.5" -> 2.5 */
+const phase_number = (name: string) => parseFloat(name.slice(1))
+
+/**
+ * Spec rankings share the first fight's ruler, but other fights can reach later phases than it.
+ * The phases after the last of `own`, starting where they were first seen (`seen`: name -> ms, see `Stage.get_seen_phases`).
+ * A phase never starts before the one before it. The last one ends at `end` (ms).
+ */
+export function get_extra_phase_spans(own: Pull[], seen: Map<string, number>, end: number): Pull[] {
+    const last = own[own.length - 1]
+    if (!last) { return [] }
+
+    const names = [...seen.keys()]
+        .filter(name => phase_number(name) > phase_number(last.name!))
+        .sort((a, b) => phase_number(a) - phase_number(b))
+
+    let t = last.end
+    const starts = names.map(name => (t = Math.max(t, seen.get(name)!)))
+    return names.map((name, i) => ({ start: starts[i], end: i + 1 < names.length ? starts[i + 1] : Math.max(end, starts[i]), boss: null, name }))
+}
+
+
 /** names of the phases of the fights of this boss, in order ("P1", "P2", "P2.5"...) */
 export function get_phase_names(fights: Fight[], boss_slug?: string) {
     const names = new Set<string>()
