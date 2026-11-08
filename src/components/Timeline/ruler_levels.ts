@@ -21,6 +21,6 @@ export const MIN_LABEL_SPACING = 80
 
 
 /** Pick the finest level whose timestamps are at least `MIN_LABEL_SPACING` apart. */
-export function level_for_scale(scale_x: number): RulerLevel {
-    return LEVELS.find(level => level.label * scale_x >= MIN_LABEL_SPACING) ?? LEVELS[LEVELS.length - 1]
+export function level_for_scale(scale_x: number, levels: RulerLevel[] = LEVELS, min_spacing = MIN_LABEL_SPACING): RulerLevel {
+    return levels.find(level => level.label * scale_x >= min_spacing) ?? levels[levels.length - 1]
 }

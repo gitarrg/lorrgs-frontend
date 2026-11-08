@@ -19,7 +19,7 @@ import type { Context } from "konva/lib/Context"
 
 import * as constants from "./constants"
 import { toMMSS } from "../../utils"
-import { level_for_scale } from "./ruler_levels"
+import RulerDrawer, { type RulerRun } from "./ruler_drawer"
 import { get_pull_color, get_pull_label, MIN_PHASE_TS } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type TimeMap from "./TimeMap"
@@ -56,8 +56,11 @@ const ANCHOR_COLOR = "#00ffff"  // 6 digits: see `rgba`
 /** phase labels: under the pointer (same as a hovered phase marker) */
 const PHASE_HOVER_COLOR = "#17e67f"
 
-/** min. px between two timestamps (eg. left and right of a cut) */
-const MIN_TEXT_SPACING = 40
+/** a stretch of the ruler: see `draw_ticks` */
+interface PullRun extends RulerRun {
+    /** run time (s) its labels count from */
+    origin: number
+}
 
 
 /** "#rrggbb" as "rgba(r, g, b, alpha)" */
@@ -71,6 +74,7 @@ export default class PullRow {
 
     pulls: Pull[]
     time_ref: TimeMapRef
+    private ruler_drawer = new RulerDrawer<PullRun>({ height: HEIGHT, color: TEXT_COLOR, font: FONT, text_y: TEXT_Y })
     /** boss of the fight (phases: which phases there are to pick from) */
     private boss_slug?: string
     selected: Set<number> = new Set()
@@ -297,58 +301,32 @@ export default class PullRow {
     private draw_ticks(context: Context) {
         const map = this.time_ref.current
         const s = this.scale_x
-        const { label, tick } = level_for_scale(s)
-        const ticks_per_label = Math.round(label / tick)
-
-        context.setAttr("strokeStyle", TEXT_COLOR)
-        context.setAttr("fillStyle", TEXT_COLOR)
-        context.setAttr("lineWidth", 1)
-        context.setAttr("font", FONT)
-        context.setAttr("textAlign", "left")
-        context.setAttr("textBaseline", "middle")
 
         // what the timestamps count from (like the times of the casts, see `TimeMap.label`): intervals of run time, each with its 0:00
         const anchor = this.phase_anchor
         const anchor_span = anchor?.ts ? this.pulls.find(pull => pull.name == anchor.name) : undefined
         const intervals = this.label_intervals(map, anchor_span?.start)
 
-        let last_text_x = -Infinity
         const xs = map.segment_xs(s)
+        const runs: PullRun[] = []
         map.segments.forEach((segment, index) => {
             intervals.forEach(interval => {
                 const lo = Math.max(segment.start, interval.start)
                 const hi = Math.min(segment.end, interval.end)
                 if (hi < lo) { return }
-
-                const first = Math.ceil((lo - interval.origin) / tick - 1e-9)
-                const last = Math.floor((hi - interval.origin) / tick + 1e-9)
-                for (let i = first; i <= last; i++) {
-                    const t = i * tick
-                    const x = Math.round(xs[index].x0 + (interval.origin + t - segment.start) * s) + 0.5
-                    const big = i % ticks_per_label == 0
-                    const h = big ? 10 : 5
-
-                    context.beginPath()
-                    context.moveTo(x, HEIGHT - h)
-                    context.lineTo(x, HEIGHT)
-                    context.stroke()
-
-                    if (big && x - last_text_x >= MIN_TEXT_SPACING) {
-                        // starts at the tick, like the main ruler
-                        const is_anchor = !!anchor_span && t == 0 && interval.origin == anchor_span.start / 1000
-                        if (is_anchor) {
-                            context.setAttr("fillStyle", ANCHOR_COLOR)
-                            context.setAttr("font", `bold ${FONT}`)
-                        }
-                        context.fillText(is_anchor ? (anchor_span!.start < MIN_PHASE_TS ? "Pull" : anchor!.name) : toMMSS(t), x - 0.5, TEXT_Y)
-                        if (is_anchor) {
-                            context.setAttr("fillStyle", TEXT_COLOR)
-                            context.setAttr("font", FONT)
-                        }
-                        last_text_x = x
-                    }
-                }
+                runs.push({
+                    from: lo - interval.origin,
+                    to: hi - interval.origin,
+                    x: t => xs[index].x0 + (interval.origin + t - segment.start) * s,
+                    origin: interval.origin,
+                })
             })
+        })
+
+        this.ruler_drawer.draw(context, runs, s, (t, run) => {
+            const is_anchor = !!anchor_span && t == 0 && run.origin == anchor_span.start / 1000
+            if (!is_anchor) { return toMMSS(t) }
+            return { text: anchor_span!.start < MIN_PHASE_TS ? "Pull" : anchor!.name, color: ANCHOR_COLOR, font: `bold ${FONT}` }
         })
     }
 

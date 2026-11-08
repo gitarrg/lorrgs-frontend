@@ -13,7 +13,8 @@
     "server": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.5.1",
@@ -39,6 +40,7 @@
     "sass-embedded": "^1.85.0",
     "typescript": "^7.0.2",
     "vite": "^6.1.0",
-    "vite-plugin-radar": "^0.10.0"
+    "vite-plugin-radar": "^0.10.0",
+    "vitest": "^3.2.7"
   }
 }

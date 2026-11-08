@@ -2,18 +2,24 @@ import { LINE_HEIGHT } from "../../constants";
 import { toMMSS } from "../../utils";
 import * as constants from "./constants"
 import Konva from "konva"
+import type { Context } from "konva/lib/Context"
 import Stage from "./Stage";
 import TimelineMarker from "./Overlays/TimelineMarker";
-import { LEVELS, level_for_scale } from "./ruler_levels";
+import RulerDrawer from "./ruler_drawer";
 import { clear_phase_selection } from "./phase_selection";
 import { hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip";
 
 
 
+/** the timestamp of the anchor (0:00 of the ruler): same as the active phase marker */
+const ANCHOR_COLOR = "#0FF"  // todo: config
+const FONT = "14px Lato"
+
+
 export default class Ruler extends Konva.Group {
 
-    private level = LEVELS[3]
     private color = "white";
+    private drawer = new RulerDrawer({ height: LINE_HEIGHT, color: this.color, font: FONT })
 
     // time in seconds
     duration: number
@@ -21,8 +27,8 @@ export default class Ruler extends Konva.Group {
     private stage: Stage
     private markers: TimelineMarker[]
     private bbox: Konva.Rect
-    private bottom_line?: Konva.Line
-    private zero_timestamp?: Konva.Text
+    /** the ticks and timestamps (and the line under them) */
+    private shape: Konva.Shape
 
 
     constructor(stage: Stage, config: any = {}) {
@@ -36,6 +42,16 @@ export default class Ruler extends Konva.Group {
         this.stage = stage
         this.duration = 0;
         this.markers = []
+
+        // one shape for all ticks and timestamps: positioned by the anchor (see `handle_anchor_changed`), so it covers both sides of 0
+        this.shape = new Konva.Shape({
+            name: "ticks",
+            listening: false,
+            transformsEnabled: "position",
+            perfectDrawEnabled: false,
+            sceneFunc: (context) => this.draw_ticks(context),
+        })
+        this.add(this.shape)
 
         //////////////////////////
         // bbox used to catch mouse events
@@ -60,72 +76,24 @@ export default class Ruler extends Konva.Group {
         this.bbox.visible(state)
     }
 
-    private create_ticks() {
-
-        // reset
-        this.destroyChildren()
-        this.zero_timestamp = undefined
-
-        if (this.duration <= 0) { return; }
-
-        this.bottom_line = new Konva.Line({
-            name: "bottom_line",
-            points: [], // applied in handle_zoom
-            stroke: "black",
-            strokeWidth: 1,
-            transformsEnabled: "none",
-        })
-        this.add(this.bottom_line)
-
-        /////////////////////////////////////
-        // create ticks
-        //
-        const { label, tick } = this.level
-        const ticks_per_label = Math.round(label / tick)
+    private draw_ticks(context: Context) {
+        if (this.duration <= 0) { return }
+        const scale = this.stage.scale_x
+        const { ts, name } = this.stage.get_anchor()
 
         // to allow phase-anchors we simply mirror the ruler on both sides.
         // not ideal but works for now
-        // (iterate over integer indices to avoid float drift with sub-second ticks)
-        const first = Math.floor(-this.duration / label) * ticks_per_label
-        const last = Math.ceil(this.duration / tick)
+        this.drawer.draw(context, [{ from: -this.duration, to: this.duration, x: t => t * scale }], scale, t => {
+            // the anchor name on the 0:00 timestamp
+            if (t != 0 || ts == 0) { return toMMSS(t) }
+            return { text: name || toMMSS(ts), color: ANCHOR_COLOR, font: `bold ${FONT}` }
+        })
 
-        for (let i = first; i < last; i++) {
-            const t = i * tick
-            const big = i % ticks_per_label == 0
-            const h = big ? 10 : 5
-
-            this.add(new Konva.Line({
-                name: "tick",
-                points: [0.5, constants.LINE_HEIGHT - h, 0.5, constants.LINE_HEIGHT],
-                stroke: this.color,
-                strokeWidth: 1,
-                transformsEnabled: "position",
-                ts: t,  // custom: current timestamp
-            }))
-
-            if (big) {
-                let text = new Konva.Text({
-                    text: toMMSS(t),
-                    name: "timestamp",
-                    y: -10,
-                    fontSize: 14,
-                    height: constants.LINE_HEIGHT,
-                    verticalAlign: 'bottom',
-                    align: "center",
-                    fontFamily: "Lato",
-                    fill: this.color,
-                    transformsEnabled: "position",
-                    ts: t,  // custom: current timestamp
-                })
-
-                if (t == 0) {
-                    this.zero_timestamp = text
-                }
-                this.add(text)
-            } // if big
-        } // for i
-
-        this.update_zero_timestamp()
+        context.setAttr("strokeStyle", "black")
+        context.beginPath()
+        context.moveTo(-this.duration * scale, constants.LINE_HEIGHT + 0.5)
+        context.lineTo(this.duration * scale, constants.LINE_HEIGHT + 0.5)
+        context.stroke()
     }
 
     ///////////////////////////////////////////////////////////
@@ -133,73 +101,20 @@ export default class Ruler extends Konva.Group {
 
     update_duration(duration: number) {
         this.duration = duration;
-        this.level = level_for_scale(this.stage.scale_x)
-        this.create_ticks()
     }
 
     ////////////////////////////////////////////////////////////////////////////
     // Events
     //
     private handle_zoom_change(scale_x: number) {
-
-        // switch to a finer/coarser resolution if needed
-        const level = level_for_scale(scale_x)
-        if (level !== this.level) {
-            this.level = level
-            this.create_ticks()
-        }
-
         // Offset the entire ruler based on anchor
         const { ts } = this.stage.get_anchor()
         this.x(ts * scale_x)
-
-
-        // update ticks
-        this.find(".tick").forEach((tick, i) => {
-            // tick.x(this.tick_distance * i * scale_x);
-            tick.x(tick.getAttr("ts") * scale_x)
-        })
-
-        // update timestamps
-        this.find(".timestamp").forEach((timestamp, i) => {
-            // let x = this.timestamp_distance * i * scale_x
-            // x += i == 0 ? 0 : -18;
-            timestamp.x(timestamp.getAttr("ts") * scale_x)
-        })
-
-        this.bottom_line && this.bottom_line.points([this.duration * scale_x * -1, constants.LINE_HEIGHT + 0.5, this.duration * scale_x, constants.LINE_HEIGHT + 0.5])
         this.bbox.width(this.duration * scale_x)
-        this.duration && this.cache()
     }
 
     private handle_anchor_changed({ ts }: { ts: number, name: string }) {
-
-        // update on anchor change.
-        // will also update on zoom change in `handle_zoom_change`
         this.x(ts * this.stage.scale_x)
-        this.update_zero_timestamp()
-        this.duration && this.cache()
-    }
-
-    /** Show the anchor name on the 0:00 timestamp. */
-    private update_zero_timestamp() {
-        if (!this.zero_timestamp) { return }
-
-        let { ts, name } = this.stage.get_anchor()
-        name = name || toMMSS(ts)
-
-        let color = "#0FF"  // todo: config
-        let fontStyle = "bold"
-
-        if (ts == 0) {
-            name = toMMSS(ts)
-            color = this.color
-            fontStyle = ""
-        }
-
-        this.zero_timestamp.text(name)
-        this.zero_timestamp.fill(color)
-        this.zero_timestamp.fontStyle(fontStyle)
     }
 
 
