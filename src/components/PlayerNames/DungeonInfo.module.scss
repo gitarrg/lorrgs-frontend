@@ -1,27 +1,28 @@
 // like the `FightInfo` it replaces for dungeon runs
 .container {
     width: 175px;
-    height: 28px; // fixed height, like FightInfo
+    height: calc(var(--timeline-height) + 1px); // like the player names
+    margin-bottom: -1px; // overlap the border with the first player name below
+    // no overflow: hidden here, it would clip the pull selector's popover
 
     display: flex;
     align-items: stretch;
 
-    background: #222;
+    background: hsl(0, 0%, 30%); // like the player names
     border: 1px solid black;
     border-top-left-radius: 0.25rem;
 }
 
 .icon_link {
     flex-shrink: 0;
-    width: 26px;
-    border-right: 1px solid black;
-    overflow: hidden;
-    border-top-left-radius: 0.25rem;
 }
 
+// same size as the player icons
 .icon {
-    width: 26px;
-    height: 26px;
+    width: var(--timeline-height);
+    height: var(--timeline-height);
+    border-right: 1px solid black;
+    border-top-left-radius: 0.25rem; // the container can't clip it
     display: block;
 }
 
@@ -40,7 +41,19 @@
     white-space: nowrap;
     overflow: hidden;
 
-    span {
+    // the duration
+    > span:last-child {
+        flex-shrink: 0;
         opacity: 0.7;
     }
+}
+
+// hover card with the run's info (see `DungeonRunInfo`), like the pull selector's popover
+.card {
+    position: fixed;
+    z-index: 100;
+    padding: 0.5rem 0.6rem;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }

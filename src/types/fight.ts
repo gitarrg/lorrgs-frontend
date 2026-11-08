@@ -37,6 +37,14 @@ export default interface Fight {
      */
     pulls?: Pull[]
 
+    /** Mythic+ keystone level (0/missing: unknown) */
+    keystone_level?: number
+    /** Mythic+ run time in ms, as Warcraft Logs reports it */
+    keystone_time?: number
+    /** 0 = depleted, 1/2/3 = timed at +1/+2/+3 */
+    keystone_bonus?: number
+    keystone_affixes?: number[]
+
     pinned?: boolean
 
     /** the zone id of the fight: EU, US, TW, CN, KR */
