@@ -181,15 +181,17 @@ export default class FightRow {
             context.fillRect(x0, top, x1 - x0, height)
         })
 
-        // cuts: dashed line through the whole run, where the time continues (after the gap)
+        // cuts without a gutter: dashed line through the whole run, on the seam where time was taken out.
         context.setAttr("strokeStyle", "rgba(255, 255, 255, 0.6)")
         context.setAttr("lineWidth", 1)
         context.setLineDash([3, 3])
-        map.segment_xs(s).slice(1).forEach(({ x0 }) => {
+        const xs = map.segment_xs(s)
+        xs.slice(1).forEach(({ x0 }, i) => {
+            if (map.gap(i + 1) > 0) { return }  // a gutter marks the cut itself
             const x = Math.round(x0) + 0.5
             context.beginPath()
-            context.moveTo(x, top)
-            context.lineTo(x, this.rows_height)
+            context.moveTo(x, top + 1)  // inside the 1px border
+            context.lineTo(x, this.rows_height + 1)  // down to the bottom border
             context.stroke()
         })
         context.setLineDash([])

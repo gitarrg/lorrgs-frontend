@@ -112,6 +112,18 @@ export default class PullRow {
         // the stretches with background: the segments, the gutters (before the crop, at cuts) stay empty
         const spans = map.segment_xs(s)
 
+        // black border at both ends of every segment (also around the gutters)
+        context.setAttr("strokeStyle", "black")
+        context.setAttr("lineWidth", 1)
+        context.beginPath()
+        spans.forEach(({ x0, x1 }) => {
+            context.moveTo(Math.round(x0) - 0.5, 0)
+            context.lineTo(Math.round(x0) - 0.5, HEIGHT + 1)
+            context.moveTo(Math.round(x1) + 0.5, 0)
+            context.lineTo(Math.round(x1) + 0.5, HEIGHT + 1)
+        })
+        context.stroke()
+
         // pulls outside the crop stay outside the row
         context.beginPath()
         spans.forEach(({ x0, x1 }) => context.rect(x0, 0, x1 - x0, HEIGHT + 1))
@@ -165,19 +177,6 @@ export default class PullRow {
 
         // names: in front of the ticks
         bands.forEach(({ pull, i, x0, x1, color }) => this.draw_strip(context, get_pull_label(pull, i), color, x0, x1, i === this.hovered))
-
-        // cuts: a double line where time was taken out (after its gap)
-        context.setAttr("strokeStyle", "#ddd")
-        context.setAttr("lineWidth", 1)
-        map.segment_xs(s).slice(1).forEach(({ x0 }) => {
-            const x = Math.round(x0)
-            context.beginPath()
-            context.moveTo(x - 1.5, 0)
-            context.lineTo(x - 1.5, HEIGHT)
-            context.moveTo(x + 1.5, 0)
-            context.lineTo(x + 1.5, HEIGHT)
-            context.stroke()
-        })
 
         // bottom line
         context.setAttr("strokeStyle", "black")
