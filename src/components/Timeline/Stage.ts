@@ -2,16 +2,27 @@ import Konva from "konva"
 import type { StageConfig } from "konva/lib/Stage";
 
 import Ruler from "./Ruler"
+import MouseCrosshair from "./Overlays/MouseCrosshair"
 import * as constants from "./constants";
-import FightRow from "./FightRow";
+import FightRow, { type PullView } from "./FightRow";
 import type Fight from "../../types/fight";
 import Cast, { IMAGES } from "./Cast";
 import type Player from "./Player";
-import { MODES, type FilterValues } from "../../store/ui";
+import { MODES, set_aligned_phase, type FilterValues } from "../../store/ui";
+import store from "../../store/store";
 
 
 // for performance
 Konva.autoDrawEnabled = false;
+
+
+export type AnchorKind = "phase" | "pull"
+
+/**
+ * The time all fights are aligned on (see `EVENT_ANCHOR_CHANGED`).
+ * `ts`: where on the timeline (s) the phase/pull starts. 0: no anchor, all fights start at 0.
+ */
+export type Anchor = { ts: number, name: string, kind: AnchorKind }
 
 
 /** Run `callback` once the browser is idle. `has_time()` tells if there is idle time left to continue. */
@@ -34,6 +45,9 @@ function on_idle(callback: (has_time: () => boolean) => void) {
 }
 
 
+/** where a phase was first seen: time (ms) in the fight (row) that reached it */
+export interface SeenPhase { ts: number, row: FightRow }
+
 export default class Stage extends Konva.Stage {
 
     static ZOOM_RATE = 1.1
@@ -51,6 +65,11 @@ export default class Stage extends Konva.Stage {
 
     anchor_ts: number = 0
     anchor_name: string = "pull"
+    /** what the anchor aligns the fights on: a boss phase, or a pull of dungeon runs (see `FightRow`) */
+    anchor_kind: AnchorKind = "phase"
+
+    /** how dungeon runs show their pulls (see `set_pull_view`) */
+    private pull_view: PullView = { selection: {}, hide_unselected: false, timestamps: "pull", phase_selection: [] }
 
     /** filters last applied (see `EVENT_APPLY_FILTERS`) */
     private applied_filters?: FilterValues
@@ -58,12 +77,16 @@ export default class Stage extends Konva.Stage {
     private rows: FightRow[] = []
     back_layer: Konva.Layer
     main_layer: Konva.Layer
-    overlay_layer: Konva.Layer  // general overlays (MouseCrossHair / Timeline Markers)
+    overlay_layer: Konva.Layer  // general overlays (MouseCrossHair)
     overlay_layer2: Konva.Layer  // additional overlays
+    marker_layer: Konva.Layer  // Timeline Markers (on top: nothing may catch their mouse events)
     ruler: Ruler
+    private crosshair: MouseCrosshair
 
     /** Duration of the longest fight. Used to set things such as the the Length of the Ruler and overall width. */
     longest_fight = 0
+    /** spec rankings: where each phase was first seen (see `get_seen_phases`) */
+    seen_phases = new Map<string, SeenPhase>()
 
     /** Players whose cache needs rebuilding. Done in small slices while the browser is idle (see `_update_caches`). */
     private uncached_players = new Set<Player>()
@@ -105,8 +128,16 @@ export default class Stage extends Konva.Stage {
         this.overlay_layer2 = new Konva.Layer()
         this.add(this.overlay_layer2);
 
+        this.marker_layer = new Konva.Layer()
+        this.add(this.marker_layer);
+
         this.ruler = new Ruler(this);
         this.back_layer.add(this.ruler)
+
+        this.crosshair = new MouseCrosshair()
+        this.overlay_layer.add(this.crosshair)
+        this.on("mousemove", () => { this._update_crosshair(); this.schedule_cursor_time() })
+        this.container().addEventListener("mouseleave", () => this._hide_crosshair())
 
         // update canvas on window resize
         this.on("dragmove", this.on_dragmove)
@@ -137,6 +168,17 @@ export default class Stage extends Konva.Stage {
 
     layout_children() {
 
+        // a dungeon run's pull row sits where the ruler is when it is the first fight (see `PullRow`).
+        // (the ruler keeps its space: the names column shows the first fight's info next to it)
+        // (boss fights with phases the same, but only the first one in a spec ranking: they are stacked without space between)
+        const first_row = this.rows.find(row => row.visible())
+        this.ruler.set_shown(!first_row?.has_pull_row())
+        this.rows.forEach(row => {
+            row.has_phases() && row.set_ruler_shown(this.MODE == MODES.USER_REPORT || row === first_row)
+            // spec rankings: the one ruler covers the longest fight and all its phases
+            row.set_ruler_extent(this.MODE != MODES.USER_REPORT && row === first_row ? this.seen_phases : undefined, this.longest_fight)
+        })
+
         let y = this.ruler.height()
 
         this.rows.forEach(row => {
@@ -148,6 +190,42 @@ export default class Stage extends Konva.Stage {
             }
         })
         this.height(y + 1) // 1 extra to show the border
+        this.crosshair.set_height(this.height())
+    }
+
+    /** pointer position (px on the stage), once seen: "cursor" timestamps count from it */
+    private cursor_x?: number
+    private cursor_frame = 0
+
+    /** update the "cursor" timestamps once per frame */
+    private schedule_cursor_time() {
+        if (this.pull_view.timestamps != "cursor" || this.cursor_frame) { return }
+        this.cursor_frame = requestAnimationFrame(() => {
+            this.cursor_frame = 0
+            const pointer = this.getPointerPosition()
+            if (pointer) { this.cursor_x = pointer.x - this.x() }
+            this.update_cursor_time()
+        })
+    }
+
+    private update_cursor_time() {
+        if (this.cursor_x === undefined) { return }
+        let changed = false
+        this.rows.forEach(row => { changed = row.set_cursor(this.cursor_x!) || changed })
+        if (changed) { this.batchDraw() }
+    }
+
+    /** move the crosshair to the pointer */
+    _update_crosshair() {
+        const pointer = this.getPointerPosition()
+        if (!pointer) { return }
+        this.crosshair.move_to((pointer.x - this.x()) / this.scale_x)
+        this.overlay_layer.batchDraw()
+    }
+
+    _hide_crosshair() {
+        this.crosshair.hide_crosshair()
+        this.overlay_layer.batchDraw()
     }
 
     /**
@@ -308,9 +386,11 @@ export default class Stage extends Konva.Stage {
 
         // pass to children
         this.ruler.handle_event(event_name, payload)
+        this.crosshair.handle_event(event_name, payload)
         this.rows.forEach(row => row.handle_event(event_name, payload))
 
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters(payload) }
+        if (FightRow.GUTTER_EVENTS.has(event_name)) { this.sync_gaps() }
 
         // with "hide empty rows", rows whose casts are all hidden now must hide too
         if (event_name === constants.EVENT_SPELL_DISPLAY && this.applied_filters?.hide_empty_rows) {
@@ -322,44 +402,22 @@ export default class Stage extends Konva.Stage {
         else { this.batchDraw() } // for now, just assume we need to redraw after every other event
     }
 
+    /**
+     * Boss fights show their phases next to each other, so the gaps before the segments (see `TimeMap.gaps`) must be as wide in
+     * all of them (the widest): else the same phase would start at different positions, and the ruler above the first fight would not fit the others.
+     * (dungeon runs have a ruler each: they keep their own)
+     */
+    private sync_gaps() {
+        const rows = this.rows.filter(row => row.visible() && row.has_phases())
+        if (!rows.length) { return }
+
+        const wanted = rows.map(row => row.wanted_gaps())
+        const gaps = Array.from({ length: Math.max(...wanted.map(w => w.length)) }, (_, i) => Math.max(...wanted.map(w => w[i] || 0)))
+        rows.forEach(row => row.apply_gaps(gaps))
+    }
+
     /** Events that only change casts (all on the main layer). */
     static CAST_EVENTS = new Set([constants.EVENT_SPELL_DISPLAY, constants.EVENT_SPELL_SELECTED])
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Updates phase marker headers for each fight.
-     * Ensures that each phase is only shown once per boss.
-     * Subsequent occurrences of the same phase label are hidden.
-     *
-     * Note:
-     *   for now, this is really only relevant for spec_rankings,
-     *   as these use a single boss row + many player rows.
-     *   and even then only for cases where top logs skip phases
-     *   while other logs still play them
-     */
-    private _update_phase_marker_headers() {
-
-        // for user reports we can show the phases on each fight,
-        // since each one will have its own boss-row
-        if (this.MODE == MODES.USER_REPORT) { return; }
-
-        // let seen: Record<string, Record<string, boolean>> = {}
-        let seen: { [phase: string]: boolean } = {};
-
-        this.rows.forEach(row => {
-            row.phases.forEach(phase => {
-                const phase_label = phase._get_text_label()
-
-                if (seen[phase_label ?? ""]) {
-                    phase.show_label(false)
-                } else {
-                    phase.show_label(true)
-                    seen[phase_label ?? ""] = true
-                }
-            })
-        })
-    }
 
     ////////////////////////////////////////////////////////////////////////////
     // LOAD
@@ -380,9 +438,11 @@ export default class Stage extends Konva.Stage {
         // create fresh instances
         new_fights.forEach((fight) => {
             const row = new FightRow(fight)
-            this.longest_fight = Math.max(this.longest_fight, row.duration)
+            row.set_pull_view(this.pull_view)
             this.rows.push(row)
         })
+        this.longest_fight = this.get_longest_fight()
+        this.seen_phases = this.get_seen_phases()
 
         // resize before adding the rows: Konva redraws every layer on resize, and the new rows aren't cached yet
         this.layout_children()
@@ -396,21 +456,65 @@ export default class Stage extends Konva.Stage {
         this.ruler.update_duration(this.longest_fight)
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
         this.handle_event(constants.EVENT_CHECK_IMAGES_LOADED)
-
-        this._update_phase_marker_headers()
     }
 
-    set_anchor(ts: number, name: string = "") {
+    /**
+     * Where each phase was first seen: the time (ms) in the best ranked fight that reaches it (the rows are in ranking order).
+     * The ruler of the first fight shows the phases it lacks there (see `FightRow.set_ruler_extent`).
+     */
+    private get_seen_phases() {
+        const seen = new Map<string, SeenPhase>()
+        this.rows.forEach(row => row.phase_spans.forEach(span => {
+            if (!seen.has(span.name!)) { seen.set(span.name!, { ts: span.start, row }) }
+        }))
+        return seen
+    }
+
+    /** length of the longest row (in display time: dungeon runs can be cropped) */
+    private get_longest_fight() {
+        return Math.max(0, ...this.rows.map(row => row.time_ref.current.duration))
+    }
+
+    /** Change how dungeon runs show their pulls: selection, cut out or dimmed, what the timestamps count from. */
+    set_pull_view(view: PullView) {
+        const previous = this.pull_view
+        this.pull_view = view
+
+        let changed = false
+        this.rows.forEach(row => {
+            const run_changed = previous.hide_unselected != view.hide_unselected
+                || previous.timestamps != view.timestamps
+                || previous.phase_selection !== view.phase_selection
+                || previous.selection[row.run_key] !== view.selection[row.run_key]
+            if (run_changed) { row.set_pull_view(view); changed = true }
+        })
+        if (!changed) { return }
+        this.sync_gaps()
+        this.update_cursor_time()
+
+        const longest = this.get_longest_fight()
+        if (longest != this.longest_fight) {
+            this.longest_fight = longest
+            this.ruler.update_duration(longest)
+            this.ruler.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
+        }
+        this.batchDraw()
+    }
+
+    set_anchor(ts: number, name: string = "", kind: AnchorKind = "phase") {
         this.anchor_ts = ts
         this.anchor_name = name
+        this.anchor_kind = kind
+        store.dispatch(set_aligned_phase(ts && kind == "phase" ? name : null))
 
         this.handle_event(constants.EVENT_ANCHOR_CHANGED, this.get_anchor())
     }
 
-    get_anchor(): { ts: number, name: string } {
+    get_anchor(): Anchor {
         return {
             ts: this.anchor_ts,
             name: this.anchor_name,
+            kind: this.anchor_kind,
         }
     }
 

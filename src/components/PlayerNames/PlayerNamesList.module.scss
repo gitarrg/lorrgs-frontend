@@ -5,7 +5,8 @@
     display: flex;
     flex-direction: column;
 
-    margin-top: var(--timeline-ruler-height);
+    // (rankings: the corner takes this space, see `RulerCorner`)
+    margin-top: 0;
 }
 
 :global .user_report {

@@ -16,6 +16,9 @@ export default class Player extends Konva.Group {
     resurrections: Resurrection[]
     player_data: Actor
 
+    /** number of casts with an icon in the gap before each segment (see `update_gutter_slots`, `FightRow.update_gaps`) */
+    gap_counts: number[] = []
+
     constructor(row: PlayerRow, player_data: Actor) {
         super()
         this.row = row
@@ -31,12 +34,22 @@ export default class Player extends Konva.Group {
         this.player_data = player_data
 
         // load casts
-        this.casts = (player_data.casts || []).map(cast_data => new Cast(cast_data))
+        const time_ref = this.row.time_ref
+        this.casts = (player_data.casts || []).map(cast_data => new Cast(cast_data, time_ref))
         this.casts = this.casts.filter(cast => cast.spell)
+
+        // link each cast to the previous one of the same spell
+        const last_cast: { [spell_id: number]: Cast } = {}
+        this.casts.forEach(cast => {
+            cast.previous = last_cast[cast.spell_id]
+            last_cast[cast.spell_id] = cast
+        })
 
         // sub events
         this.deaths = (player_data.deaths || []).map(death_data => new Death(player_data, death_data))
         this.resurrections = (player_data.resurrects || []).map(resurrect_data => new Resurrection(player_data, resurrect_data))
+        this.deaths.forEach(event => event.time_ref = time_ref)
+        this.resurrections.forEach(event => event.time_ref = time_ref)
         this.layout_children()
     }
 
@@ -44,10 +57,37 @@ export default class Player extends Konva.Group {
 
         // Rebuild the child list in one pass instead of moveToTop() per cast (O(n) each).
         // Casts are sorted by time, so adding them in order fixes overlaps; deaths and resurrections go on top.
-        const visible_casts = this.casts.filter(cast => cast.spell && cast.visible())
+        const visible_casts = this.casts.filter(cast => cast.spell && cast.visible() && cast.in_range)
 
         this.removeChildren()
         this.add(...visible_casts, ...this.deaths, ...this.resurrections)
+        this.update_gutter_slots()
+    }
+
+    /**
+     * Place the icons of the shown carried casts (from before the crop, or from time cut out)
+     * in the gap before the segment they come into view in: the latest next to the segment.
+     * Only the latest of each spell per gap: our cooldowns can be longer than in game
+     * (talents, cooldown reduction), so older casts may well be ready again. Those are dropped.
+     */
+    update_gutter_slots() {
+        this.gap_counts = []
+        this.casts.forEach(cast => {
+            cast.gutter_slot = null
+            cast.superseded = false
+        })
+
+        const carried = this.casts.filter(cast => cast.gap_index !== null && cast.in_range && cast.visible() && cast.has_visible_bar())
+        const seen = new Set<string>()  // gap and spell
+        carried.reverse().forEach(cast => {
+            const i = cast.gap_index!
+            const key = `${i}:${cast.spell_id}`
+            if (seen.has(key)) { cast.superseded = true; return }
+            seen.add(key)
+
+            cast.gutter_slot = this.gap_counts[i] || 0
+            this.gap_counts[i] = cast.gutter_slot + 1
+        })
     }
 
     /** The row's look changed: redraw its cache right away if possible, else rebuild it once the browser is idle. */
@@ -158,17 +198,24 @@ export default class Player extends Konva.Group {
     }
 
     _handle_zoom_change(scale_x: number) {
-        this.clipWidth((this.row.duration * scale_x) - 1)  // 1px to allow border to show
+        this.clipWidth(this.row.time_ref.current.width(scale_x) - 1)  // 1px to allow border to show
+    }
+
+    _handle_time_map_changed() {
+        this.casts.forEach(cast => cast.update_time())
+        this.layout_children()  // casts whose time was cut out drop out
     }
 
     handle_event(event_name: string, payload: any) {
         // only concerns casts, and only the rows with toggled casts need a new cache
         if (event_name === constants.EVENT_SPELL_DISPLAY) { return this._handle_spell_display(payload) }
 
+        if (event_name === constants.EVENT_TIME_MAP_CHANGED) { this._handle_time_map_changed() }
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         this.casts.forEach(cast => cast.handle_event(event_name, payload))
         this.deaths.forEach(event => event.handle_event(event_name, payload))
         this.resurrections.forEach(event => event.handle_event(event_name, payload))
+        if (event_name === constants.EVENT_DISPLAY_SETTINGS) { this.update_gutter_slots() }  // bars shown or hidden
 
         if (Player.REDRAW_EVENTS.has(event_name)) {
             this.invalidate_cache()

@@ -2,6 +2,15 @@ import type Actor from "./actor";
 import type Phase from "./phase";
 
 
+export interface Pull {
+    start: number
+    end: number
+    boss: string | null
+    /** only the phases of a boss fight (see `get_phase_spans`): their name, eg. "P2" */
+    name?: string
+}
+
+
 export default interface Fight {
 
 
@@ -22,6 +31,21 @@ export default interface Fight {
     player_ids?: number[]
 
     phases: Phase[]
+
+    /**
+     * The pulls of a dungeon run, in Warcraft Logs order (empty/missing otherwise).
+     * `start`/`end`: milliseconds since the run started (same clock as the casts).
+     * `boss`: name of the boss for a boss pull, null for trash.
+     */
+    pulls?: Pull[]
+
+    /** Mythic+ keystone level (0/missing: unknown) */
+    keystone_level?: number
+    /** Mythic+ run time in ms, as Warcraft Logs reports it */
+    keystone_time?: number
+    /** 0 = depleted, 1/2/3 = timed at +1/+2/+3 */
+    keystone_bonus?: number
+    keystone_affixes?: number[]
 
     pinned?: boolean
 

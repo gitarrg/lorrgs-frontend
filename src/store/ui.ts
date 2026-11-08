@@ -4,6 +4,7 @@ import { DEFAULT_DIFFICULTY } from '../constants'
 import Actor from '../types/actor'
 import type { RootState } from './store'
 import type Fight from '../types/fight'
+import type { TooltipContent } from '../components/Timeline/tooltip'
 
 
 // modes to switch some page related features
@@ -35,6 +36,19 @@ export function get_metric(state: RootState) {
 
 export function get_filters(state: RootState) {
     return state.ui.filters
+}
+
+
+/** key of a fight in `pull_selection` */
+export function get_run_key(fight: Fight) {
+    return `${fight.report_id}/${fight.fight_id}`
+}
+
+const NO_PULLS: number[] = []
+
+/** the selected pulls of a dungeon run (indices into its `pulls`) */
+export function get_pull_selection(state: RootState, fight: Fight): number[] {
+    return state.ui.pull_selection[get_run_key(fight)] ?? NO_PULLS
 }
 
 
@@ -130,14 +144,47 @@ export interface UiSliceState {
     filters: FilterValues
 
     tooltip: {
-        content: string
+        content: TooltipContent
         position: { x: number, y: number }
     }
+
+    /**
+     * Selected pulls of each dungeon run, as indices into its `pulls`. Missing/empty: the whole run.
+     * Keyed by `get_run_key`. Only for this session (not in the url).
+     */
+    pull_selection: { [run_key: string]: number[] }
+
+    /**
+     * Selected phases of boss fights, by name (eg. "P2"): the same for all fights shown. Empty: the whole fights.
+     * Kept per tab (sessionStorage), so it survives a reload.
+     */
+    phase_selection: string[]
+
+    /** name of the boss phase the fights are aligned on (set by the timeline), if any. Enables the "aligned" timestamps. */
+    aligned_phase: string | null
 
     // CopyNote Options
     show_copynote: boolean
     copynote_player: Actor | null
     copynote_fight: Fight | null
+}
+
+
+const PHASE_SELECTION_KEY = "lorrgs_phase_selection"
+
+function read_phase_selection(): string[] {
+    try {
+        const stored = JSON.parse(sessionStorage.getItem(PHASE_SELECTION_KEY) || "[]")
+        return Array.isArray(stored) ? stored.filter(name => typeof name == "string") : []
+    } catch {
+        return []  // storage can be unavailable (private mode, blocked site data)
+    }
+}
+
+function store_phase_selection(names: string[]) {
+    try {
+        sessionStorage.setItem(PHASE_SELECTION_KEY, JSON.stringify(names))
+    } catch { /* nothing to remember it with */ }
 }
 
 
@@ -183,6 +230,10 @@ const INITIAL_STATE: UiSliceState = {
         content: "",
         position: { x: 0, y: 0 }
     },
+
+    pull_selection: {},
+    phase_selection: read_phase_selection(),
+    aligned_phase: null,
 
     show_copynote: false,
     copynote_player: null,
@@ -266,6 +317,25 @@ const SLICE = createSlice({
             return state
         },
 
+        set_pull_selection: (state, action: PayloadAction<{ run_key: string, indices: number[] }>) => {
+            const { run_key, indices } = action.payload
+            state.pull_selection[run_key] = [...indices].sort((a, b) => a - b)
+            return state
+        },
+
+
+        set_aligned_phase: (state, action: PayloadAction<string | null>) => {
+            state.aligned_phase = action.payload
+            return state
+        },
+
+        set_phase_selection: (state, action: PayloadAction<string[]>) => {
+            state.phase_selection = [...new Set(action.payload)]
+            store_phase_selection(state.phase_selection)
+            return state
+        },
+
+
         set_show_copynote: (state, action: PayloadAction<boolean>) => {
             state.show_copynote = action.payload
             return state
@@ -296,6 +366,9 @@ export const {
     set_mode,
     set_spec_slug,
     set_tooltip,
+    set_pull_selection,
+    set_phase_selection,
+    set_aligned_phase,
     update_settings,
     set_show_copynote,
     set_copynote_player,

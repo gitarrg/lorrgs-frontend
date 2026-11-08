@@ -6,6 +6,7 @@ import type Fight from "../../types/fight";
 import { get_is_loading } from "../../store/ui";
 import { useAppSelector } from "../../store/store_hooks";
 import { useRef, useEffect } from "react";
+import { get_view_settings } from "../../store/report_links";
 
 export default function TimelineCanvas() {
     //////////////////////////////////////
@@ -23,6 +24,11 @@ export default function TimelineCanvas() {
     const spell_display = useAppSelector((state) => state.spells.spell_display);
     const selected_spells = useAppSelector((state) => state.spells.selected_spells);
     const filters = useAppSelector((state) => state.ui.filters);
+    const pull_selection = useAppSelector((state) => state.ui.pull_selection);
+    const phase_selection = useAppSelector((state) => state.ui.phase_selection);
+    const view_settings = useAppSelector(get_view_settings);
+    const hide_unselected = view_settings.hide_unselected_pulls;
+    const timestamps = view_settings.timestamps;
 
     //////////////////////////////////////
     // Listeners
@@ -48,6 +54,7 @@ export default function TimelineCanvas() {
         } // not ready yet
         if (fights === stage_fights.current) { return } // only a loading flag changed: no need to rebuild
         stage_fights.current = fights
+        stage_ref.current!.set_pull_view({ selection: pull_selection, hide_unselected, timestamps, phase_selection });
         stage_ref.current!.set_fights(fights);
 
         // initial values
@@ -68,6 +75,11 @@ export default function TimelineCanvas() {
     useEffect(() => {
         stage_ref.current!.handle_event(constants.EVENT_SPELL_SELECTED, selected_spells);
     }, [selected_spells]);
+
+    // dungeon runs: selected pulls, cut out or dimmed, run or pull time
+    useEffect(() => {
+        stage_ref.current!.set_pull_view({ selection: pull_selection, hide_unselected, timestamps, phase_selection });
+    }, [pull_selection, phase_selection, hide_unselected, timestamps]);
 
     // (spell display changes re-apply the filters inside the stage, when needed)
     useEffect(() => {

@@ -1,6 +1,7 @@
 import { FaCopy } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { get_boss } from "../store/bosses";
+import { get_dungeon } from "../store/dungeons";
 import { get_difficulty_name } from "../store/fights";
 import { get_spec } from "../store/specs";
 import { get_spell_display } from "../store/spells";
@@ -112,22 +113,25 @@ function get_note_nsrt(
     name: string,
     player: Actor,
     fight: Fight,
-    boss: Boss,
+    boss: Boss | null,
+    dungeon_name: string | undefined,
     spell_display: SpellDisplayMap,
 ): string {
 
     const rows: string[] = [];
 
-    const encounterId = boss.id;
-    const encounterName = boss.full_name;
-
-    rows.push(
-        format_nsrt_row([
-            ["EncounterID", encounterId],
-            ["Difficulty", get_difficulty_name(fight.difficulty)],
-            ["Name", encounterName],
-        ]),
-    );
+    // a dungeon run has no boss (and so no encounter id)
+    if (boss) {
+        rows.push(
+            format_nsrt_row([
+                ["EncounterID", boss.id],
+                ["Difficulty", get_difficulty_name(fight.difficulty)],
+                ["Name", boss.full_name],
+            ]),
+        );
+    } else {
+        rows.push(format_nsrt_row([["Name", dungeon_name ?? "Unknown"]]));
+    }
 
     player.casts.forEach((cast) => {
 
@@ -186,7 +190,9 @@ function get_formatted_note(
     const player = useAppSelector(ui_store.get_copynote_player);
     const spell_display = useAppSelector(get_spell_display) as SpellDisplayMap;
     const fight = useAppSelector(ui_store.get_copynote_fight);
-    const boss = useAppSelector(state => get_boss(state, fight?.boss?.boss_slug));
+    // no fallback to the selected boss: a dungeon run has none
+    const boss = useAppSelector(state => fight?.boss?.boss_slug ? get_boss(state, fight.boss.boss_slug) : null);
+    const dungeon = useAppSelector(state => get_dungeon(state, fight?.dungeon ?? undefined));
 
     if (!player) {
         return "no player selected";
@@ -210,6 +216,7 @@ function get_formatted_note(
                 player,
                 fight,
                 boss,
+                dungeon?.name,
                 spell_display,
             );
     }
@@ -234,7 +241,7 @@ export default function CopyNoteWindow() {
     const fight = useAppSelector(ui_store.get_copynote_fight)
     const dispatch = useAppDispatch()
     const user = useUser()
-    const boss = useAppSelector(state => get_boss(state, fight?.boss?.boss_slug))
+    const boss = useAppSelector(state => fight?.boss?.boss_slug ? get_boss(state, fight.boss.boss_slug) : null)
 
     const player = useAppSelector(ui_store.get_copynote_player);
     const spec = useAppSelector(state => get_spec(state, player?.spec_slug));

@@ -1,0 +1,190 @@
+// Pull picker of a dungeon run, in its `DungeonInfo` (see `PullSelect`).
+// Colours match the pull bands on the timeline (see `PullRow`).
+
+.container {
+    position: relative;
+    flex-grow: 1;
+    min-width: 0;
+    height: 100%;
+}
+
+.button {
+    width: 100%;
+    height: 100%;
+    padding: 0 6px 0 4px;
+
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    color: hsl(190, 20%, 80%);
+    background: hsl(195, 40%, 30%);
+
+    border: none;
+    font-size: 0.9rem;
+    text-align: left;
+
+    &:hover,
+    &.open {
+        color: white;
+    }
+}
+
+.summary {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.duration {
+    opacity: 0.7;
+}
+
+.popover {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    z-index: 100;  // above the copy icon
+
+    background: var(--bg-darker);
+
+    width: 26rem;
+    max-width: 80vw;
+    padding: 0.5rem 0.6rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-weight: bold;
+}
+
+.hint {
+    flex-grow: 1;
+    font-size: 0.75rem;
+    font-weight: normal;
+    opacity: 0.6;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+// like the chips of the pull/player tooltips (see `FightPlayerLinks.module.scss`)
+.chip {
+    --chip-color: #5b9bd5;  // PULL_COLOR
+
+    display: flex;
+    gap: 0.4em;
+    align-items: baseline;
+    padding: 0 0.4em;
+
+    background: hsl(0, 0%, 17%);
+    border: 1px solid var(--chip-color);
+    border-radius: 3px;
+    color: hsl(0, 0%, 85%);
+    white-space: nowrap;
+    user-select: none;
+
+    &:hover {
+        color: white;
+        background: hsl(0, 0%, 25%);
+    }
+
+    &.boss {
+        --chip-color: #e6b422;  // BOSS_PULL_COLOR
+    }
+
+    &.selected {
+        color: white;
+        background: color-mix(in srgb, var(--chip-color) 45%, black);
+    }
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.85rem;
+
+    label {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0;
+        cursor: pointer;
+        user-select: none;
+    }
+}
+
+.quick {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.85rem;
+}
+
+.quick_button {
+    padding: 0 0.5rem;
+    background: transparent;
+    border: 1px solid hsl(0, 0%, 50%);
+    border-radius: 3px;
+    color: inherit;
+
+    &:hover {
+        background: hsl(0, 0%, 25%);
+    }
+
+    &.active {
+        background: hsl(0, 0%, 35%);
+        color: white;
+    }
+
+    &:disabled {
+        opacity: 0.4;
+    }
+}
+
+// between the sections of the popover: run info, pulls, settings
+.divider {
+    margin: 0;
+    border: none;
+    border-top: 1px solid hsl(0, 0%, 30%);
+    opacity: 1;
+}
+
+// like the quick select buttons, with a caret
+.select {
+    appearance: none;
+    padding: 0 1.4rem 0 0.4rem;
+
+    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23cccccc' d='M2.5 4.25 6 7.75 9.5 4.25'/%3E%3C/svg%3E") no-repeat right 0.3rem center;
+    border: 1px solid hsl(0, 0%, 50%);
+    border-radius: 3px;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+        background-color: hsl(0, 0%, 25%);
+        outline: none;
+    }
+
+    option {
+        background: hsl(0, 0%, 15%);
+        color: hsl(0, 0%, 85%);
+    }
+}

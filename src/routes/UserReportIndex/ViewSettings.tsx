@@ -1,12 +1,12 @@
 import styles from "./ViewSettings.module.scss"
 import { FaCog } from "react-icons/fa"
-import { get_view_settings, set_view_setting, type ViewSettings as ViewSettingsType } from "../../store/report_links"
+import { get_view_settings, set_view_setting, type ViewSettingToggle } from "../../store/report_links"
 import { useAppDispatch, useAppSelector } from "../../store/store_hooks"
 import { get_user_report_fights } from "../../store/user_reports"
 import { useEffect, useRef, useState } from "react"
 
 
-const OPTIONS: { key: keyof ViewSettingsType, label: string }[] = [
+const OPTIONS: { key: ViewSettingToggle, label: string }[] = [
     { key: "hover_fight", label: "Hover a pull to see its players" },
     { key: "hover_player", label: "Hover a player to see their pulls" },
     { key: "grey_out", label: "Grey out what isn't in the selection" },

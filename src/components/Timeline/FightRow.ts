@@ -2,6 +2,9 @@
 
 This basically just wraps a number of Boss/Player Rows.
 
+Dungeon runs with pulls also get a `PullRow` above the row (in the gap/ruler space next to the run's info), and can be cropped to some of their pulls. Everything on the row goes through the row's `TimeMap`
+(`time_ref`) to turn the time of an event into its position.
+
 */
 
 import { FilterValues } from "../../store/ui";
@@ -11,9 +14,28 @@ import filter_logic from "../../filter_logic";
 import Konva from "konva";
 import PhaseMarker from "./PhaseMarker";
 import PlayerRow from "./PlayerRow";
+import PullRow from "./PullRow";
+import type { SeenPhase } from "./Stage";
+import TimeMap, { type TimeMapRef, type TimestampMode } from "./TimeMap";
+import { get_run_key } from "../../store/ui";
+import type { Context } from "konva/lib/Context";
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
+import type { Pull } from "../../types/fight";
 import type Stage from "./Stage";
+import type { Anchor } from "./Stage";
+import { get_extra_phase_spans, get_phase_spans, get_pull_label, MIN_PHASE_TS } from "../../pulls";
+
+
+/** How dungeon runs show their pulls (the same for all fight rows of the stage) */
+export interface PullView {
+    /** selected pulls per run (see `get_run_key`) */
+    selection: { [run_key: string]: number[] }
+    hide_unselected: boolean
+    timestamps: TimestampMode
+    /** selected phases of boss fights, by name (eg. "P2": shared by all fights). Empty: the whole fight */
+    phase_selection: string[]
+}
 
 
 export default class FightRow {
@@ -21,8 +43,13 @@ export default class FightRow {
     /* offset for the killtime text */
     KILLTIME_MARGIN = 5
 
+    /** length of the fight in seconds */
     duration: number
     _visible: boolean
+
+    /** maps the time of an event to its position on the row. Shared with all children */
+    time_ref: TimeMapRef
+    run_key: string
     _fight_data: Fight
 
     // latest payload per event received while hidden
@@ -30,7 +57,12 @@ export default class FightRow {
 
     // Timestamp of the current anchor (in milliseconds)
     anchor_offset: number = 0
-    anchor_ts: number = 0
+    /** run time (s) of the pull the fights are aligned on. None: aligned on a phase (or not at all) */
+    private anchor_pull?: number
+    /** run time (s) where the phase the fights are aligned on starts in this fight (see "aligned" timestamps) */
+    private align_origin?: number
+    /** run time (s) under the pointer, to the second (see "cursor" timestamps) */
+    private cursor_origin?: number
 
     foreground: Konva.Group
     background: Konva.Group
@@ -38,6 +70,16 @@ export default class FightRow {
     rows: PlayerRow[] = []
     phases: PhaseMarker[] = []
     killtime_text: Konva.Text
+
+    /** the phases of a boss fight as pulls (see `get_phase_spans`). Empty: no phases, or a dungeon run */
+    phase_spans: Pull[] = []
+
+    // dungeon runs, and the ruler of boss fights with phases (their `pull_row` shows the phases)
+    pull_row?: PullRow
+    /** greys out the time between the selected pulls, and marks cut out time */
+    dim_shape: Konva.Shape
+    private rows_height = 0
+    private scale_x = constants.DEFAULT_ZOOM
 
 
     constructor(fight_data: Fight) {
@@ -47,6 +89,9 @@ export default class FightRow {
         // input data
         this._fight_data = fight_data
         this.duration = Math.ceil(fight_data.duration / 1000); // ms to s
+        this.phase_spans = get_phase_spans(fight_data)
+        this.time_ref = { current: TimeMap.identity(this.duration), pulls: fight_data.pulls || (this.phase_spans.length ? this.phase_spans : undefined) }
+        this.run_key = get_run_key(fight_data)
 
         // Groups
         this.foreground = new Konva.Group()
@@ -63,17 +108,38 @@ export default class FightRow {
         this.foreground.add(this.killtime_text)
 
         // Phases
-        fight_data.phases?.forEach(phase_data => {
+        fight_data.phases?.filter(phase_data => phase_data.ts >= MIN_PHASE_TS).forEach(phase_data => {
             const phase = new PhaseMarker(phase_data)
+            phase.time_ref = this.time_ref
             this.phases.push(phase)
             this.overlay.add(phase)
         })
+
+        // Pulls (dungeon runs)
+        const pulls = fight_data.pulls?.length ? fight_data.pulls : this.phase_spans
+        if (pulls.length) {
+            // above the row, next to the run's info in the names column (where the shared ruler is for the first fight)
+            this.pull_row = new PullRow(pulls, this.time_ref, fight_data.boss?.boss_slug)
+            this.pull_row.shape.y(-this.pull_row.height())
+            this.pull_row.bbox.y(-this.pull_row.height())
+            this.background.add(this.pull_row.shape)
+            this.overlay.add(this.pull_row.bbox)
+        }
+
+        this.dim_shape = new Konva.Shape({
+            listening: false,
+            perfectDrawEnabled: false,
+            transformsEnabled: "position",
+            sceneFunc: (context) => this.draw_dim(context),
+        })
+        this.overlay.add(this.dim_shape)
+        this.dim_shape.moveToBottom()  // below the phase markers
 
         this.layout_children()
     }
 
     add_row(fight: Fight, player: Actor) {
-        const row = new PlayerRow(fight, player)
+        const row = new PlayerRow(fight, player, this.time_ref)
         this.rows.push(row)
 
         this.foreground.add(row.foreground)
@@ -85,7 +151,7 @@ export default class FightRow {
         return new Konva.Text({
             name: "cast_text",
             text: toMMSS(this.duration),
-            x: this.KILLTIME_MARGIN + (this.duration * constants.DEFAULT_ZOOM),
+            x: this.KILLTIME_MARGIN + (this.time_ref.current.duration * constants.DEFAULT_ZOOM),
             y: 0,
             fontSize: 14,
 
@@ -106,8 +172,92 @@ export default class FightRow {
             row.y(y)
             y += row.height()
         })
+        this.rows_height = y
 
-        this.phases.forEach(phase => phase.set_height(y))
+        this.phases.forEach(phase => { phase.set_height(y) })
+    }
+
+    /** grey out the time between the selected pulls, and mark where time was cut out (in the overlay) */
+    private draw_dim(context: Context) {
+        const map = this.time_ref.current
+        const s = this.scale_x
+        // (the pull row sits above the row, if it is shown: else the fight above would be dimmed too)
+        const top = this.pull_row?.is_shown() ? -this.pull_row.height() : 0
+        const height = this.rows_height - top
+
+        context.setAttr("fillStyle", "rgba(0, 0, 0, 0.6)")
+        map.dimmed.forEach(range => {
+            const x0 = map.to_x(range.start, s)
+            const x1 = map.to_x(range.end, s)
+            context.fillRect(x0, top, x1 - x0, height)
+        })
+
+        // cuts without a gutter: dashed line through the whole run, on the seam where time was taken out.
+        context.setAttr("strokeStyle", "rgba(255, 255, 255, 0.6)")
+        context.setAttr("lineWidth", 1)
+        context.setLineDash([3, 3])
+        const xs = map.segment_xs(s)
+        xs.slice(1).forEach(({ x0 }, i) => {
+            if (map.gap(i + 1) > 0) { return }  // a gutter marks the cut itself
+            const x = Math.round(x0) + 0.5
+            context.beginPath()
+            context.moveTo(x, top + 1)  // inside the 1px border
+            context.lineTo(x, this.rows_height + 1)  // down to the bottom border
+            context.stroke()
+        })
+        context.setLineDash([])
+    }
+
+    /** whether the fight shows its pulls or phases (and so has its own ruler) */
+    has_pull_row() {
+        return !!this.pull_row
+    }
+
+    /** a boss fight with phases: its ruler is shown for the first fight only (in spec rankings, see `Stage.layout_children`) */
+    has_phases() {
+        return this.phase_spans.length > 0
+    }
+
+    /**
+     * spec rankings: the ruler (first fight) covers the longest fight, and the phases this one doesn't reach (at the time they were first seen).
+     * `seen`: see `Stage.get_seen_phases`. None: reset
+     */
+    set_ruler_extent(seen?: Map<string, SeenPhase>, end = 0) {
+        if (!this.pull_row || !this.has_phases()) { return }
+        const times = new Map([...(seen || [])].map(([name, phase]) => [name, phase.ts]))
+        this.pull_row.set_extent(get_extra_phase_spans(this.phase_spans, times, end * 1000), Math.max(this.duration, end))
+    }
+
+    set_ruler_shown(state: boolean) {
+        this.pull_row?.set_shown(state)
+    }
+
+    /** Rebuild the time map for the pull selection/settings */
+    set_pull_view(view: PullView) {
+        if (!this.pull_row) { return }
+
+        // phases are picked by name (the same in all fights), pulls by index
+        const phases = this.has_phases()
+        const selected = phases
+            ? this.phase_spans.flatMap((span, i) => view.phase_selection.includes(span.name!) ? [i] : [])
+            : view.selection[this.run_key] || []
+        const map = TimeMap.build({
+            duration: this.duration,
+            pulls: phases ? this.phase_spans : this._fight_data.pulls,
+            selected,
+            hide_unselected: view.hide_unselected,
+            show_all: phases,
+            selection_active: phases && view.phase_selection.length > 0,
+            timestamps: view.timestamps,
+            align_origin: this.align_origin,
+            cursor_origin: this.cursor_origin,
+        })
+        this.pull_row.set_selected(selected)
+        this.time_ref.current = map
+
+        // children read the map: update their texts, what is cut out, and their positions
+        this.handle_event(constants.EVENT_TIME_MAP_CHANGED, null)
+        this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
     }
 
     //////////////////////////////
@@ -154,8 +304,62 @@ export default class FightRow {
     //
 
     _handle_zoom_change(scale_x: number) {
-        this.killtime_text.x(this.KILLTIME_MARGIN + (this.duration * scale_x))
-        this.x(this.anchor_offset * scale_x)
+        this.scale_x = scale_x
+        this.killtime_text.x(this.KILLTIME_MARGIN + this.time_ref.current.width(scale_x))
+        this.update_x()
+    }
+
+    /** the anchor offset */
+    private update_x() {
+        if (this.anchor_pull !== undefined) {
+            // in px: the gaps before the pull have no time
+            this.x(this.anchor_offset * this.scale_x - this.time_ref.current.to_x(this.anchor_pull, this.scale_x))
+            return
+        }
+        this.x(this.anchor_offset * this.scale_x)
+    }
+
+    /**
+     * Gaps before the segments of a cropped/cut row, with the icons of the casts from before them
+     * whose bars reach into them (so they don't look like they were cast at the segment's start).
+     * Each as wide as the most such casts of a (visible) player. None: no gap.
+     */
+    wanted_gaps(): number[] {
+        const map = this.time_ref.current
+        const visible = this.rows.filter(row => row.visible())
+        return map.segments.map((_, i) => {
+            const count = Math.max(0, ...visible.map(row => row.foreground.gap_counts[i] || 0))
+            const left = i > 0 ? constants.GUTTER_CUT_PADDING : 0  // cuts: apart from the segment before
+            return count ? left + count * constants.GUTTER_SLOT + constants.GUTTER_PADDING : 0
+        })
+    }
+
+    private update_gaps() {
+        // boss fights: the stage sets them, they have to be the same in all fights to stay aligned (see `Stage.sync_gaps`)
+        if (this.has_phases()) { return }
+        this.apply_gaps(this.wanted_gaps())
+    }
+
+    apply_gaps(gaps: number[]) {
+        const map = this.time_ref.current
+        if (!map.set_gaps(gaps.slice(0, map.segments.length))) { return }
+
+        // everything after a gap moves
+        this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
+        this.background.getStage()?.batchDraw()  // (casts only redraw their layer)
+    }
+
+    /** events that can change which casts go in the gaps */
+    static GUTTER_EVENTS = new Set([
+        constants.EVENT_TIME_MAP_CHANGED,
+        constants.EVENT_SPELL_DISPLAY,
+        constants.EVENT_DISPLAY_SETTINGS,
+        constants.EVENT_APPLY_FILTERS,
+    ])
+
+    _handle_time_map_changed() {
+        const map = this.time_ref.current
+        this.killtime_text.text(toMMSS(map.label_at_display(map.duration)))
     }
 
     _handle_apply_filters_pre(filters: FilterValues) {
@@ -163,27 +367,58 @@ export default class FightRow {
         this.visible(visible)
     }
 
-    private handle_anchor_changed({ ts, name }: { ts: number, name: string }) {
+    private handle_anchor_changed({ ts, name, kind }: Anchor) {
 
         let stage = this.background.getStage() as Stage || null
         if (!stage) { return }
 
         // reset to pull
+        this.anchor_offset = 0
+        this.anchor_pull = undefined
+        const previous_origin = this.align_origin
+        this.align_origin = undefined
         if (ts == 0) {
-            this.anchor_offset = 0
-            this.anchor_ts = 0
-            this.x(0)
+            this.update_x()
+            this.update_align_origin(previous_origin)
+            return
         }
 
-        // find the same phase in this fight
-        const phase_in_fight = this._fight_data.phases?.find(phase => phase.name === name)
-        if (!phase_in_fight) { return }
+        // the same pull (or phase) in this run: its start lands at `ts` (see `update_x`)
+        const pulls = kind == "pull" ? this._fight_data.pulls || [] : this.phase_spans
+        const pull = pulls.find((pull, i) => get_pull_label(pull, i) == name)
+        if (pull) {
+            this.anchor_offset = ts
+            this.anchor_pull = pull.start / 1000
+            if (kind == "phase") { this.align_origin = pull.start / 1000 }
+        }
+        this.update_x()
+        this.update_align_origin(previous_origin)
+    }
 
-        // TODO: see if we can keep the relative screen position
-        // of the object clicked on.
-        let new_offset = ts - (phase_in_fight.ts / 1000);
-        this.anchor_offset = new_offset;
-        this.x(this.anchor_offset * stage.scale_x);
+    /**
+     * "cursor" timestamps count from the time under the pointer: `x` is the pointer's position on the stage (px).
+     * @returns true if the texts changed
+     */
+    set_cursor(x: number): boolean {
+        const map = this.time_ref.current
+        if (map.timestamps != "cursor") { return false }
+        const origin = Math.round(map.run_at_x(x - this.foreground.x(), this.scale_x))
+        if (origin === this.cursor_origin) { return false }
+        this.cursor_origin = origin
+        map.cursor_origin = origin
+        this.handle_event(constants.EVENT_TIME_MAP_CHANGED, null)
+        this.rows.forEach(row => row.foreground.invalidate_cache())
+        return true
+    }
+
+    /** "aligned" timestamps count from the aligned phase: update the texts if it changed */
+    private update_align_origin(previous?: number) {
+        const map = this.time_ref.current
+        if (this.align_origin === previous) { return }
+        map.align_origin = this.align_origin
+        if (map.timestamps != "aligned") { return }
+        this.handle_event(constants.EVENT_TIME_MAP_CHANGED, null)
+        this.rows.forEach(row => row.foreground.invalidate_cache())  // only the texts changed: the rows are cached
     }
 
 
@@ -207,7 +442,7 @@ export default class FightRow {
 
         // hidden: remember the latest payload and replay once visible again
         if (!this.visible()) {
-            if (event_name !== constants.EVENT_APPLY_FILTERS && event_name !== constants.EVENT_PHASE_HOVER) {
+            if (event_name !== constants.EVENT_APPLY_FILTERS && event_name !== constants.EVENT_PHASE_HOVER && event_name !== constants.EVENT_PHASE_PEEK) {
                 this._pending_events.delete(event_name)
                 this._pending_events.set(event_name, payload)
             }
@@ -215,11 +450,14 @@ export default class FightRow {
         }
 
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
+        if (event_name === constants.EVENT_TIME_MAP_CHANGED) { this._handle_time_map_changed() }
         if (event_name === constants.EVENT_ANCHOR_CHANGED) { this.handle_anchor_changed(payload) }
         this.rows.forEach(child => child.handle_event(event_name, payload))
         this.phases.forEach(child => child.handle_event(event_name, payload))
+        this.pull_row?.handle_event(event_name, payload)
 
         // postprocess after filters applied (in case height change due to child rows updating)
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters_post() }
+        if (FightRow.GUTTER_EVENTS.has(event_name)) { this.update_gaps() }
     }
 }

@@ -3,6 +3,7 @@
 
 :root {
     --bg-dark: hsl(0, 0%, 18%);
+    --bg-darker: hsl(0, 0%, 5%);
     --bg-dark-hover: hsl(0, 0%, 30%);
     --bg-light: hsl(0, 0%, 25%);
     --bg-light-hover: hsl(0, 0%, 32%);
@@ -19,9 +20,17 @@
 }
 
 
+/* main background color */
 .bg-dark {
     background-color: var(--bg-dark);
 }
+
+
+/* used for tooltips etc */
+.bg-darker {
+    background-color: var(--bg-dark);
+}
+
 
 /** notes, hints and other secondary text */
 .text-small {

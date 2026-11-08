@@ -1,21 +1,18 @@
 /*
-    Custom Tooltip Component.
+    Tooltip of the timeline.
 
-    Reads content and position from the redux state,
-    so we can easily feed it from anywhere inside the app.
+    Reads content and position from the redux state (see `tooltip.ts`),
+    so it can be fed from anywhere inside the timeline.
 
-    Once content is received we start a short timer,
-    and how the tooltip with some delay.
-
-    If the state changes in the meantime, the component gets dismounted,
-    and should cancel the timer.
-
+    Appears after a short delay. Once shown, new content (eg. moving along the ruler)
+    shows right away, until the content is cleared.
 */
-import { useRef, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import parse from 'html-react-parser';
 
 import { get_tooltip } from '../../store/ui'
 import { useAppSelector } from '../../store/store_hooks';
+import type { TooltipInfo } from './tooltip';
 
 import styles from "./TimelineTooltip.module.scss"
 
@@ -23,41 +20,64 @@ import styles from "./TimelineTooltip.module.scss"
 const TOOLTIP_DELAY = 500
 
 
+function TooltipBody({ info }: { info: TooltipInfo }) {
+    return <>
+        {info.title && (
+            <div className={styles.title} style={{ color: info.title_color }}>
+                {info.icon && <img className={styles.icon} src={info.icon} alt="" />}
+                <span>{info.title}</span>
+                {info.title_detail && <span className={styles.title_detail}>{info.title_detail}</span>}
+            </div>
+        )}
+
+        {info.time && (
+            <div className={styles.time}>
+                <span>{info.time}</span>
+                {info.time_detail && <span className={styles.muted}>
+                    {info.time_detail}
+                    {info.time_pull && <> <span style={{ color: info.time_pull.color }}>{info.time_pull.name}</span></>}
+                </span>}
+            </div>
+        )}
+
+        {!!info.lines?.length && (
+            <div className={styles.lines}>
+                {info.lines.map((line, i) => <div key={i} className={styles.line}>
+                    <span className={styles.value}>{line.value}</span>
+                    <span className={styles.muted}>
+                        {line.label}
+                        {line.pull && <> <span style={{ color: line.pull.color }}>{line.pull.name}</span></>}
+                    </span>
+                </div>)}
+            </div>
+        )}
+
+        {!!info.hints?.length && <div className={styles.hints}>{info.hints.map(hint => <div key={hint}>{hint}</div>)}</div>}
+    </>
+}
+
+
 export default function TimelineTooltip() {
 
     const tooltip = useAppSelector(state => get_tooltip(state))
-    const ref = useRef<HTMLDivElement>(null)
+    const has_content = !!tooltip.content
+    const [shown, set_shown] = useState(false)
 
     useEffect(() => {
+        if (!has_content) { set_shown(false); return }
+        const timer = setTimeout(() => set_shown(true), TOOLTIP_DELAY)
+        return () => clearTimeout(timer)
+    }, [has_content]);
 
-        // no tooltip? no timer!
-        if (!ref.current) { return }
+    if (!has_content || !shown) { return null }
 
-        // create timer to show the tooltip after some delay
-        const interval = setTimeout(() => {
-            if (ref.current) {
-                ref.current.style.display = "block";
-            }
-        }, TOOLTIP_DELAY);
-        return () => clearInterval(interval);
-    }, [tooltip]);
-
-    // no content to show? :/
-    if (!tooltip.content) {
-        return null;
-    }
-
-    /////////////////////////////////
-    // Render
-    //
-    const tooltip_content = parse(tooltip.content)
     return (
-        <div
-            ref={ref}
-            className={styles.tooltip}
-            style={{left: tooltip.position.x, top: tooltip.position.y, display: "None"}}
-        >
-            <div className={styles.tooltip_content}>{tooltip_content}</div>
+        <div className={styles.tooltip} style={{ left: tooltip.position.x, top: tooltip.position.y }}>
+            <div className={styles.tooltip_content}>
+                {typeof tooltip.content == "string"
+                    ? parse(tooltip.content)
+                    : <TooltipBody info={tooltip.content} />}
+            </div>
             <div className={styles.tooltip_arrow}></div>
         </div>
     )

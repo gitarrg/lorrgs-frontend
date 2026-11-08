@@ -1,0 +1,65 @@
+// Summary of a dungeon run at the top of its pull selector (see `DungeonRunInfo`).
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-size: 0.85rem;
+    color: hsl(0, 0%, 85%);
+}
+
+.title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: white;
+}
+
+.icon {
+    width: 1.4rem;
+    height: 1.4rem;
+    border: 1px solid black;
+    border-radius: 3px;
+}
+
+// name, level, stars (also in the closed pull selector, where it may get cut off)
+.run_title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.level {
+    flex-shrink: 0;
+    color: #f5c542;
+}
+
+.stars {
+    flex-shrink: 0;
+    display: flex;
+    gap: 1px;
+    color: #f5c542;
+    font-size: 0.75rem;
+}
+
+.under {
+    color: var(--wow-kill, #6fd36f);
+}
+
+.over {
+    color: var(--wow-wipe, #e5604d);
+}
+
+.date {
+    opacity: 0.6;
+}

@@ -63,11 +63,14 @@ export function BossName({ fight, boss }: { fight: Fight; boss: Actor }) {
     ///////////////////
     // Render
     return (
-        <div className={styles.boss_name}>
+        <div
+            className={styles.boss_name}
+        >
             <a target="_blank" href={fight.report_url}>
                 <WebpImg className={styles.icon} src={boss_type.icon_path} />
                 <span className={styles.name}>{boss_type.name}</span>
             </a>
+
         </div>
     );
 }
@@ -130,8 +133,9 @@ export function PlayerName({ fight, player }: { fight: Fight; player: Actor }) {
     const role = useAppSelector((state) => get_role(state, spec?.role ?? ""));
     const mode_spec = mode == MODES.SPEC_RANKING;
     const mode_comp = mode == MODES.COMP_RANKING;
+    const mode_user_report = mode == MODES.USER_REPORT;
     const has_talents = useAppSelector(get_has_talents);
-    const show_talents = mode_spec && has_talents;
+    const show_talents = (mode_spec || mode_user_report) && has_talents;
     const talent_card = useTalentCard(show_talents);
 
     ///////////////////

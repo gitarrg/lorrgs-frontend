@@ -1,10 +1,8 @@
-
-
 import Konva from "konva"
 import * as constants from "../constants"
-import Stage from "../Stage"
 
 
+/** Vertical line following the pointer across all timelines (see `Stage._update_crosshair`). */
 export default class MouseCrosshair extends Konva.Line {
 
     // last known pointer position in seconds on the timeline
@@ -12,36 +10,38 @@ export default class MouseCrosshair extends Konva.Line {
 
     constructor() {
         super({
-            name: "mouse_crosshair_y",
-            points: [0.5, constants.LINE_HEIGHT, 0.5, 999],  // fix height
+            name: "mouse_crosshair",
+            points: [0.5, 0, 0.5, 0],  // see `set_height`
             stroke: "white",
             strokeWidth: 0.5,
-            fill: "white",
-            transformsEnabled: "position",
+            listening: false,
             visible: false,
+            transformsEnabled: "position",
         })
     }
 
-    private update_position() {
-        const stage = this.getStage() as Stage || null
-        this.x( this.time * (stage?.scale_x  || constants.DEFAULT_ZOOM ))
+    /** cover all timelines */
+    set_height(height: number) {
+        this.points([0.5, 0, 0.5, height])
     }
 
-    handle_mousemove() {
+    private update_position() {
+        const stage = this.getStage() as (Konva.Stage & { scale_x: number }) | null
+        this.x(this.time * (stage?.scale_x || constants.DEFAULT_ZOOM))
+    }
 
-        if (!this.visible()) {return}
-
-        const stage = this.getStage() as Stage || null
-        if (!stage) { return }
-        let pointer = stage.getPointerPosition();
-        if (!pointer) { return }
-
-        // store the time the mouse is at
-        this.time = (pointer.x - stage.x()) / stage.scale_x
+    /** Move to `time` (seconds on the stage) */
+    move_to(time: number) {
+        this.time = time
         this.update_position()
+        this.visible(true)
+    }
+
+    hide_crosshair() {
+        this.visible(false)
     }
 
     handle_event(event_name: string, _: any) {
-        if (event_name === constants.EVENT_ZOOM_CHANGE) { this.update_position()}
+        if (event_name === constants.EVENT_ZOOM_CHANGE) { this.update_position() }
     }
 }

@@ -4,10 +4,12 @@ import type { Context } from "konva/lib/Context"
 
 import * as constants from "./constants"
 import store from "./../../store/store"
-import { toMMSS } from "../../utils"
+import { format_time, toMMSS } from "../../utils"
 import type Spell from "../../types/spell"
 import type CastType from "../../types/cast"
 import type Stage from "./Stage"
+import { IDENTITY_REF, type TimeMapRef } from "./TimeMap"
+import { get_time_lines, pull_tag, show_tooltip, type TooltipInfo } from "./tooltip"
 
 /** simple cache to reuse existing images */
 export const IMAGES: {[key: number]: HTMLImageElement} = {}
@@ -66,18 +68,50 @@ export default class Cast extends Konva.Shape {
     hovering: boolean
     selected: boolean
 
-    tooltip_content?: string
+    private counter?: number
+
+    /** the cast of the same spell before this one, by the same player (see `Player`) */
+    previous?: Cast
+
+    /** where on the row the cast goes (see `TimeMap`) */
+    time_ref: TimeMapRef
+
+    /** false while neither the cast nor its bars are shown on the row */
+    in_range = true
+
+    /**
+     * Run time (s) the cast is drawn from: its own time, or where its bars come into view
+     * when it was cast before the shown time (before the first selected pull, or in a cut-out gap).
+     */
+    private shown_from = 0
+
+    /** cast before the shown time, but its bars reach into it: drawn from `shown_from`, without its time */
+    private carried = false
+
+    /** carried: the segment it comes into view in. Its icon goes in the gap before it (see `TimeMap.gaps`) */
+    gap_index: number | null = null
+
+    /** position in that gap (0: next to the segment), set by `Player.update_gutter_slots` */
+    gutter_slot: number | null = null
+
+    /** carried, but a later cast of the same spell is carried into the same gap: not drawn */
+    superseded = false
 
     // default opacity (might be different for procs)
     _default_opacity: number = 1.0
-
-    /** pixels per second */
-    private scale_x = constants.DEFAULT_ZOOM
 
     private image?: HTMLImageElement
     private text = ""
     private text_width = 0
     private has_cooldown = false
+
+    // widths of the bars in display time (s): time cut out of the row doesn't count
+    private cooldown_width = 0
+    private duration_width = 0
+
+    // the same in px (see `_handle_zoom_change`): bars crossing a gap include it
+    private cooldown_px = 0
+    private duration_px = 0
 
     // which parts are shown (see `_handle_display_settings`)
     private show_icon = true
@@ -94,7 +128,7 @@ export default class Cast extends Konva.Shape {
     private text_fill = "white"
 
 
-    constructor(cast_data: CastType) {
+    constructor(cast_data: CastType, time_ref: TimeMapRef = IDENTITY_REF) {
         super({
             name: "Cast",
             y: 1, // for the background stroke
@@ -107,6 +141,7 @@ export default class Cast extends Konva.Shape {
         const state = store.getState()
 
         // Cast & Spell Info
+        this.time_ref = time_ref
         this.spell_id = cast_data.id;
         this.timestamp = cast_data.ts / 1000;
         this.spell = state.spells.all_spells[this.spell_id];
@@ -120,8 +155,7 @@ export default class Cast extends Konva.Shape {
         if (!this.spell) { return }
 
         this.image = get_image(this.spell)
-        this.text = toMMSS(this.timestamp)
-        this.text_width = measure_text(this.text)
+        this.counter = cast_data.counter
         this.has_cooldown = !!this.spell.cooldown
 
         // Dim procs
@@ -131,19 +165,81 @@ export default class Cast extends Konva.Shape {
             this.opacity(this._default_opacity)
             this.has_cooldown = false
         }
+        this.update_time()
 
         let show = state.spells.spell_display[this.spell_id]
         show = (show === undefined) ? this.spell.show : show
         this.visible(show)
 
-        // prepare the tooltip content, as it doesn't change
-        this.tooltip_content = `${this.spell.name}`
-        this.tooltip_content += cast_data.counter ? ` #${cast_data.counter}` : ""
-        this.tooltip_content += "<br>"
-        this.tooltip_content += `${toMMSS(this.timestamp)}`
-        if (this._duration > 0) {
-            let end_time = this.timestamp + this._duration;
-            this.tooltip_content += ` - ${toMMSS(end_time)}`
+    }
+
+    /** Apply the current time map: bar widths and the times shown (position: see `_handle_zoom_change`) */
+    update_time() {
+        const map = this.time_ref.current
+
+        const t = this.timestamp
+        const cooldown = this.has_cooldown ? (this.spell?.cooldown || 0) : 0
+        const duration = this._duration || 0
+
+        const from = map.first_shown(t, t + Math.max(cooldown, duration))
+        this.in_range = from !== null
+        this.shown_from = from ?? t
+        this.carried = from !== null && from > t
+        this.gap_index = this.carried ? map.segment_index(this.shown_from) : null
+
+        // the part of each bar from `shown_from` on
+        const bar_width = (length: number) => Math.max(0, map.to_display(t + length) - map.to_display(this.shown_from))
+        this.cooldown_width = bar_width(cooldown)
+        this.duration_width = bar_width(duration)
+
+        if (!this.spell) { return }
+        const time = map.label(this.timestamp)
+        const text = toMMSS(time)
+        if (text !== this.text) {
+            this.text = text
+            this.text_width = measure_text(this.text)
+        }
+    }
+
+    /**
+     * Spell, and in aligned lines:
+     *
+     *     14m22s  into Dungeon
+     *        35s  into Pull #3           (see `get_time_lines`)
+     *      1m07s  before Pull #4         carried: before where it comes into view
+     *      1m05s  since last use
+     *        12s  after it was off cooldown   (or "before base cooldown")
+     */
+    get_tooltip(): TooltipInfo {
+        const pulls = this.time_ref.pulls
+        const lines = get_time_lines(pulls, this.timestamp)
+
+        if (this.carried) {
+            const value = format_time(this.shown_from - this.timestamp)
+            const index = (pulls || []).findIndex(pull => Math.abs(pull.start / 1000 - this.shown_from) < 0.01)
+            const tag = index >= 0 ? pull_tag(pulls![index], index) : undefined
+            // between pulls, the line before the next pull may be that one already
+            const listed = lines.some(line => line.label == "before" && line.pull?.name == tag?.name)
+            if (!tag) { lines.push({ value, label: "before the cut" }) }
+            else if (!listed) { lines.push({ value, label: "before", pull: tag }) }
+        }
+
+        if (this.previous) {
+            const since = this.timestamp - this.previous.timestamp
+            lines.push({ value: format_time(since), label: "since last use" })
+
+            // a bit early can be just rounding of the log's times
+            const cooldown = this.spell.cooldown || 0
+            const late = since - cooldown
+            if (cooldown && late > -0.05) { lines.push({ value: format_time(Math.max(late, 0)), label: "after it was off cooldown" }) }
+            else if (cooldown) { lines.push({ value: format_time(-late), label: "before base cooldown" }) }
+        }
+
+        return {
+            icon: this.spell.icon_path,
+            title: this.spell.name + (this.counter ? ` #${this.counter}` : ""),
+            title_color: this.spell.color || undefined,
+            lines,
         }
     }
 
@@ -169,34 +265,51 @@ export default class Cast extends Konva.Shape {
     // Drawing
     //
 
+    /** whether a carried cast still shows a bar (else there is nothing to tie its icon to) */
+    has_visible_bar() {
+        return (this.show_cooldown && this.has_cooldown && this.cooldown_width > 0)
+            || (this.show_duration && this.duration_width > 0)
+    }
+
+    /** carried, but nothing to show: no bar left, or a later cast of the spell is shown instead */
+    private hidden_carried() {
+        return this.carried && (this.superseded || !this.has_visible_bar())
+    }
+
     _sceneFunc(context: Context) {
+        if (this.hidden_carried()) { return }
         const alpha = context._context.globalAlpha // the cast's own opacity, set by Konva
 
         if (this.show_cooldown && this.has_cooldown) {
             context.setAttr("globalAlpha", alpha * this.cooldown_opacity)
             context.setAttr("fillStyle", this.spell.color)
-            context.fillRect(0, 0, this.spell.cooldown * this.scale_x, BAR_HEIGHT)
+            context.fillRect(0, 0, this.cooldown_px, BAR_HEIGHT)
         }
 
         if (this.show_duration && this._duration) {
             context.setAttr("globalAlpha", alpha * this.duration_opacity)
             context.setAttr("fillStyle", this.spell.color)
-            context.fillRect(0, 0, this._duration * this.scale_x, BAR_HEIGHT)
+            context.fillRect(0, 0, this.duration_px, BAR_HEIGHT)
         }
 
         if (this.show_icon) {
-            context.setAttr("globalAlpha", alpha * this.icon_opacity)
+            // carried: in the gap before the segment
+            const gutter = this.in_gutter()
+            const x = gutter ? this.gutter_icon_x() : ICON_X
+            context.setAttr("globalAlpha", alpha * this.icon_opacity * (gutter ? constants.GUTTER_ICON_OPACITY : 1))
+            if (gutter) { context.setAttr("filter", constants.GUTTER_ICON_FILTER) }
             if (this.icon_stroke) {
                 context.setAttr("lineWidth", 1)
                 context.setAttr("strokeStyle", "black")
-                context.strokeRect(ICON_X, ICON_X, ICON_SIZE, ICON_SIZE)
+                context.strokeRect(x, ICON_X, ICON_SIZE, ICON_SIZE)
             }
             if (this.image?.complete && this.image.naturalWidth) {
-                context.drawImage(this.image, ICON_X, ICON_X, ICON_SIZE, ICON_SIZE)
+                context.drawImage(this.image, x, ICON_X, ICON_SIZE, ICON_SIZE)
             }
+            if (gutter) { context.setAttr("filter", "none") }
         }
 
-        if (this.show_text) {
+        if (this.show_text && !this.carried) {
             context.setAttr("globalAlpha", alpha)
             context.setAttr("font", this.text_bold ? CAST_TEXT_FONT_BOLD : CAST_TEXT_FONT)
             context.setAttr("textBaseline", "middle")
@@ -208,16 +321,36 @@ export default class Cast extends Konva.Shape {
 
     /** The area that receives mouse events: the visible label parts, else the duration bar. */
     _hitFunc(context: Context) {
+        if (this.hidden_carried()) { return }
+
+        // carried: its icon in the gap, else its bars
+        if (this.in_gutter() && this.show_icon) {
+            context.setAttr("fillStyle", this.colorKey)
+            context.fillRect(this.gutter_icon_x() - 1, 0, ICON_SIZE + 2, BAR_HEIGHT)
+            return
+        }
+        const show_text = this.show_text && !this.carried
+
         let width = 0
-        if (this.show_text) { width = TEXT_X + this.text_width + TEXT_PADDING }
+        if (show_text) { width = TEXT_X + this.text_width + TEXT_PADDING }
         else if (this.show_icon) { width = TEXT_X }
-        else if (this.show_duration) { width = this._duration * this.scale_x }
+        else if (this.show_duration) { width = this.duration_px }
         if (!width) { return }
 
         // with the icon hidden, the text starts at the same place
-        const x = (this.show_icon || !this.show_text) ? 0 : TEXT_X
+        const x = (this.show_icon || !show_text) ? 0 : TEXT_X
         context.setAttr("fillStyle", this.colorKey)
         context.fillRect(x, 0, width - x, BAR_HEIGHT)
+    }
+
+    /** whether the icon goes in the gap before its segment */
+    private in_gutter() {
+        return this.carried && this.gutter_slot !== null
+    }
+
+    /** x of the icon in the gap (left of the segment, slot 0 next to it) */
+    private gutter_icon_x() {
+        return -constants.GUTTER_PADDING - (this.gutter_slot! + 1) * constants.GUTTER_SLOT + (constants.GUTTER_SLOT - ICON_SIZE) / 2
     }
 
     update_style() {
@@ -262,8 +395,12 @@ export default class Cast extends Konva.Shape {
     }
 
     _handle_zoom_change(scale_x: number) {
-        this.x(scale_x * this.timestamp)
-        this.scale_x = scale_x
+        const map = this.time_ref.current
+        const x = map.to_x(this.shown_from, scale_x)
+        const bar_px = (length: number) => length > 0 ? Math.max(0, map.to_x(this.timestamp + length, scale_x) - x) : 0
+        this.x(x)
+        this.cooldown_px = this.has_cooldown ? bar_px(this.spell?.cooldown || 0) : 0
+        this.duration_px = bar_px(this._duration || 0)
     }
 
     /** @returns true if the cast was shown or hidden */
@@ -314,13 +451,7 @@ export default class Cast extends Konva.Shape {
         position.y += container_position.y
 
         position.x += ICON_X + (ICON_SIZE / 2) // center above the icon
-        store.dispatch({
-            type: constants.EVENT_SHOW_TOOLTIP,
-            payload: {
-                content: this.hovering ? this.tooltip_content : "",
-                position: position
-            },
-        })
+        show_tooltip(this.hovering ? this.get_tooltip() : "", position)
     }
 
     select(event: Konva.KonvaEventObject<MouseEvent>) {
