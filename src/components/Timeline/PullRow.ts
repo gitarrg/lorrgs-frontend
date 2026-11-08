@@ -118,6 +118,11 @@ export default class PullRow {
         return HEIGHT
     }
 
+    /** whether the row is shown (see `set_shown`) */
+    is_shown() {
+        return this.shape.visible()
+    }
+
     destroy() {
         this.shape.destroy()
         this.bbox.destroy()

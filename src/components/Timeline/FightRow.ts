@@ -177,8 +177,8 @@ export default class FightRow {
     private draw_dim(context: Context) {
         const map = this.time_ref.current
         const s = this.scale_x
-        // (the pull row sits above the row)
-        const top = -(this.pull_row?.height() ?? 0)
+        // (the pull row sits above the row, if it is shown: else the fight above would be dimmed too)
+        const top = this.pull_row?.is_shown() ? -this.pull_row.height() : 0
         const height = this.rows_height - top
 
         context.setAttr("fillStyle", "rgba(0, 0, 0, 0.6)")
