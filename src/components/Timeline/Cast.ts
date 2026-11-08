@@ -294,8 +294,10 @@ export default class Cast extends Konva.Shape {
 
         if (this.show_icon) {
             // carried: in the gap before the segment
-            const x = this.in_gutter() ? this.gutter_icon_x() : ICON_X
-            context.setAttr("globalAlpha", alpha * this.icon_opacity)
+            const gutter = this.in_gutter()
+            const x = gutter ? this.gutter_icon_x() : ICON_X
+            context.setAttr("globalAlpha", alpha * this.icon_opacity * (gutter ? constants.GUTTER_ICON_OPACITY : 1))
+            if (gutter) { context.setAttr("filter", constants.GUTTER_ICON_FILTER) }
             if (this.icon_stroke) {
                 context.setAttr("lineWidth", 1)
                 context.setAttr("strokeStyle", "black")
@@ -304,6 +306,7 @@ export default class Cast extends Konva.Shape {
             if (this.image?.complete && this.image.naturalWidth) {
                 context.drawImage(this.image, x, ICON_X, ICON_SIZE, ICON_SIZE)
             }
+            if (gutter) { context.setAttr("filter", "none") }
         }
 
         if (this.show_text && !this.carried) {

@@ -290,7 +290,8 @@ export default class FightRow {
         const visible = this.rows.filter(row => row.visible())
         const gaps = map.segments.map((_, i) => {
             const count = Math.max(0, ...visible.map(row => row.foreground.gap_counts[i] || 0))
-            return count ? count * constants.GUTTER_SLOT + constants.GUTTER_PADDING : 0
+            const left = i > 0 ? constants.GUTTER_CUT_PADDING : 0  // cuts: apart from the segment before
+            return count ? left + count * constants.GUTTER_SLOT + constants.GUTTER_PADDING : 0
         })
         if (!map.set_gaps(gaps)) { return }
 

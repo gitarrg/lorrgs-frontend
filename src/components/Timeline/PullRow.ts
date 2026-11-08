@@ -109,16 +109,17 @@ export default class PullRow {
         const map = this.time_ref.current
         const s = this.scale_x
         const width = map.width(s)
-        const start = map.gap(0)  // the row's own gap: no time
+        // the stretches with background: the segments, the gutters (before the crop, at cuts) stay empty
+        const spans = map.segment_xs(s)
 
         // pulls outside the crop stay outside the row
         context.beginPath()
-        context.rect(start, 0, width - start, HEIGHT + 1)
+        spans.forEach(({ x0, x1 }) => context.rect(x0, 0, x1 - x0, HEIGHT + 1))
         context.clip()
 
         // background
         context.setAttr("fillStyle", BACKGROUND)
-        context.fillRect(start, 0, width - start, HEIGHT)
+        spans.forEach(({ x0, x1 }) => context.fillRect(x0, 0, x1 - x0, HEIGHT))
 
         // pulls that are shown (not cut out)
         const bands = this.pulls
@@ -181,8 +182,10 @@ export default class PullRow {
         // bottom line
         context.setAttr("strokeStyle", "black")
         context.beginPath()
-        context.moveTo(start, HEIGHT + 0.5)
-        context.lineTo(width, HEIGHT + 0.5)
+        spans.forEach(({ x0, x1 }) => {
+            context.moveTo(x0, HEIGHT + 0.5)
+            context.lineTo(x1, HEIGHT + 0.5)
+        })
         context.stroke()
     }
 

@@ -9,6 +9,11 @@ export const DEFAULT_ZOOM = 4
 export const GUTTER_SLOT = 22
 /** space between the gutter's icons and the row */
 export const GUTTER_PADDING = 4
+/** extra space on the left of a gutter at a cut (between it and the segment before) */
+export const GUTTER_CUT_PADDING = GUTTER_PADDING
+/** look of the icons in the gutter */
+export const GUTTER_ICON_OPACITY = 0.3
+export const GUTTER_ICON_FILTER = "saturate(75%) blur(0.5px)"
 
 // Events
 export const EVENT_ZOOM_CHANGE = "zoom_change"
