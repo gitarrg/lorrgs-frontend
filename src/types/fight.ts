@@ -6,6 +6,8 @@ export interface Pull {
     start: number
     end: number
     boss: string | null
+    /** only the phases of a boss fight (see `get_phase_spans`): their name, eg. "P2" */
+    name?: string
 }
 
 

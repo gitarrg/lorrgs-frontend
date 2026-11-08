@@ -2,7 +2,7 @@
 import store from "../../store/store"
 import * as constants from "./constants"
 import { toMMSS } from "../../utils"
-import { BOSS_PULL_COLOR, PULL_COLOR, get_pull_label } from "../../pulls"
+import { get_pull_color, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type { TimeMapRef } from "./TimeMap"
 
@@ -74,7 +74,7 @@ export function format_time(seconds: number) {
 
 /** name and colour of a pull, for a `TooltipLine` */
 export function pull_tag(pull: Pull, index: number) {
-    return { name: get_pull_label(pull, index), color: pull.boss ? BOSS_PULL_COLOR : PULL_COLOR }
+    return { name: get_pull_label(pull, index), color: get_pull_color(pull) }
 }
 
 
@@ -89,9 +89,12 @@ export function pull_tag(pull: Pull, index: number) {
 export function get_time_lines(pulls: Pull[] | undefined, t: number): TooltipLine[] {
     if (!pulls?.length) { return [{ value: format_time(t), label: "into the fight" }] }
 
-    const lines: TooltipLine[] = [{ value: format_time(t), label: "into Dungeon" }]
+    // (boss fights: their phases, see `get_phase_spans`)
+    const phases = !!pulls[0].name
+    const lines: TooltipLine[] = [{ value: format_time(t), label: phases ? "into the fight" : "into Dungeon" }]
 
-    const found = get_pull_at(pulls, t)
+    // (the last phase runs on)
+    const found = get_pull_at(pulls, t) || (phases && t > 0 ? { pull: pulls[pulls.length - 1], index: pulls.length - 1 } : null)
     if (found) {
         lines.push({ value: format_time(t - found.pull.start / 1000), label: "into", pull: pull_tag(found.pull, found.index) })
         return lines

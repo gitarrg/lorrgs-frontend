@@ -4,6 +4,11 @@ import EventLine, { EventLineConfig } from "./EventLine"
 import Stage from "./Stage"
 import type Konva from "konva"
 import type Phase from "../../types/phase"
+import { PHASE_COLOR } from "../../pulls"
+
+
+/** px wide that grab the line */
+const HIT_WIDTH = 10
 
 
 export default class PhaseMarker extends EventLine {
@@ -14,36 +19,22 @@ export default class PhaseMarker extends EventLine {
 
     constructor(phase_data: Phase, config: EventLineConfig = {}) {
 
-        const height = 12
-
+        // the name is on the ruler (see `PullRow`): the line stays inside the rows
         config = deepMerge({
 
-            color: "#36b336",
+            color: PHASE_COLOR,
             color_hover: "#17e67f",
-            // color_active: "#e6b217",
             color_active: "#0FF",
 
-            label: {
-                show: true,
-                fontSize: 10,
-                align: "center",
-                color: "black",
-
-                x: 0,
-                y: -height,
-
-                width: 20,
-                height: height,
-            },
-
-            label_background: {
-                show: true,
-                cornerRadius: [0, height / 2, height / 2, 0],
-                // x: -10,
-            }
+            label: { show: false },
+            label_background: { show: false },
         }, config)
 
         super(phase_data, config)
+
+        // easier to hit than the line itself
+        this.mouse_event_bbox.width(HIT_WIDTH)
+        this.mouse_event_bbox.x(-HIT_WIDTH / 2)
 
         this.on('mouseover', () => { this.hover_same_phase(true) });
         this.on('mouseout', () => { this.hover_same_phase(false) });
@@ -66,11 +57,13 @@ export default class PhaseMarker extends EventLine {
         if (!stage) { return; }
 
 
-        let { name: current_anchor } = stage.get_anchor()
-        if (this.event_data.name == current_anchor) {
+        const { name: current_anchor, ts } = stage.get_anchor()
+        if (this.event_data.name == current_anchor && ts) {
             stage.set_anchor(0, "pull")
         } else {
-            stage.set_anchor(this.event_data.ts / 1000, this.event_data.name)
+            // where the line is now: it stays in place, the other fights move to it (see `FightRow.update_x`)
+            const x = (this.getParent()?.x() ?? 0) + this.x()
+            stage.set_anchor(x / stage.scale_x, this.event_data.name)
         }
     }
 

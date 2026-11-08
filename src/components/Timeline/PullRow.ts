@@ -5,6 +5,10 @@ Each band shows the pull's name ("Pull #n", or the boss) in its top left corner.
 Clicking a pull aligns all runs on it (like clicking a boss phase): the same pull (by name) starts
 at the same x in every run. Clicking it again resets them all to start at 0.
 
+The phases of a boss fight work the same way (see `get_phase_spans`): the "pulls" are its phases, but
+without background: they have no downtime between them, so each label sits on a gradient that fades out.
+The ruler is the fight's ruler then (see `Stage.layout_children`).
+
 Drawn by a single shape (bands, ticks and timestamps), so zooming only redraws it.
 Everything is positioned through the fight row's `TimeMap`, so cropping and cut out time
 is reflected here the same way as on the casts below.
@@ -16,7 +20,7 @@ import type { Context } from "konva/lib/Context"
 import * as constants from "./constants"
 import { toMMSS } from "../../utils"
 import { level_for_scale } from "./ruler_levels"
-import { BOSS_PULL_COLOR, PULL_COLOR, get_pull_label } from "../../pulls"
+import { get_pull_color, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type { TimeMapRef } from "./TimeMap"
 import { format_duration, get_pull_at, get_time_info, hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip"
@@ -45,6 +49,10 @@ const MIN_STRIP_TEXT_WIDTH = 14
 
 /** the pull all runs are aligned on: same as the active phase marker */
 const ANCHOR_COLOR = "#0FF"
+/** phase labels: under the pointer (same as a hovered phase marker) */
+const PHASE_HOVER_COLOR = "#17e67f"
+/** px a phase label's gradient takes to fade out, after the name */
+const PHASE_FADE = 40
 
 /** min. px between two timestamps (eg. left and right of a cut) */
 const MIN_TEXT_SPACING = 40
@@ -59,6 +67,10 @@ export default class PullRow {
     private anchor_name?: string
     /** index of the pull under the pointer */
     private hovered?: number
+    /** the "pulls" are the phases of a boss fight */
+    readonly is_phases: boolean
+    /** where the runs are aligned on a phase (kind "phase": see `Stage.get_anchor`). ts 0: not aligned */
+    private phase_anchor?: { name: string, ts: number }
 
     /** pixels per second */
     private scale_x = constants.DEFAULT_ZOOM
@@ -72,6 +84,7 @@ export default class PullRow {
     constructor(pulls: Pull[], time_ref: TimeMapRef) {
         this.pulls = pulls
         this.time_ref = time_ref
+        this.is_phases = !!pulls[0]?.name
 
         this.shape = new Konva.Shape({
             name: "PullRow",
@@ -129,9 +142,11 @@ export default class PullRow {
         spans.forEach(({ x0, x1 }) => context.rect(x0, 0, x1 - x0, HEIGHT + 1))
         context.clip()
 
-        // background
-        context.setAttr("fillStyle", BACKGROUND)
-        spans.forEach(({ x0, x1 }) => context.fillRect(x0, 0, x1 - x0, HEIGHT))
+        // background (phases: none, the page's)
+        if (!this.is_phases) {
+            context.setAttr("fillStyle", BACKGROUND)
+            spans.forEach(({ x0, x1 }) => context.fillRect(x0, 0, x1 - x0, HEIGHT))
+        }
 
         // pulls that are shown (not cut out)
         const bands = this.pulls
@@ -139,12 +154,12 @@ export default class PullRow {
                 pull, i,
                 x0: map.to_x(pull.start / 1000, s),
                 x1: map.to_x(pull.end / 1000, s),
-                color: pull.boss ? BOSS_PULL_COLOR : PULL_COLOR,
+                color: get_pull_color(pull),
             }))
             .filter(band => band.x1 > band.x0)
 
-        // bands: behind the ticks
-        bands.forEach(({ i, x0, x1, color }) => {
+        // bands: behind the ticks (phases: only the labels, see `draw_phase_label`)
+        const draw_band = ({ i, x0, x1, color }: typeof bands[number]) => {
             const selected = this.selected.has(i)
             context.setAttr("globalAlpha", selected ? BAND_OPACITY_SELECTED : BAND_OPACITY)
             context.setAttr("fillStyle", color)
@@ -158,11 +173,12 @@ export default class PullRow {
             context.moveTo(Math.round(x0) + 0.5, 1)
             context.lineTo(Math.round(x0) + 0.5, HEIGHT)
             context.stroke()
-        })
+        }
+        if (!this.is_phases) { bands.forEach(draw_band) }
         context.setAttr("globalAlpha", 1)
 
         // the pull the runs are aligned on: its start
-        const anchored = bands.find(({ pull, i }) => get_pull_label(pull, i) == this.anchor_name)
+        const anchored = !this.is_phases && bands.find(({ pull, i }) => get_pull_label(pull, i) == this.anchor_name)
         if (anchored) {
             const x = Math.round(anchored.x0) + 0.5
             context.setAttr("strokeStyle", ANCHOR_COLOR)
@@ -176,7 +192,12 @@ export default class PullRow {
         this.draw_ticks(context)
 
         // names: in front of the ticks
-        bands.forEach(({ pull, i, x0, x1, color }) => this.draw_strip(context, get_pull_label(pull, i), color, x0, x1, i === this.hovered))
+        bands.forEach(({ pull, i, x0, x1, color }) => {
+            const label = get_pull_label(pull, i)
+            if (!this.is_phases) { return this.draw_strip(context, label, color, x0, x1, i === this.hovered) }
+            const active = this.phase_anchor?.name == label
+            this.draw_phase_label(context, label, active ? ANCHOR_COLOR : i === this.hovered ? PHASE_HOVER_COLOR : color, x0, x1)
+        })
 
         // bottom line
         context.setAttr("strokeStyle", "black")
@@ -225,6 +246,32 @@ export default class PullRow {
         context.fillText(label, x0 + 3, 1 + STRIP_HEIGHT / 2 + 0.5)
     }
 
+    /** a phase's name at its start: on a background that fades out to the right */
+    private draw_phase_label(context: Context, text: string, color: string, x0: number, x1: number) {
+        context.setAttr("font", STRIP_FONT)
+        const text_width = context.measureText(text).width + 6
+        const width = Math.min(x1 - x0, text_width + PHASE_FADE)
+        if (width < MIN_STRIP_TEXT_WIDTH) { return }
+
+        const rgb = (alpha: number) => {
+            const n = parseInt(color.slice(1), 16)
+            return `rgba(${n >> 16}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`
+        }
+        const solid = Math.min(text_width / width, 1)
+        const gradient = context.createLinearGradient(x0, 0, x0 + width, 0)
+        gradient.addColorStop(0, rgb(STRIP_OPACITY))
+        gradient.addColorStop(solid, rgb(STRIP_OPACITY))
+        gradient.addColorStop(1, rgb(0))
+        context.setAttr("fillStyle", gradient)
+        context.fillRect(x0, 1, width, STRIP_HEIGHT)
+
+        if (width < text_width) { return }
+        context.setAttr("fillStyle", STRIP_TEXT_COLOR)
+        context.setAttr("textAlign", "left")
+        context.setAttr("textBaseline", "middle")
+        context.fillText(text, x0 + 3, 1 + STRIP_HEIGHT / 2 + 0.5)
+    }
+
     /** ticks and timestamps like the main `Ruler`, in the labels of the time map (run or pull time) */
     private draw_ticks(context: Context) {
         const map = this.time_ref.current
@@ -239,15 +286,20 @@ export default class PullRow {
         context.setAttr("textAlign", "left")
         context.setAttr("textBaseline", "middle")
 
+        // aligned on a phase: the timestamps count from where it starts in this run, like the main ruler
+        const anchor = this.phase_anchor
+        const anchor_span = anchor?.ts ? this.pulls.find(pull => pull.name == anchor.name) : undefined
+        const shift = anchor_span ? map.label(anchor_span.start / 1000) : 0
+
         let last_text_x = -Infinity
         const xs = map.segment_xs(s)
         map.label_ranges().forEach((range, index) => {
-            const first = Math.ceil(range.label / tick)
-            const last = Math.floor((range.label + (range.end - range.start)) / tick)
+            const first = Math.ceil((range.label - shift) / tick)
+            const last = Math.floor((range.label - shift + (range.end - range.start)) / tick)
 
             for (let i = first; i <= last; i++) {
                 const t = i * tick
-                const x = Math.round(xs[index].x0 + (t - range.label) * s) + 0.5
+                const x = Math.round(xs[index].x0 + (t + shift - range.label) * s) + 0.5
                 const big = i % ticks_per_label == 0
                 const h = big ? 10 : 5
 
@@ -258,7 +310,16 @@ export default class PullRow {
 
                 if (big && x - last_text_x >= MIN_TEXT_SPACING) {
                     // starts at the tick, like the main ruler
-                    context.fillText(toMMSS(t), x - 0.5, TEXT_Y)
+                    const is_anchor = anchor_span && t == 0
+                    if (is_anchor) {
+                        context.setAttr("fillStyle", ANCHOR_COLOR)
+                        context.setAttr("font", `bold ${FONT}`)
+                    }
+                    context.fillText(is_anchor ? anchor!.name : toMMSS(t), x - 0.5, TEXT_Y)
+                    if (is_anchor) {
+                        context.setAttr("fillStyle", TEXT_COLOR)
+                        context.setAttr("font", FONT)
+                    }
                     last_text_x = x
                 }
             }
@@ -295,7 +356,7 @@ export default class PullRow {
             info.title = get_pull_label(pull, index)
             info.time_detail = `(${format_duration(t - pull.start / 1000)} in)`
             info.time_pull = undefined
-            info.title_color = pull.boss ? BOSS_PULL_COLOR : PULL_COLOR
+            info.title_color = get_pull_color(pull)
             info.title_detail = `${toMMSS(start)} - ${toMMSS(end)} (${format_duration(duration)})`
         }
 
@@ -332,19 +393,27 @@ export default class PullRow {
         if (!found) { return }
 
         const name = get_pull_label(found.pull, found.index)
+        const kind = this.is_phases ? "phase" : "pull"
         const current = stage.get_anchor()
-        if (current.kind == "pull" && current.name == name) {
+        if (current.kind == kind && current.name == name && current.ts) {
             stage.set_anchor(0, "pull")
         } else {
             // where the pull starts in this run now: it stays in place, the other runs move to it
             const row_x = this.bbox.getParent()?.x() ?? 0
             const x = row_x + this.time_ref.current.to_x(found.pull.start / 1000, this.scale_x)
-            stage.set_anchor(x / this.scale_x, name, "pull")
+            stage.set_anchor(x / this.scale_x, name, kind)
         }
     }
 
-    private handle_anchor_changed({ name, kind }: Anchor) {
+    private handle_anchor_changed({ ts, name, kind }: Anchor) {
         this.anchor_name = kind == "pull" ? name : undefined
+        this.phase_anchor = kind == "phase" ? { name, ts } : undefined
+    }
+
+    /** show or hide the row (eg. only the first fight of a spec ranking has one) */
+    set_shown(state: boolean) {
+        this.shape.visible(state)
+        this.bbox.visible(state)
     }
 
     ////////////////////////////////////////////////////////////////////////////

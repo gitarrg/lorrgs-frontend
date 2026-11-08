@@ -20,9 +20,10 @@ import { get_run_key } from "../../store/ui";
 import type { Context } from "konva/lib/Context";
 import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
+import type { Pull } from "../../types/fight";
 import type Stage from "./Stage";
 import type { Anchor } from "./Stage";
-import { get_pull_label } from "../../pulls";
+import { get_phase_spans, get_pull_label } from "../../pulls";
 
 
 /** How dungeon runs show their pulls (the same for all fight rows of the stage) */
@@ -31,6 +32,8 @@ export interface PullView {
     selection: { [run_key: string]: number[] }
     hide_unselected: boolean
     pull_time: boolean
+    /** selected phases of boss fights, by name (eg. "P2": shared by all fights). Empty: the whole fight */
+    phase_selection: string[]
 }
 
 
@@ -64,7 +67,10 @@ export default class FightRow {
     phases: PhaseMarker[] = []
     killtime_text: Konva.Text
 
-    // dungeon runs
+    /** the phases of a boss fight as pulls (see `get_phase_spans`). Empty: no phases, or a dungeon run */
+    phase_spans: Pull[] = []
+
+    // dungeon runs, and the ruler of boss fights with phases (their `pull_row` shows the phases)
     pull_row?: PullRow
     /** greys out the time between the selected pulls, and marks cut out time */
     dim_shape: Konva.Shape
@@ -79,7 +85,8 @@ export default class FightRow {
         // input data
         this._fight_data = fight_data
         this.duration = Math.ceil(fight_data.duration / 1000); // ms to s
-        this.time_ref = { current: TimeMap.identity(this.duration), pulls: fight_data.pulls || undefined }
+        this.phase_spans = get_phase_spans(fight_data)
+        this.time_ref = { current: TimeMap.identity(this.duration), pulls: fight_data.pulls || (this.phase_spans.length ? this.phase_spans : undefined) }
         this.run_key = get_run_key(fight_data)
 
         // Groups
@@ -105,7 +112,7 @@ export default class FightRow {
         })
 
         // Pulls (dungeon runs)
-        const pulls = fight_data.pulls || []
+        const pulls = fight_data.pulls?.length ? fight_data.pulls : this.phase_spans
         if (pulls.length) {
             // above the row, next to the run's info in the names column (where the shared ruler is for the first fight)
             this.pull_row = new PullRow(pulls, this.time_ref)
@@ -197,22 +204,35 @@ export default class FightRow {
         context.setLineDash([])
     }
 
-    /** whether the fight shows its pulls (and so has its own ruler) */
+    /** whether the fight shows its pulls or phases (and so has its own ruler) */
     has_pull_row() {
         return !!this.pull_row
+    }
+
+    /** a boss fight with phases: its ruler is shown for the first fight only (in spec rankings, see `Stage.layout_children`) */
+    has_phases() {
+        return this.phase_spans.length > 0
+    }
+
+    set_ruler_shown(state: boolean) {
+        this.pull_row?.set_shown(state)
     }
 
     /** Rebuild the time map for the pull selection/settings. @returns true if it changed */
     set_pull_view(view: PullView): boolean {
         if (!this.pull_row) { return false }
 
-        const selected = view.selection[this.run_key] || []
+        // phases are picked by name (the same in all fights), pulls by index
+        const phases = this.has_phases()
+        const selected = phases
+            ? this.phase_spans.flatMap((span, i) => view.phase_selection.includes(span.name!) ? [i] : [])
+            : view.selection[this.run_key] || []
         const map = TimeMap.build({
             duration: this.duration,
-            pulls: this._fight_data.pulls,
+            pulls: phases ? this.phase_spans : this._fight_data.pulls,
             selected,
             hide_unselected: view.hide_unselected,
-            pull_time: view.pull_time,
+            pull_time: phases || view.pull_time,  // phases start at different times in each fight: count from the first selected one
         })
         this.pull_row.set_selected(selected)
         this.time_ref.current = map
@@ -287,15 +307,25 @@ export default class FightRow {
      * whose bars reach into them (so they don't look like they were cast at the segment's start).
      * Each as wide as the most such casts of a (visible) player. None: no gap.
      */
-    private update_gaps() {
+    wanted_gaps(): number[] {
         const map = this.time_ref.current
         const visible = this.rows.filter(row => row.visible())
-        const gaps = map.segments.map((_, i) => {
+        return map.segments.map((_, i) => {
             const count = Math.max(0, ...visible.map(row => row.foreground.gap_counts[i] || 0))
             const left = i > 0 ? constants.GUTTER_CUT_PADDING : 0  // cuts: apart from the segment before
             return count ? left + count * constants.GUTTER_SLOT + constants.GUTTER_PADDING : 0
         })
-        if (!map.set_gaps(gaps)) { return }
+    }
+
+    private update_gaps() {
+        // boss fights: the stage sets them, they have to be the same in all fights to stay aligned (see `Stage.sync_gaps`)
+        if (this.has_phases()) { return }
+        this.apply_gaps(this.wanted_gaps())
+    }
+
+    apply_gaps(gaps: number[]) {
+        const map = this.time_ref.current
+        if (!map.set_gaps(gaps.slice(0, map.segments.length))) { return }
 
         // everything after a gap moves
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
@@ -333,29 +363,13 @@ export default class FightRow {
             return
         }
 
-        // the same pull in this run: its start lands at `ts` (see `update_x`)
-        if (kind == "pull") {
-            const pulls = this._fight_data.pulls || []
-            const pull = pulls.find((pull, i) => get_pull_label(pull, i) == name)
-            if (pull) {
-                this.anchor_offset = ts
-                this.anchor_pull = pull.start / 1000
-            }
-            this.update_x()
-            return
+        // the same pull (or phase) in this run: its start lands at `ts` (see `update_x`)
+        const pulls = kind == "pull" ? this._fight_data.pulls || [] : this.phase_spans
+        const pull = pulls.find((pull, i) => get_pull_label(pull, i) == name)
+        if (pull) {
+            this.anchor_offset = ts
+            this.anchor_pull = pull.start / 1000
         }
-
-        // find the same phase in this fight
-        const phase_in_fight = this._fight_data.phases?.find(phase => phase.name === name)
-        if (!phase_in_fight) {
-            this.update_x()
-            return
-        }
-
-        // TODO: see if we can keep the relative screen position
-        // of the object clicked on.
-        let new_offset = ts - this.time_ref.current.to_display(phase_in_fight.ts / 1000);
-        this.anchor_offset = new_offset;
         this.update_x()
     }
 

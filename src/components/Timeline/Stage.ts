@@ -65,7 +65,7 @@ export default class Stage extends Konva.Stage {
     anchor_kind: AnchorKind = "phase"
 
     /** how dungeon runs show their pulls (see `set_pull_view`) */
-    private pull_view: PullView = { selection: {}, hide_unselected: false, pull_time: false }
+    private pull_view: PullView = { selection: {}, hide_unselected: false, pull_time: false, phase_selection: [] }
 
     /** filters last applied (see `EVENT_APPLY_FILTERS`) */
     private applied_filters?: FilterValues
@@ -164,8 +164,12 @@ export default class Stage extends Konva.Stage {
 
         // a dungeon run's pull row sits where the ruler is when it is the first fight (see `PullRow`).
         // (the ruler keeps its space: the names column shows the first fight's info next to it)
+        // (boss fights with phases the same, but only the first one in a spec ranking: they are stacked without space between)
         const first_row = this.rows.find(row => row.visible())
         this.ruler.set_shown(!first_row?.has_pull_row())
+        this.rows.forEach(row => {
+            row.has_phases() && row.set_ruler_shown(this.MODE == MODES.USER_REPORT || row === first_row)
+        })
 
         let y = this.ruler.height()
 
@@ -356,6 +360,7 @@ export default class Stage extends Konva.Stage {
         this.rows.forEach(row => row.handle_event(event_name, payload))
 
         if (event_name === constants.EVENT_APPLY_FILTERS) { this._handle_apply_filters(payload) }
+        if (FightRow.GUTTER_EVENTS.has(event_name)) { this.sync_gaps() }
 
         // with "hide empty rows", rows whose casts are all hidden now must hide too
         if (event_name === constants.EVENT_SPELL_DISPLAY && this.applied_filters?.hide_empty_rows) {
@@ -367,44 +372,22 @@ export default class Stage extends Konva.Stage {
         else { this.batchDraw() } // for now, just assume we need to redraw after every other event
     }
 
+    /**
+     * Boss fights show their phases next to each other, so the gaps before the segments (see `TimeMap.gaps`) must be as wide in
+     * all of them (the widest): else the same phase would start at different positions, and the ruler above the first fight would not fit the others.
+     * (dungeon runs have a ruler each: they keep their own)
+     */
+    private sync_gaps() {
+        const rows = this.rows.filter(row => row.visible() && row.has_phases())
+        if (!rows.length) { return }
+
+        const wanted = rows.map(row => row.wanted_gaps())
+        const gaps = Array.from({ length: Math.max(...wanted.map(w => w.length)) }, (_, i) => Math.max(...wanted.map(w => w[i] || 0)))
+        rows.forEach(row => row.apply_gaps(gaps))
+    }
+
     /** Events that only change casts (all on the main layer). */
     static CAST_EVENTS = new Set([constants.EVENT_SPELL_DISPLAY, constants.EVENT_SPELL_SELECTED])
-
-    ////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Updates phase marker headers for each fight.
-     * Ensures that each phase is only shown once per boss.
-     * Subsequent occurrences of the same phase label are hidden.
-     *
-     * Note:
-     *   for now, this is really only relevant for spec_rankings,
-     *   as these use a single boss row + many player rows.
-     *   and even then only for cases where top logs skip phases
-     *   while other logs still play them
-     */
-    private _update_phase_marker_headers() {
-
-        // for user reports we can show the phases on each fight,
-        // since each one will have its own boss-row
-        if (this.MODE == MODES.USER_REPORT) { return; }
-
-        // let seen: Record<string, Record<string, boolean>> = {}
-        let seen: { [phase: string]: boolean } = {};
-
-        this.rows.forEach(row => {
-            row.phases.forEach(phase => {
-                const phase_label = phase._get_text_label()
-
-                if (seen[phase_label ?? ""]) {
-                    phase.show_label(false)
-                } else {
-                    phase.show_label(true)
-                    seen[phase_label ?? ""] = true
-                }
-            })
-        })
-    }
 
     ////////////////////////////////////////////////////////////////////////////
     // LOAD
@@ -442,8 +425,6 @@ export default class Stage extends Konva.Stage {
         this.ruler.update_duration(this.longest_fight)
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
         this.handle_event(constants.EVENT_CHECK_IMAGES_LOADED)
-
-        this._update_phase_marker_headers()
     }
 
     /** length of the longest row (in display time: dungeon runs can be cropped) */
@@ -460,10 +441,12 @@ export default class Stage extends Konva.Stage {
         this.rows.forEach(row => {
             const run_changed = previous.hide_unselected != view.hide_unselected
                 || previous.pull_time != view.pull_time
+                || previous.phase_selection !== view.phase_selection
                 || previous.selection[row.run_key] !== view.selection[row.run_key]
             if (run_changed) { changed = row.set_pull_view(view) || changed }
         })
         if (!changed) { return }
+        this.sync_gaps()
 
         const longest = this.get_longest_fight()
         if (longest != this.longest_fight) {

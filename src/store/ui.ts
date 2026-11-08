@@ -154,6 +154,12 @@ export interface UiSliceState {
      */
     pull_selection: { [run_key: string]: number[] }
 
+    /**
+     * Selected phases of boss fights, by name (eg. "P2"): the same for all fights shown. Empty: the whole fights.
+     * Only for this session.
+     */
+    phase_selection: string[]
+
     // CopyNote Options
     show_copynote: boolean
     copynote_player: Actor | null
@@ -205,6 +211,7 @@ const INITIAL_STATE: UiSliceState = {
     },
 
     pull_selection: {},
+    phase_selection: [],
 
     show_copynote: false,
     copynote_player: null,
@@ -295,6 +302,12 @@ const SLICE = createSlice({
         },
 
 
+        set_phase_selection: (state, action: PayloadAction<string[]>) => {
+            state.phase_selection = [...new Set(action.payload)]
+            return state
+        },
+
+
         set_show_copynote: (state, action: PayloadAction<boolean>) => {
             state.show_copynote = action.payload
             return state
@@ -326,6 +339,7 @@ export const {
     set_spec_slug,
     set_tooltip,
     set_pull_selection,
+    set_phase_selection,
     update_settings,
     set_show_copynote,
     set_copynote_player,

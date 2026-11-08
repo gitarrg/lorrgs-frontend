@@ -25,6 +25,7 @@ export default function TimelineCanvas() {
     const selected_spells = useAppSelector((state) => state.spells.selected_spells);
     const filters = useAppSelector((state) => state.ui.filters);
     const pull_selection = useAppSelector((state) => state.ui.pull_selection);
+    const phase_selection = useAppSelector((state) => state.ui.phase_selection);
     const view_settings = useAppSelector(get_view_settings);
     const hide_unselected = view_settings.hide_unselected_pulls;
     const pull_time = view_settings.timestamps == "pull";
@@ -53,7 +54,7 @@ export default function TimelineCanvas() {
         } // not ready yet
         if (fights === stage_fights.current) { return } // only a loading flag changed: no need to rebuild
         stage_fights.current = fights
-        stage_ref.current!.set_pull_view({ selection: pull_selection, hide_unselected, pull_time });
+        stage_ref.current!.set_pull_view({ selection: pull_selection, hide_unselected, pull_time, phase_selection });
         stage_ref.current!.set_fights(fights);
 
         // initial values
@@ -77,8 +78,8 @@ export default function TimelineCanvas() {
 
     // dungeon runs: selected pulls, cut out or dimmed, run or pull time
     useEffect(() => {
-        stage_ref.current!.set_pull_view({ selection: pull_selection, hide_unselected, pull_time });
-    }, [pull_selection, hide_unselected, pull_time]);
+        stage_ref.current!.set_pull_view({ selection: pull_selection, hide_unselected, pull_time, phase_selection });
+    }, [pull_selection, phase_selection, hide_unselected, pull_time]);
 
     // (spell display changes re-apply the filters inside the stage, when needed)
     useEffect(() => {
