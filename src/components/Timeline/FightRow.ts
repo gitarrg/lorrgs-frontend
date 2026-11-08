@@ -56,7 +56,6 @@ export default class FightRow {
 
     // Timestamp of the current anchor (in milliseconds)
     anchor_offset: number = 0
-    anchor_ts: number = 0
     /** run time (s) of the pull the fights are aligned on. None: aligned on a phase (or not at all) */
     private anchor_pull?: number
     /** run time (s) where the phase the fights are aligned on starts in this fight (see "aligned" timestamps) */
@@ -222,9 +221,9 @@ export default class FightRow {
         this.pull_row?.set_shown(state)
     }
 
-    /** Rebuild the time map for the pull selection/settings. @returns true if it changed */
-    set_pull_view(view: PullView): boolean {
-        if (!this.pull_row) { return false }
+    /** Rebuild the time map for the pull selection/settings */
+    set_pull_view(view: PullView) {
+        if (!this.pull_row) { return }
 
         // phases are picked by name (the same in all fights), pulls by index
         const phases = this.has_phases()
@@ -248,7 +247,6 @@ export default class FightRow {
         // children read the map: update their texts, what is cut out, and their positions
         this.handle_event(constants.EVENT_TIME_MAP_CHANGED, null)
         this.handle_event(constants.EVENT_ZOOM_CHANGE, this.scale_x)
-        return true
     }
 
     //////////////////////////////

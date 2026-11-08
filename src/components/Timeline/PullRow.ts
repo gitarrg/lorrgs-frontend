@@ -20,7 +20,7 @@ import type { Context } from "konva/lib/Context"
 import * as constants from "./constants"
 import { toMMSS } from "../../utils"
 import { level_for_scale } from "./ruler_levels"
-import { get_pull_color, get_pull_label } from "../../pulls"
+import { get_pull_color, get_pull_label, MIN_PHASE_TS } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type TimeMap from "./TimeMap"
 import type { TimeMapRef } from "./TimeMap"
@@ -55,8 +55,6 @@ const MIN_STRIP_TEXT_WIDTH = 14
 const ANCHOR_COLOR = "#00ffff"  // 6 digits: see `rgba`
 /** phase labels: under the pointer (same as a hovered phase marker) */
 const PHASE_HOVER_COLOR = "#17e67f"
-/** phases starting before this (ms) are "on pull": no label */
-const MIN_PHASE_START = 1000
 
 /** min. px between two timestamps (eg. left and right of a cut) */
 const MIN_TEXT_SPACING = 40
@@ -212,7 +210,7 @@ export default class PullRow {
         }
         bands
             // phases: none for P1 (it starts on pull) and none when the phase markers are hidden, unless highlighted
-            .filter(({ pull, i }) => !this.is_phases || this.is_highlighted(i) || (pull.start >= MIN_PHASE_START && this.show_phases))
+            .filter(({ pull, i }) => !this.is_phases || this.is_highlighted(i) || (pull.start >= MIN_PHASE_TS && this.show_phases))
             .forEach(draw_band)
         context.setAttr("globalAlpha", 1)
 
@@ -233,7 +231,7 @@ export default class PullRow {
         // names: in front of the ticks
         bands.forEach(({ pull, i, x0, x1, color }) => {
             if (this.is_phases && !this.show_phases) { return }  // (the hover highlight stays)
-            if (this.is_phases && pull.start < MIN_PHASE_START && !this.is_highlighted(i)) { return }  // "on pull": no label unless highlighted (the band can still be clicked)
+            if (this.is_phases && pull.start < MIN_PHASE_TS && !this.is_highlighted(i)) { return }  // "on pull": no label unless highlighted (the band can still be clicked)
             this.draw_strip(context, get_pull_label(pull, i), color, x0, x1, !this.is_phases && i === this.hovered)
         })
 
@@ -342,7 +340,7 @@ export default class PullRow {
                             context.setAttr("fillStyle", ANCHOR_COLOR)
                             context.setAttr("font", `bold ${FONT}`)
                         }
-                        context.fillText(is_anchor ? (anchor_span!.start < MIN_PHASE_START ? "Pull" : anchor!.name) : toMMSS(t), x - 0.5, TEXT_Y)
+                        context.fillText(is_anchor ? (anchor_span!.start < MIN_PHASE_TS ? "Pull" : anchor!.name) : toMMSS(t), x - 0.5, TEXT_Y)
                         if (is_anchor) {
                             context.setAttr("fillStyle", TEXT_COLOR)
                             context.setAttr("font", FONT)

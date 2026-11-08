@@ -466,7 +466,7 @@ export default class Stage extends Konva.Stage {
                 || previous.timestamps != view.timestamps
                 || previous.phase_selection !== view.phase_selection
                 || previous.selection[row.run_key] !== view.selection[row.run_key]
-            if (run_changed) { changed = row.set_pull_view(view) || changed }
+            if (run_changed) { row.set_pull_view(view); changed = true }
         })
         if (!changed) { return }
         this.sync_gaps()

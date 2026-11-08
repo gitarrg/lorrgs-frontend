@@ -136,7 +136,6 @@ export default class TimeMap {
 
     static build({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, timestamps = "pull", selection_active = false, align_origin, cursor_origin }: TimeMapOptions) {
         const map = TimeMap.build_map({ duration, pulls, selected, hide_unselected, show_all, timestamps, selection_active })
-        map.timestamps = timestamps
         map.align_origin = align_origin
         map.cursor_origin = cursor_origin
         map.phase_ranges = pulls.map(pull => ({ start: pull.start / 1000, end: pull.end / 1000 }))

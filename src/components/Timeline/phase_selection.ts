@@ -22,12 +22,12 @@ export function get_all_phase_names(boss_slug?: string) {
 }
 
 
-/** the new selection after a click on `name`. `phases`: all names, in order. `modifier`: whether a click on the ruler counts (Ctrl/Cmd/Shift) */
+/** the new selection after a click on `name`. `phases`: all names, in order. */
 export function click_phase(phases: string[], selection: string[], name: string, event: { shiftKey: boolean }): string[] {
     const selected = selection.filter(n => phases.includes(n))
     if (event.shiftKey && selected.length) {
         const [from, to] = [phases.indexOf(selected[selected.length - 1]), phases.indexOf(name)].sort((a, b) => a - b)
-        return [...selected, ...phases.slice(from, to + 1)]
+        return [...new Set([...selected, ...phases.slice(from, to + 1)])]
     }
     return selected.includes(name) ? selected.filter(n => n != name) : [...selected, name]
 }

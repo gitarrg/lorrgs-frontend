@@ -4,12 +4,12 @@ import type { Context } from "konva/lib/Context"
 
 import * as constants from "./constants"
 import store from "./../../store/store"
-import { toMMSS } from "../../utils"
+import { format_time, toMMSS } from "../../utils"
 import type Spell from "../../types/spell"
 import type CastType from "../../types/cast"
 import type Stage from "./Stage"
 import { IDENTITY_REF, type TimeMapRef } from "./TimeMap"
-import { format_time, get_time_lines, pull_tag, show_tooltip, type TooltipInfo } from "./tooltip"
+import { get_time_lines, pull_tag, show_tooltip, type TooltipInfo } from "./tooltip"
 
 /** simple cache to reuse existing images */
 export const IMAGES: {[key: number]: HTMLImageElement} = {}

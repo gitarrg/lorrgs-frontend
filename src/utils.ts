@@ -147,3 +147,16 @@ export function deepMerge(obj1: Record<string, any>, obj2: Record<string, any>):
 
     return result;
 }
+
+
+/**
+ * a time as "45s", "1m 05s" (`separator` " ") or "2m05s" (tooltip lines: seconds are padded
+ * once there are minutes, so right-aligned values line up).
+ */
+export function format_time(seconds: number, separator = "") {
+    const total = Math.round(seconds)
+    if (total < 60) { return `${total}s` }
+    const m = Math.floor(total / 60)
+    const s = total % 60
+    return `${m}m${separator}${s.toString().padStart(2, "0")}s`
+}

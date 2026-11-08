@@ -1,7 +1,7 @@
 /* What the timeline's tooltip shows (see `TimelineTooltip`), and helpers to fill it. */
 import store from "../../store/store"
 import * as constants from "./constants"
-import { toMMSS } from "../../utils"
+import { format_time, toMMSS } from "../../utils"
 import { get_pull_color, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type { TimeMapRef } from "./TimeMap"
@@ -45,32 +45,15 @@ export function hide_tooltip() {
 
 
 /** a length of time: "45s", "1m 05s" */
-export function format_duration(seconds: number) {
-    const total = Math.round(seconds)
-    if (total < 60) { return `${total}s` }
-    const m = Math.floor(total / 60)
-    const s = total % 60
-    return `${m}m ${s.toString().padStart(2, "0")}s`
-}
+export const format_duration = (seconds: number) => format_time(seconds, " ")
 
 
 /** the pull running at `t` (run time, seconds) */
 export function get_pull_at(pulls: Pull[] | undefined, t: number): { pull: Pull, index: number } | null {
-    const index = (pulls || []).findIndex(pull => t * 1000 >= pull.start && t * 1000 <= pull.end)
+    const ms = t * 1000
+    // (half-open, so back-to-back phases don't both claim their boundary: the last one includes its end)
+    const index = (pulls || []).findIndex((pull, i) => ms >= pull.start && (ms < pull.end || (ms == pull.end && i == pulls!.length - 1)))
     return index >= 0 ? { pull: pulls![index], index } : null
-}
-
-
-/**
- * a time in tooltip lines: "3s", "2m05s", "15m03s".
- * Seconds are padded once there are minutes, so right-aligned values line up.
- */
-export function format_time(seconds: number) {
-    const total = Math.round(seconds)
-    if (total < 60) { return `${total}s` }
-    const m = Math.floor(total / 60)
-    const s = total % 60
-    return `${m}m${s.toString().padStart(2, "0")}s`
 }
 
 

@@ -1,8 +1,7 @@
 import { FaStar } from "react-icons/fa"
 import type Fight from "../../types/fight"
 import type Dungeon from "../../types/dungeon"
-import { format_time } from "../Timeline/tooltip"
-import { toMMSS } from "../../utils"
+import { format_time, toMMSS } from "../../utils"
 import WebpImg from "../WebpImg"
 import styles from "./DungeonRunInfo.module.scss"
 
