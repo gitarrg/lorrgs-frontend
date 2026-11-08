@@ -22,6 +22,7 @@ import { toMMSS } from "../../utils"
 import { level_for_scale } from "./ruler_levels"
 import { get_pull_color, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
+import type TimeMap from "./TimeMap"
 import type { TimeMapRef } from "./TimeMap"
 import { format_duration, get_pull_at, get_time_info, hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip"
 import { RULER_HINTS, clear_phase_selection, is_select_click, select_phase } from "./phase_selection"
@@ -356,6 +357,7 @@ export default class PullRow {
     /** run time ranges (s) and the run time (s) they count from, for the timestamps setting */
     private label_intervals(map: TimeMap, aligned_start?: number): { start: number, end: number, origin: number }[] {
         const whole = { start: -Infinity, end: Infinity }
+        if (map.timestamps == "cursor" && map.cursor_origin !== undefined) { return [{ ...whole, origin: map.cursor_origin }] }
         if (map.timestamps == "aligned" && aligned_start !== undefined) { return [{ ...whole, origin: aligned_start / 1000 }] }
         if (map.timestamps != "phase" || !map.phase_ranges.length) { return [{ ...whole, origin: 0 }] }
 
