@@ -84,12 +84,12 @@ export default function RulerCorner({ fights }: { fights: Fight[] }) {
 // Menu
 //
 
-function Item({ checked, onClick, icon, children }: { checked: boolean, onClick: () => void, icon?: ReactNode, children: ReactNode }) {
+function Item({ checked, onClick, icon, disabled, children }: { checked: boolean, onClick: () => void, icon?: ReactNode, disabled?: boolean, children: ReactNode }) {
     return (
-        <button type="button" className={styles.item} onClick={onClick} role="menuitemcheckbox" aria-checked={checked}>
+        <button type="button" className={styles.item} onClick={onClick} disabled={disabled} role="menuitemcheckbox" aria-checked={checked}>
             {checked ? <FaCheckSquare className={styles.check} /> : <FaRegSquare className={styles.check} />}
             {icon && <span className={styles.icon}>{icon}</span>}
-            {children}
+            <span>{children}</span>
         </button>
     )
 }
@@ -102,6 +102,7 @@ function PhaseMenu({ phases }: { phases: string[] }) {
     const selection = useAppSelector(state => state.ui.phase_selection)
     const display = useAppSelector(state => state.ui.settings)
     const view = useAppSelector(get_view_settings)
+    const aligned_phase = useAppSelector(state => state.ui.aligned_phase)
 
     // nothing selected: all phases show
     const selected = selection.filter(name => phases.includes(name))
@@ -133,8 +134,31 @@ function PhaseMenu({ phases }: { phases: string[] }) {
             <Item checked={display.show_phases} onClick={() => toggle("show_phases")} icon={<IoFlagSharp />}>phase markers</Item>
 
             <div className={styles.group}>Time</div>
-            <Item checked={view.timestamps == "run"} onClick={() => dispatch(set_view_setting("timestamps", "run"))}>relative to pull</Item>
-            <Item checked={view.timestamps == "pull"} onClick={() => dispatch(set_view_setting("timestamps", "pull"))}>relative to phase</Item>
+            <Item
+                checked={view.timestamps == "pull" || (view.timestamps == "aligned" && !aligned_phase)}
+                onClick={() => dispatch(set_view_setting("timestamps", "pull"))}
+            >
+                relative to <span className="wow-boss">pull</span>
+            </Item>
+            <Item
+                checked={view.timestamps == "phase"}
+                onClick={() => dispatch(set_view_setting("timestamps", "phase"))}
+            >
+                relative to <span className={styles.phase}>phase</span>
+            </Item>
+            <Item
+                checked={view.timestamps == "aligned" && !!aligned_phase}
+                disabled={!aligned_phase}
+                onClick={() => dispatch(set_view_setting("timestamps", "aligned"))}
+            >
+                relative to <span className={styles.aligned}>aligned phase</span>
+            </Item>
+            <Item
+                checked={view.timestamps == "cursor"}
+                onClick={() => dispatch(set_view_setting("timestamps", "cursor"))}
+            >
+                relative to <span className="wow-epic">cursor</span>
+            </Item>
         </div>
     )
 }

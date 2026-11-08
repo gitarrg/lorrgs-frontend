@@ -160,6 +160,9 @@ export interface UiSliceState {
      */
     phase_selection: string[]
 
+    /** name of the boss phase the fights are aligned on (set by the timeline), if any. Enables the "aligned" timestamps. */
+    aligned_phase: string | null
+
     // CopyNote Options
     show_copynote: boolean
     copynote_player: Actor | null
@@ -230,6 +233,7 @@ const INITIAL_STATE: UiSliceState = {
 
     pull_selection: {},
     phase_selection: read_phase_selection(),
+    aligned_phase: null,
 
     show_copynote: false,
     copynote_player: null,
@@ -320,6 +324,11 @@ const SLICE = createSlice({
         },
 
 
+        set_aligned_phase: (state, action: PayloadAction<string | null>) => {
+            state.aligned_phase = action.payload
+            return state
+        },
+
         set_phase_selection: (state, action: PayloadAction<string[]>) => {
             state.phase_selection = [...new Set(action.payload)]
             store_phase_selection(state.phase_selection)
@@ -359,6 +368,7 @@ export const {
     set_tooltip,
     set_pull_selection,
     set_phase_selection,
+    set_aligned_phase,
     update_settings,
     set_show_copynote,
     set_copynote_player,

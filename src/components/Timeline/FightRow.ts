@@ -15,7 +15,7 @@ import Konva from "konva";
 import PhaseMarker from "./PhaseMarker";
 import PlayerRow from "./PlayerRow";
 import PullRow from "./PullRow";
-import TimeMap, { type TimeMapRef } from "./TimeMap";
+import TimeMap, { type TimeMapRef, type TimestampMode } from "./TimeMap";
 import { get_run_key } from "../../store/ui";
 import type { Context } from "konva/lib/Context";
 import type Actor from "../../types/actor";
@@ -31,7 +31,7 @@ export interface PullView {
     /** selected pulls per run (see `get_run_key`) */
     selection: { [run_key: string]: number[] }
     hide_unselected: boolean
-    pull_time: boolean
+    timestamps: TimestampMode
     /** selected phases of boss fights, by name (eg. "P2": shared by all fights). Empty: the whole fight */
     phase_selection: string[]
 }
@@ -59,6 +59,10 @@ export default class FightRow {
     anchor_ts: number = 0
     /** run time (s) of the pull the fights are aligned on. None: aligned on a phase (or not at all) */
     private anchor_pull?: number
+    /** run time (s) where the phase the fights are aligned on starts in this fight (see "aligned" timestamps) */
+    private align_origin?: number
+    /** run time (s) under the pointer, to the second (see "cursor" timestamps) */
+    private cursor_origin?: number
 
     foreground: Konva.Group
     background: Konva.Group
@@ -233,7 +237,9 @@ export default class FightRow {
             selected,
             hide_unselected: view.hide_unselected,
             show_all: phases,
-            pull_time: view.pull_time,
+            timestamps: view.timestamps,
+            align_origin: this.align_origin,
+            cursor_origin: this.cursor_origin,
         })
         this.pull_row.set_selected(selected)
         this.time_ref.current = map
@@ -359,8 +365,11 @@ export default class FightRow {
         // reset to pull
         this.anchor_offset = 0
         this.anchor_pull = undefined
+        const previous_origin = this.align_origin
+        this.align_origin = undefined
         if (ts == 0) {
             this.update_x()
+            this.update_align_origin(previous_origin)
             return
         }
 
@@ -370,8 +379,36 @@ export default class FightRow {
         if (pull) {
             this.anchor_offset = ts
             this.anchor_pull = pull.start / 1000
+            if (kind == "phase") { this.align_origin = pull.start / 1000 }
         }
         this.update_x()
+        this.update_align_origin(previous_origin)
+    }
+
+    /**
+     * "cursor" timestamps count from the time under the pointer: `x` is the pointer's position on the stage (px).
+     * @returns true if the texts changed
+     */
+    set_cursor(x: number): boolean {
+        const map = this.time_ref.current
+        if (map.timestamps != "cursor") { return false }
+        const origin = Math.round(map.run_at_x(x - this.foreground.x(), this.scale_x))
+        if (origin === this.cursor_origin) { return false }
+        this.cursor_origin = origin
+        map.cursor_origin = origin
+        this.handle_event(constants.EVENT_TIME_MAP_CHANGED, null)
+        this.rows.forEach(row => row.foreground.invalidate_cache())
+        return true
+    }
+
+    /** "aligned" timestamps count from the aligned phase: update the texts if it changed */
+    private update_align_origin(previous?: number) {
+        const map = this.time_ref.current
+        if (this.align_origin === previous) { return }
+        map.align_origin = this.align_origin
+        if (map.timestamps != "aligned") { return }
+        this.handle_event(constants.EVENT_TIME_MAP_CHANGED, null)
+        this.rows.forEach(row => row.foreground.invalidate_cache())  // only the texts changed: the rows are cached
     }
 
 

@@ -46,8 +46,11 @@ export interface ViewSettings {
 
     /** dungeon runs: cut the time between the selected pulls out of the timeline (instead of dimming it) */
     hide_unselected_pulls: boolean
-    /** dungeon runs: timestamps since the run started, or since the first selected pull ("pull time") */
-    timestamps: "run" | "pull"
+    /**
+     * what the times of casts count from: the start of the fight ("pull"), the phase the cast is in
+     * (dungeon runs: the pull), the phase the fights are aligned on ("aligned"), or the time under the pointer ("cursor")
+     */
+    timestamps: "pull" | "phase" | "aligned" | "cursor"
 }
 
 /** the View Settings that are on/off */
@@ -69,14 +72,16 @@ export const DEFAULT_VIEW_SETTINGS: ViewSettings = {
     grey_out: false,
     tooltip: true,
     hide_unselected_pulls: false,
-    timestamps: "run",
+    timestamps: "pull",
 }
 
 
 function read_view_settings(): ViewSettings {
     try {
         const stored = JSON.parse(localStorage.getItem(SETTINGS_STORAGE_KEY) || "{}")
-        return { ...DEFAULT_VIEW_SETTINGS, ...stored }
+        const settings = { ...DEFAULT_VIEW_SETTINGS, ...stored }
+        if (!["pull", "phase", "aligned", "cursor"].includes(settings.timestamps)) { settings.timestamps = "pull" }  // (older versions: "run")
+        return settings
     } catch {
         return DEFAULT_VIEW_SETTINGS  // storage can be unavailable (private mode, blocked site data)
     }

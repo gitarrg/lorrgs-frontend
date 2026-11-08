@@ -9,8 +9,11 @@ For a plain fight both are the same. For a dungeon run with selected pulls:
   and the remaining parts are put next to each other.
 - otherwise that time stays, and is listed in `dimmed` to be greyed out.
 
-Labels ("timestamps") show either the run time, or the "pull time":
-0:00 at the first selected pull, counting only the time shown (= the display time).
+Labels ("timestamps") of casts, events and tooltips show (see `TimestampMode`):
+- "pull": the time since the fight/run started, whatever is selected or aligned
+- "phase": the time into the phase (dungeon run: the pull) the time is in
+- "aligned": the time since the aligned phase started in this fight
+- "cursor": the time since the time under the pointer
 
 Pixels: display time × zoom, plus "gaps": a fixed number of px before each segment
 (see `set_gaps`), for the icons of casts from before it (before the crop, or cut out).
@@ -19,6 +22,10 @@ Pure and framework free: everything on the timeline positions itself through thi
 */
 
 import type { Pull } from "../../types/fight"
+
+
+/** what the labels count from, see the top of this file */
+export type TimestampMode = "pull" | "phase" | "aligned" | "cursor"
 
 
 /** A pull of a dungeon run, as sent by the API (milliseconds since the run started). */
@@ -56,8 +63,12 @@ export interface TimeMapOptions {
     hide_unselected?: boolean
     /** dimmed: show the whole fight (the unselected time dimmed) instead of cropping it to the selected pulls (phases) */
     show_all?: boolean
-    /** label times relative to the first selected pull, counting only the time shown */
-    pull_time?: boolean
+    /** what the labels count from */
+    timestamps?: TimestampMode
+    /** run time (s) where the aligned phase starts in this fight (for "aligned") */
+    align_origin?: number
+    /** run time (s) under the pointer in this fight (for "cursor") */
+    cursor_origin?: number
 }
 
 
@@ -88,10 +99,16 @@ export default class TimeMap {
     /** length of the row in display time (s) */
     readonly duration: number
 
-    readonly pull_time: boolean
+    timestamps: TimestampMode
 
-    /** pull time: the display time (s) labelled 0:00 (not the row's start when it shows more than the selected pulls) */
-    readonly label_origin: number
+    /** run time (s) the aligned phase starts at. None: not aligned (or not in this fight): labels show the run time */
+    align_origin?: number
+
+    /** run time (s) under the pointer ("cursor" labels count from it). None (pointer not seen yet): labels show the run time */
+    cursor_origin?: number
+
+    /** pulls or phases (run time, s) in order: "phase" labels count from the start of the one the time is in */
+    phase_ranges: TimeRange[] = []
 
     /** whether this maps anything else than "display = run time" */
     readonly is_identity: boolean
@@ -100,11 +117,10 @@ export default class TimeMap {
     gaps: number[] = []
 
 
-    constructor(segments: TimeSegment[], dimmed: TimeRange[] = [], pull_time = false, label_origin = 0) {
+    constructor(segments: TimeSegment[], dimmed: TimeRange[] = [], timestamps: TimestampMode = "pull") {
         this.segments = segments
         this.dimmed = dimmed
-        this.pull_time = pull_time
-        this.label_origin = label_origin
+        this.timestamps = timestamps
 
         const last = segments[segments.length - 1]
         this.duration = last.offset + (last.end - last.start)
@@ -116,14 +132,23 @@ export default class TimeMap {
         return new TimeMap([{ start: 0, end: duration, offset: 0 }])
     }
 
-    static build({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, pull_time = false }: TimeMapOptions) {
+    static build({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, timestamps = "pull", align_origin, cursor_origin }: TimeMapOptions) {
+        const map = TimeMap.build_map({ duration, pulls, selected, hide_unselected, show_all, timestamps })
+        map.timestamps = timestamps
+        map.align_origin = align_origin
+        map.cursor_origin = cursor_origin
+        map.phase_ranges = pulls.map(pull => ({ start: pull.start / 1000, end: pull.end / 1000 }))
+        return map
+    }
+
+    private static build_map({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, timestamps = "pull" }: TimeMapOptions) {
 
         const ranges = selected
             .map(i => pulls[i])
             .filter(pull => pull && pull.end > pull.start)
             .map(pull => ({ start: pull.start / 1000, end: pull.end / 1000 }))
 
-        // nothing selected: the whole fight (pull time is the same as run time then)
+        // nothing selected: the whole fight
         if (ranges.length == 0) { return TimeMap.identity(duration) }
 
         const shown = merge_ranges(ranges)
@@ -136,7 +161,7 @@ export default class TimeMap {
                 offset += range.end - range.start
                 return segment
             })
-            return new TimeMap(segments, [], pull_time)
+            return new TimeMap(segments, [], timestamps)
         }
 
         // dim: the gaps between the selected pulls
@@ -153,9 +178,9 @@ export default class TimeMap {
                 t = range.end
             })
             if (end > t) { all.push({ start: t, end }) }
-            return new TimeMap([{ start: 0, end, offset: 0 }], all, pull_time, crop.start)
+            return new TimeMap([{ start: 0, end, offset: 0 }], all, timestamps)
         }
-        return new TimeMap([{ ...crop, offset: 0 }], dimmed, pull_time)
+        return new TimeMap([{ ...crop, offset: 0 }], dimmed, timestamps)
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -301,26 +326,21 @@ export default class TimeMap {
     // Labels
     //
 
-    /** The time to show for a run time (s): itself, or the pull time */
+    /** The time to show for a run time (s), see `TimestampMode` */
     label(t: number): number {
-        return this.pull_time ? this.to_display(t) - this.label_origin : t
+        if (this.timestamps == "cursor") { return t - (this.cursor_origin ?? 0) }
+        if (this.timestamps == "aligned") { return t - (this.align_origin ?? 0) }
+        if (this.timestamps == "phase") {
+            // between pulls (dungeon runs): the run time
+            const range = this.phase_ranges.find(range => t >= range.start && t <= range.end)
+            return range ? t - range.start : t
+        }
+        return t
     }
 
     /** The time to show at a display time (s) */
     label_at_display(d: number): number {
-        return this.pull_time ? d - this.label_origin : this.to_run(d)
-    }
-
-    /**
-     * The shown time in display time, with the label at its start.
-     * Within each, the label grows at the same rate as the display time.
-     */
-    label_ranges(): { start: number, end: number, label: number }[] {
-        return this.segments.map(segment => ({
-            start: segment.offset,
-            end: segment.offset + (segment.end - segment.start),
-            label: this.pull_time ? segment.offset - this.label_origin : segment.start,
-        }))
+        return this.label(this.to_run(d))
     }
 }
 

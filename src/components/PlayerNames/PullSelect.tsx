@@ -197,10 +197,10 @@ export default function PullSelect({ fight, dungeon }: { fight: Fight, dungeon: 
                             <select
                                 className={styles.select}
                                 value={settings.timestamps}
-                                onChange={event => dispatch(set_view_setting("timestamps", event.target.value as "run" | "pull"))}
+                                onChange={event => dispatch(set_view_setting("timestamps", event.target.value as "pull" | "phase"))}
                             >
-                                <option value="run">Dungeon start</option>
-                                <option value="pull">First selected pull</option>
+                                <option value="pull">Dungeon start</option>
+                                <option value="phase">Current pull</option>
                             </select>
                         </label>
                     </div>

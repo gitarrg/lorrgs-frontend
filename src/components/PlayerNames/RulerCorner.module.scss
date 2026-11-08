@@ -11,7 +11,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 4px;
-    padding: 0 4px;
+    padding: 0 4px 4px 4px;
 }
 
 .cog {
@@ -19,8 +19,10 @@
     align-items: center;
     padding: 0 4px;
     height: 1.4rem;
+    width: 1.4rem;
 
     background: transparent;
+    background: hsl(0, 0%, 30%);
     border: 1px solid hsl(0, 0%, 35%);
     border-radius: 3px;
     color: hsl(0, 0%, 70%);
@@ -75,6 +77,10 @@
         background: hsl(0, 0%, 25%);
         color: white;
     }
+
+    &:disabled {
+        opacity: 0.35;
+    }
 }
 
 .check {
@@ -94,4 +100,12 @@
     &:disabled {
         opacity: 0.3;
     }
+}
+
+.phase {
+    color: #17e67f; 
+}
+
+.aligned {
+    color: #00ffff;
 }

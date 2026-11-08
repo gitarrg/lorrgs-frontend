@@ -22,6 +22,7 @@ import { toMMSS } from "../../utils"
 import { level_for_scale } from "./ruler_levels"
 import { get_pull_color, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
+import type TimeMap from "./TimeMap"
 import type { TimeMapRef } from "./TimeMap"
 import { format_duration, get_pull_at, get_time_info, hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip"
 import { RULER_HINTS, clear_phase_selection, is_select_click, select_phase } from "./phase_selection"
@@ -294,7 +295,7 @@ export default class PullRow {
         return index === this.hovered || (this.hovered_phase !== undefined && this.hovered_phase == this.pulls[index]?.name)
     }
 
-    /** ticks and timestamps like the main `Ruler`, in the labels of the time map (run or pull time) */
+    /** ticks and timestamps like the main `Ruler`, in run time */
     private draw_ticks(context: Context) {
         const map = this.time_ref.current
         const s = this.scale_x
@@ -308,44 +309,68 @@ export default class PullRow {
         context.setAttr("textAlign", "left")
         context.setAttr("textBaseline", "middle")
 
-        // aligned on a phase: the timestamps count from where it starts in this run, like the main ruler
+        // what the timestamps count from (like the times of the casts, see `TimeMap.label`): intervals of run time, each with its 0:00
         const anchor = this.phase_anchor
         const anchor_span = anchor?.ts ? this.pulls.find(pull => pull.name == anchor.name) : undefined
-        const shift = anchor_span ? map.label(anchor_span.start / 1000) : 0
+        const intervals = this.label_intervals(map, anchor_span?.start)
 
         let last_text_x = -Infinity
         const xs = map.segment_xs(s)
-        map.label_ranges().forEach((range, index) => {
-            const first = Math.ceil((range.label - shift) / tick)
-            const last = Math.floor((range.label - shift + (range.end - range.start)) / tick)
+        map.segments.forEach((segment, index) => {
+            intervals.forEach(interval => {
+                const lo = Math.max(segment.start, interval.start)
+                const hi = Math.min(segment.end, interval.end)
+                if (hi < lo) { return }
 
-            for (let i = first; i <= last; i++) {
-                const t = i * tick
-                const x = Math.round(xs[index].x0 + (t + shift - range.label) * s) + 0.5
-                const big = i % ticks_per_label == 0
-                const h = big ? 10 : 5
+                const first = Math.ceil((lo - interval.origin) / tick - 1e-9)
+                const last = Math.floor((hi - interval.origin) / tick + 1e-9)
+                for (let i = first; i <= last; i++) {
+                    const t = i * tick
+                    const x = Math.round(xs[index].x0 + (interval.origin + t - segment.start) * s) + 0.5
+                    const big = i % ticks_per_label == 0
+                    const h = big ? 10 : 5
 
-                context.beginPath()
-                context.moveTo(x, HEIGHT - h)
-                context.lineTo(x, HEIGHT)
-                context.stroke()
+                    context.beginPath()
+                    context.moveTo(x, HEIGHT - h)
+                    context.lineTo(x, HEIGHT)
+                    context.stroke()
 
-                if (big && x - last_text_x >= MIN_TEXT_SPACING) {
-                    // starts at the tick, like the main ruler
-                    const is_anchor = anchor_span && t == 0
-                    if (is_anchor) {
-                        context.setAttr("fillStyle", ANCHOR_COLOR)
-                        context.setAttr("font", `bold ${FONT}`)
+                    if (big && x - last_text_x >= MIN_TEXT_SPACING) {
+                        // starts at the tick, like the main ruler
+                        const is_anchor = !!anchor_span && t == 0 && interval.origin == anchor_span.start / 1000
+                        if (is_anchor) {
+                            context.setAttr("fillStyle", ANCHOR_COLOR)
+                            context.setAttr("font", `bold ${FONT}`)
+                        }
+                        context.fillText(is_anchor ? (anchor_span!.start < MIN_PHASE_START ? "Pull" : anchor!.name) : toMMSS(t), x - 0.5, TEXT_Y)
+                        if (is_anchor) {
+                            context.setAttr("fillStyle", TEXT_COLOR)
+                            context.setAttr("font", FONT)
+                        }
+                        last_text_x = x
                     }
-                    context.fillText(is_anchor ? (anchor_span!.start < MIN_PHASE_START ? "Pull" : anchor!.name) : toMMSS(t), x - 0.5, TEXT_Y)
-                    if (is_anchor) {
-                        context.setAttr("fillStyle", TEXT_COLOR)
-                        context.setAttr("font", FONT)
-                    }
-                    last_text_x = x
                 }
-            }
+            })
         })
+    }
+
+    /** run time ranges (s) and the run time (s) they count from, for the timestamps setting */
+    private label_intervals(map: TimeMap, aligned_start?: number): { start: number, end: number, origin: number }[] {
+        const whole = { start: -Infinity, end: Infinity }
+        if (map.timestamps == "cursor" && map.cursor_origin !== undefined) { return [{ ...whole, origin: map.cursor_origin }] }
+        if (map.timestamps == "aligned" && aligned_start !== undefined) { return [{ ...whole, origin: aligned_start / 1000 }] }
+        if (map.timestamps != "phase" || !map.phase_ranges.length) { return [{ ...whole, origin: 0 }] }
+
+        // each phase (dungeon run: pull) from its start, in between (and before/after): the run time
+        const intervals: { start: number, end: number, origin: number }[] = []
+        let t = -Infinity
+        map.phase_ranges.forEach(range => {
+            if (range.start > t) { intervals.push({ start: t, end: range.start, origin: 0 }) }
+            intervals.push({ ...range, origin: range.start })
+            t = range.end
+        })
+        intervals.push({ start: t, end: Infinity, origin: 0 })
+        return intervals
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -372,7 +397,7 @@ export default class PullRow {
         const found = get_pull_at(this.pulls, t)
         if (found) {
             const { pull, index } = found
-            const start = map.label(pull.start / 1000)
+            const start = pull.start / 1000  // (run time, whatever the timestamps setting)
             const duration = (pull.end - pull.start) / 1000
             const end = start + map.display_length(pull.start / 1000, duration)
             info.title = get_pull_label(pull, index)

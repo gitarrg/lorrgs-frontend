@@ -8,7 +8,8 @@ import FightRow, { type PullView } from "./FightRow";
 import type Fight from "../../types/fight";
 import Cast, { IMAGES } from "./Cast";
 import type Player from "./Player";
-import { MODES, type FilterValues } from "../../store/ui";
+import { MODES, set_aligned_phase, type FilterValues } from "../../store/ui";
+import store from "../../store/store";
 
 
 // for performance
@@ -65,7 +66,7 @@ export default class Stage extends Konva.Stage {
     anchor_kind: AnchorKind = "phase"
 
     /** how dungeon runs show their pulls (see `set_pull_view`) */
-    private pull_view: PullView = { selection: {}, hide_unselected: false, pull_time: false, phase_selection: [] }
+    private pull_view: PullView = { selection: {}, hide_unselected: false, timestamps: "pull", phase_selection: [] }
 
     /** filters last applied (see `EVENT_APPLY_FILTERS`) */
     private applied_filters?: FilterValues
@@ -130,7 +131,7 @@ export default class Stage extends Konva.Stage {
 
         this.crosshair = new MouseCrosshair()
         this.overlay_layer.add(this.crosshair)
-        this.on("mousemove", () => this._update_crosshair())
+        this.on("mousemove", () => { this._update_crosshair(); this.schedule_cursor_time() })
         this.container().addEventListener("mouseleave", () => this._hide_crosshair())
 
         // update canvas on window resize
@@ -183,6 +184,28 @@ export default class Stage extends Konva.Stage {
         })
         this.height(y + 1) // 1 extra to show the border
         this.crosshair.set_height(this.height())
+    }
+
+    /** pointer position (px on the stage), once seen: "cursor" timestamps count from it */
+    private cursor_x?: number
+    private cursor_frame = 0
+
+    /** update the "cursor" timestamps once per frame */
+    private schedule_cursor_time() {
+        if (this.pull_view.timestamps != "cursor" || this.cursor_frame) { return }
+        this.cursor_frame = requestAnimationFrame(() => {
+            this.cursor_frame = 0
+            const pointer = this.getPointerPosition()
+            if (pointer) { this.cursor_x = pointer.x - this.x() }
+            this.update_cursor_time()
+        })
+    }
+
+    private update_cursor_time() {
+        if (this.cursor_x === undefined) { return }
+        let changed = false
+        this.rows.forEach(row => { changed = row.set_cursor(this.cursor_x!) || changed })
+        if (changed) { this.batchDraw() }
     }
 
     /** move the crosshair to the pointer */
@@ -432,7 +455,7 @@ export default class Stage extends Konva.Stage {
         return Math.max(0, ...this.rows.map(row => row.time_ref.current.duration))
     }
 
-    /** Change how dungeon runs show their pulls: selection, cut out or dimmed, run or pull time. */
+    /** Change how dungeon runs show their pulls: selection, cut out or dimmed, what the timestamps count from. */
     set_pull_view(view: PullView) {
         const previous = this.pull_view
         this.pull_view = view
@@ -440,13 +463,14 @@ export default class Stage extends Konva.Stage {
         let changed = false
         this.rows.forEach(row => {
             const run_changed = previous.hide_unselected != view.hide_unselected
-                || previous.pull_time != view.pull_time
+                || previous.timestamps != view.timestamps
                 || previous.phase_selection !== view.phase_selection
                 || previous.selection[row.run_key] !== view.selection[row.run_key]
             if (run_changed) { changed = row.set_pull_view(view) || changed }
         })
         if (!changed) { return }
         this.sync_gaps()
+        this.update_cursor_time()
 
         const longest = this.get_longest_fight()
         if (longest != this.longest_fight) {
@@ -461,6 +485,7 @@ export default class Stage extends Konva.Stage {
         this.anchor_ts = ts
         this.anchor_name = name
         this.anchor_kind = kind
+        store.dispatch(set_aligned_phase(ts && kind == "phase" ? name : null))
 
         this.handle_event(constants.EVENT_ANCHOR_CHANGED, this.get_anchor())
     }
