@@ -67,6 +67,8 @@ export default class EventLine extends Konva.Group {
 
     // shown: by the display settings, and while its time isn't cut out of the row
     private shown_by_settings = true
+    /** shown regardless of the settings (eg. the phase under the pointer in the ruler) */
+    private peeking = false
     private in_range = true
 
 
@@ -237,13 +239,19 @@ export default class EventLine extends Konva.Group {
     /** show/hide from the display settings */
     set_shown(state: boolean) {
         this.shown_by_settings = state
-        this.visible(this.shown_by_settings && this.in_range)
+        this.visible((this.shown_by_settings || this.peeking) && this.in_range)
+    }
+
+    set_peek(state: boolean) {
+        if (state === this.peeking) { return }
+        this.peeking = state
+        this.visible((this.shown_by_settings || this.peeking) && this.in_range)
     }
 
     /** Apply the current time map: texts and whether the time is shown (position: see `_handle_zoom_change`) */
     update_time() {
         this.in_range = this.time_ref.current.is_in_row(this.timestamp)
-        this.visible(this.shown_by_settings && this.in_range)
+        this.visible((this.shown_by_settings || this.peeking) && this.in_range)
         this.label?.text(this._get_text_label())
         this.tooltip_content = this._get_text_tooltip()
     }

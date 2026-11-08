@@ -51,6 +51,8 @@ function TooltipBody({ info }: { info: TooltipInfo }) {
                 </div>)}
             </div>
         )}
+
+        {!!info.hints?.length && <div className={styles.hints}>{info.hints.map(hint => <div key={hint}>{hint}</div>)}</div>}
     </>
 }
 

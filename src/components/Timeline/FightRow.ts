@@ -115,7 +115,7 @@ export default class FightRow {
         const pulls = fight_data.pulls?.length ? fight_data.pulls : this.phase_spans
         if (pulls.length) {
             // above the row, next to the run's info in the names column (where the shared ruler is for the first fight)
-            this.pull_row = new PullRow(pulls, this.time_ref)
+            this.pull_row = new PullRow(pulls, this.time_ref, fight_data.boss?.boss_slug)
             this.pull_row.shape.y(-this.pull_row.height())
             this.pull_row.bbox.y(-this.pull_row.height())
             this.background.add(this.pull_row.shape)
@@ -395,7 +395,7 @@ export default class FightRow {
 
         // hidden: remember the latest payload and replay once visible again
         if (!this.visible()) {
-            if (event_name !== constants.EVENT_APPLY_FILTERS && event_name !== constants.EVENT_PHASE_HOVER) {
+            if (event_name !== constants.EVENT_APPLY_FILTERS && event_name !== constants.EVENT_PHASE_HOVER && event_name !== constants.EVENT_PHASE_PEEK) {
                 this._pending_events.delete(event_name)
                 this._pending_events.set(event_name, payload)
             }

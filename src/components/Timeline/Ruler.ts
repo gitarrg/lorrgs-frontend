@@ -5,6 +5,7 @@ import Konva from "konva"
 import Stage from "./Stage";
 import TimelineMarker from "./Overlays/TimelineMarker";
 import { LEVELS, level_for_scale } from "./ruler_levels";
+import { clear_phase_selection } from "./phase_selection";
 import { hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip";
 
 
@@ -50,6 +51,7 @@ export default class Ruler extends Konva.Group {
         this.bbox.on("dblclick dbltap", () => this.add_marker())
         this.bbox.on("mousemove", () => this.handle_mousemove())
         this.bbox.on("mouseout", () => hide_tooltip())
+        this.bbox.on("contextmenu", (event) => { event.evt.preventDefault(); clear_phase_selection() })
     }
 
     /** Show or hide the ruler (eg. when every shown fight has its own pull row). Keeps its height for the layout. */

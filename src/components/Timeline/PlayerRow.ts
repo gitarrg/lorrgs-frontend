@@ -15,6 +15,7 @@ import {
     EVENT_ANCHOR_CHANGED,
     EVENT_APPLY_FILTERS,
     EVENT_PHASE_HOVER,
+    EVENT_PHASE_PEEK,
     EVENT_ZOOM_CHANGE,
     LINE_HEIGHT
 } from "./constants";
@@ -105,7 +106,7 @@ export default class PlayerRow {
         }
 
         // events that only concern phase markers / the ruler: no need to walk every cast
-        if (event_name === EVENT_PHASE_HOVER || event_name === EVENT_ANCHOR_CHANGED) { return }
+        if (event_name === EVENT_PHASE_HOVER || event_name === EVENT_PHASE_PEEK || event_name === EVENT_ANCHOR_CHANGED) { return }
 
         // hidden: remember the latest payload and replay once visible again
         if (!this.visible()) {

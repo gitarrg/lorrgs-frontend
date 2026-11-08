@@ -1,0 +1,97 @@
+// The corner left of the ruler (see `RulerCorner`): as high as the ruler, as wide as the names.
+// Chips and popover are styled like the boss card (`PullSelect.module.scss`).
+
+.corner {
+    position: relative;
+    box-sizing: border-box;
+    width: 175px;
+    height: var(--timeline-ruler-height);
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 0 4px;
+}
+
+.cog {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    height: 1.4rem;
+
+    background: transparent;
+    border: 1px solid hsl(0, 0%, 35%);
+    border-radius: 3px;
+    color: hsl(0, 0%, 70%);
+
+    &:hover,
+    &.open {
+        color: white;
+        background: hsl(0, 0%, 25%);
+    }
+}
+
+// a context menu below the cog
+.menu {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    z-index: 100;
+
+    min-width: 14rem;
+    padding: 0.25rem 0;
+
+    font-size: 1.05rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.group {
+    padding: 0.4rem 0.75rem 0.1rem;
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    opacity: 0.6;
+
+    &:first-child {
+        padding-top: 0.1rem;
+    }
+}
+
+.item,
+.clear {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.15rem 0.75rem;
+
+    background: transparent;
+    border: none;
+    color: hsl(0, 0%, 85%);
+    text-align: left;
+
+    &:hover:not(:disabled) {
+        background: hsl(0, 0%, 25%);
+        color: white;
+    }
+}
+
+.check {
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.icon {
+    display: flex;
+    opacity: 0.7;
+}
+
+.clear {
+    padding-left: calc(0.75rem + 1em + 0.5rem);  // aligned with the labels
+    opacity: 0.7;
+
+    &:disabled {
+        opacity: 0.3;
+    }
+}

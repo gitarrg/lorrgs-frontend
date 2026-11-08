@@ -156,7 +156,7 @@ export interface UiSliceState {
 
     /**
      * Selected phases of boss fights, by name (eg. "P2"): the same for all fights shown. Empty: the whole fights.
-     * Only for this session.
+     * Kept per tab (sessionStorage), so it survives a reload.
      */
     phase_selection: string[]
 
@@ -164,6 +164,24 @@ export interface UiSliceState {
     show_copynote: boolean
     copynote_player: Actor | null
     copynote_fight: Fight | null
+}
+
+
+const PHASE_SELECTION_KEY = "lorrgs_phase_selection"
+
+function read_phase_selection(): string[] {
+    try {
+        const stored = JSON.parse(sessionStorage.getItem(PHASE_SELECTION_KEY) || "[]")
+        return Array.isArray(stored) ? stored.filter(name => typeof name == "string") : []
+    } catch {
+        return []  // storage can be unavailable (private mode, blocked site data)
+    }
+}
+
+function store_phase_selection(names: string[]) {
+    try {
+        sessionStorage.setItem(PHASE_SELECTION_KEY, JSON.stringify(names))
+    } catch { /* nothing to remember it with */ }
 }
 
 
@@ -211,7 +229,7 @@ const INITIAL_STATE: UiSliceState = {
     },
 
     pull_selection: {},
-    phase_selection: [],
+    phase_selection: read_phase_selection(),
 
     show_copynote: false,
     copynote_player: null,
@@ -304,6 +322,7 @@ const SLICE = createSlice({
 
         set_phase_selection: (state, action: PayloadAction<string[]>) => {
             state.phase_selection = [...new Set(action.payload)]
+            store_phase_selection(state.phase_selection)
             return state
         },
 

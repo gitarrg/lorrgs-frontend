@@ -40,6 +40,16 @@ export function get_phase_spans(fight: Fight): Pull[] {
 }
 
 
+/** names of the phases of the fights of this boss, in order ("P1", "P2", "P2.5"...) */
+export function get_phase_names(fights: Fight[], boss_slug?: string) {
+    const names = new Set<string>()
+    fights
+        .filter(fight => fight.boss?.boss_slug == boss_slug)
+        .forEach(fight => get_phase_spans(fight).forEach(span => names.add(span.name!)))
+    return [...names].sort((a, b) => parseFloat(a.slice(1)) - parseFloat(b.slice(1)))
+}
+
+
 /** "01:20 - 02:05 (00:45)": start - end in run time, and the duration */
 export function get_pull_time_info(pull: Pull) {
     const start = toMMSS(pull.start / 1000)

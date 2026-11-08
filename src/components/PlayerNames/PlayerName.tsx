@@ -15,9 +15,6 @@ import type Actor from "../../types/actor";
 import type Fight from "../../types/fight";
 import WebpImg from "../WebpImg";
 import TalentCard from "../Talents/TalentCard";
-import BossPhaseCard, { usePhaseNames } from "./BossPhaseCard";
-
-const CARD_CLOSE_DELAY = 250  // ms, to move the mouse from the name into the card
 
 const MAX_CHAR_NAME = 6;
 
@@ -50,29 +47,6 @@ export function BossName({ fight, boss }: { fight: Fight; boss: Actor }) {
     // hooks
     const visible = useAppSelector((state) => FILTERS.is_player_visible(boss, state.ui.filters));
     const boss_type = useAppSelector((state) => get_boss(state, boss.boss_slug));
-    const phases = usePhaseNames(fight);
-    const container = useRef<HTMLDivElement>(null);
-    const [card_anchor, set_card_anchor] = useState<DOMRect | null>(null);
-    const close_timer = useRef<number>(undefined);
-
-    const cancel_close = () => window.clearTimeout(close_timer.current);
-    const open_card = () => {
-        cancel_close();
-        container.current && set_card_anchor(container.current.getBoundingClientRect());
-    };
-    const close_card = () => {
-        cancel_close();
-        close_timer.current = window.setTimeout(() => set_card_anchor(null), CARD_CLOSE_DELAY);
-    };
-
-    // the card is placed in the viewport: close it when the page scrolls
-    useEffect(() => cancel_close, []);
-    useEffect(() => {
-        if (!card_anchor) { return }
-        const close = () => set_card_anchor(null);
-        window.addEventListener("scroll", close, { capture: true, passive: true });
-        return () => window.removeEventListener("scroll", close, { capture: true });
-    }, [card_anchor]);
 
     ///////////////////
     // apply filters
@@ -90,27 +64,13 @@ export function BossName({ fight, boss }: { fight: Fight; boss: Actor }) {
     // Render
     return (
         <div
-            ref={container}
             className={styles.boss_name}
-            onPointerEnter={event => event.pointerType == "mouse" && phases.length > 0 && open_card()}
-            onPointerLeave={event => event.pointerType == "mouse" && close_card()}
         >
             <a target="_blank" href={fight.report_url}>
                 <WebpImg className={styles.icon} src={boss_type.icon_path} />
                 <span className={styles.name}>{boss_type.name}</span>
             </a>
 
-            {card_anchor && phases.length > 0 && (
-                <BossPhaseCard
-                    fight={fight}
-                    boss_name={boss_type.full_name || boss_type.name}
-                    icon_path={boss_type.icon_path}
-                    phases={phases}
-                    anchor={card_anchor}
-                    on_pointer_enter={cancel_close}
-                    on_pointer_leave={close_card}
-                />
-            )}
         </div>
     );
 }

@@ -39,6 +39,9 @@ export const EVENT_SHOW_TOOLTIP = "ui/set_tooltip"
 // Event when hovering over a phase marker
 export const EVENT_PHASE_HOVER = "phase/hover"
 
+// Event when hovering over a phase in the ruler: its start and end markers show, even if phase markers are hidden. payload: `{ names: string[] }`
+export const EVENT_PHASE_PEEK = "phase/peek"
+
 export const EVENT_ANCHOR_CHANGED = "stage/anchor_changed"
 
 // the time map of a fight row changed (see `TimeMap`): sent to the row's children, followed by a zoom change to reposition them

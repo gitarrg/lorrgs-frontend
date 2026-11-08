@@ -24,13 +24,16 @@ import { get_pull_color, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
 import type { TimeMapRef } from "./TimeMap"
 import { format_duration, get_pull_at, get_time_info, hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip"
+import { RULER_HINTS, clear_phase_selection, is_select_click, select_phase } from "./phase_selection"
 import type Stage from "./Stage"
 import type { Anchor } from "./Stage"
 
 
 const HEIGHT = constants.LINE_HEIGHT
-const BAND_OPACITY = 0.2
+const BAND_OPACITY = 0.15
 const BAND_OPACITY_SELECTED = 0.6
+/** the pull under the pointer (dungeon runs) */
+const BAND_OPACITY_HOVER = 0.4
 const BACKGROUND = "#1a1a1a"
 /** ticks and timestamps: same as the main `Ruler` */
 const TEXT_COLOR = "white"
@@ -48,7 +51,7 @@ const STRIP_TEXT_COLOR = "black"
 const MIN_STRIP_TEXT_WIDTH = 14
 
 /** the pull all runs are aligned on: same as the active phase marker */
-const ANCHOR_COLOR = "#0FF"
+const ANCHOR_COLOR = "#00ffff"  // 6 digits: see `rgba`
 /** phase labels: under the pointer (same as a hovered phase marker) */
 const PHASE_HOVER_COLOR = "#17e67f"
 /** phases starting before this (ms) are "on pull": no label */
@@ -69,6 +72,8 @@ export default class PullRow {
 
     pulls: Pull[]
     time_ref: TimeMapRef
+    /** boss of the fight (phases: which phases there are to pick from) */
+    private boss_slug?: string
     selected: Set<number> = new Set()
     /** name of the pull the runs are aligned on (see `handle_click`) */
     private anchor_name?: string
@@ -78,6 +83,8 @@ export default class PullRow {
     readonly is_phases: boolean
     /** where the runs are aligned on a phase (kind "phase": see `Stage.get_anchor`). ts 0: not aligned */
     private phase_anchor?: { name: string, ts: number }
+    /** phases: the "phase markers" display setting. Off: no bands or labels, only the hover highlight */
+    private show_phases = true
     /** the phase whose line in a row is under the pointer */
     private hovered_phase?: string
 
@@ -90,7 +97,8 @@ export default class PullRow {
     /** catches the mouse (in the fight's overlay): tooltip and markers like the main ruler */
     bbox: Konva.Rect
 
-    constructor(pulls: Pull[], time_ref: TimeMapRef) {
+    constructor(pulls: Pull[], time_ref: TimeMapRef, boss_slug?: string) {
+        this.boss_slug = boss_slug
         this.pulls = pulls
         this.time_ref = time_ref
         this.is_phases = !!pulls[0]?.name
@@ -110,7 +118,8 @@ export default class PullRow {
         })
         this.bbox.on("mousemove", () => this.handle_mousemove())
         this.bbox.on("mouseout", () => this.handle_mouseout())
-        this.bbox.on("click tap", () => this.handle_click())
+        this.bbox.on("click tap", (event) => this.handle_click(event.evt))
+        this.bbox.on("contextmenu", (event) => this.handle_contextmenu(event.evt))
         this.bbox.on("dblclick dbltap", () => (this.bbox.getStage() as Stage | null)?.ruler.add_marker())
     }
 
@@ -176,7 +185,8 @@ export default class PullRow {
         // bands: behind the ticks
         const draw_band = ({ i, x0, x1, color }: typeof bands[number]) => {
             const selected = this.selected.has(i)
-            const alpha = selected ? BAND_OPACITY_SELECTED : BAND_OPACITY
+            const hovered = !this.is_phases && i === this.hovered
+            const alpha = selected ? BAND_OPACITY_SELECTED : hovered ? BAND_OPACITY_HOVER : BAND_OPACITY
             context.setAttr("globalAlpha", this.is_phases ? 1 : alpha)
             if (this.is_phases) {
                 // phases: fades out (no downtime between them), unless highlighted
@@ -199,7 +209,10 @@ export default class PullRow {
             context.lineTo(Math.round(x0) + 0.5, HEIGHT)
             context.stroke()
         }
-        bands.forEach(draw_band)
+        bands
+            // phases: none for P1 (it starts on pull); none when the phase markers are hidden, unless highlighted
+            .filter(({ pull, i }) => !this.is_phases || (pull.start >= MIN_PHASE_START && (this.show_phases || this.is_highlighted(i))))
+            .forEach(draw_band)
         context.setAttr("globalAlpha", 1)
 
         // the pull the runs are aligned on: its start
@@ -218,6 +231,7 @@ export default class PullRow {
 
         // names: in front of the ticks
         bands.forEach(({ pull, i, x0, x1, color }) => {
+            if (this.is_phases && !this.show_phases) { return }  // (the hover highlight stays)
             if (this.is_phases && pull.start < MIN_PHASE_START) { return }  // "on pull": no label (the band can still be clicked)
             this.draw_strip(context, get_pull_label(pull, i), color, x0, x1, !this.is_phases && i === this.hovered)
         })
@@ -368,6 +382,8 @@ export default class PullRow {
             info.title_detail = `${toMMSS(start)} - ${toMMSS(end)} (${format_duration(duration)})`
         }
 
+        if (this.is_phases && found) { info.hints = RULER_HINTS }
+
         // anchor above the pointer
         const container = stage.container().getBoundingClientRect()
         const pointer = stage.getPointerPosition()!
@@ -387,11 +403,20 @@ export default class PullRow {
     private set_hovered(index: number | undefined) {
         if (index === this.hovered) { return }
         this.hovered = index
+        this.peek_phase(index)
         this.shape.getLayer()?.batchDraw()
     }
 
+    /** phases: show the start and end markers of the phase under the pointer in the rows (also if hidden) */
+    private peek_phase(index: number | undefined) {
+        if (!this.is_phases) { return }
+        const names = index === undefined ? [] : [this.pulls[index]?.name, this.pulls[index + 1]?.name].filter((name): name is string => !!name)
+        const stage = this.bbox.getStage() as Stage | null
+        stage?.handle_event(constants.EVENT_PHASE_PEEK, { names })
+    }
+
     /** align all runs on the pull under the pointer, or reset them if they already are */
-    private handle_click() {
+    private handle_click(event?: MouseEvent | TouchEvent) {
         const stage = this.bbox.getStage() as Stage | null
         if (!stage) { return }
 
@@ -399,6 +424,12 @@ export default class PullRow {
         if (t === null) { return }
         const found = get_pull_at(this.pulls, t)
         if (!found) { return }
+
+        // phases, with Ctrl/Cmd/Shift: select it (dims the others) instead of aligning on it
+        if (this.is_phases && event && "shiftKey" in event && is_select_click(event)) {
+            select_phase(this.boss_slug, found.pull.name!, event)
+            return
+        }
 
         const name = get_pull_label(found.pull, found.index)
         const kind = this.is_phases ? "phase" : "pull"
@@ -411,6 +442,13 @@ export default class PullRow {
             const x = row_x + this.time_ref.current.to_x(found.pull.start / 1000, this.scale_x)
             stage.set_anchor(x / this.scale_x, name, kind)
         }
+    }
+
+    /** right click on the ruler of phases: back to all phases */
+    private handle_contextmenu(event: MouseEvent) {
+        if (!this.is_phases) { return }
+        event.preventDefault()
+        clear_phase_selection()
     }
 
     private handle_anchor_changed({ ts, name, kind }: Anchor) {
@@ -440,7 +478,15 @@ export default class PullRow {
     handle_event(event_name: string, payload: any) {
         if (event_name === constants.EVENT_ZOOM_CHANGE) { this._handle_zoom_change(payload) }
         if (event_name === constants.EVENT_ANCHOR_CHANGED) { this.handle_anchor_changed(payload) }
+        if (event_name === constants.EVENT_DISPLAY_SETTINGS) { this.handle_display_settings(payload) }
         if (event_name === constants.EVENT_PHASE_HOVER && this.is_phases) { this.handle_phase_hover(payload) }
+    }
+
+    private handle_display_settings(settings: { show_phases?: boolean }) {
+        const show = settings.show_phases ?? true
+        if (show === this.show_phases) { return }
+        this.show_phases = show
+        this.shape.getLayer()?.batchDraw()
     }
 
     private handle_phase_hover({ state, name }: { state: boolean, name: string }) {

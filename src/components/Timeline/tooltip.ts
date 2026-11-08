@@ -24,6 +24,8 @@ export type TooltipInfo = {
     /** next to the title, eg. a pull's times */
     title_detail?: string
     lines?: TooltipLine[]
+    /** short muted notes at the bottom, one per row, eg. how to click */
+    hints?: string[]
 }
 
 /** `value` and `label` in two aligned columns, optionally followed by a pull's name (in its colour) */

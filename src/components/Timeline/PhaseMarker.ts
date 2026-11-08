@@ -81,6 +81,11 @@ export default class PhaseMarker extends EventLine {
         super._handle_phase_hover(payload)
     }
 
+    /** the phase under the pointer in the ruler: its start and end show, even if the markers are hidden */
+    private handle_phase_peek({ names }: { names: string[] }) {
+        this.set_peek(names.includes(this.event_data.name))
+    }
+
     private handle_display_settings(settings: { [key: string]: boolean }) {
         this.set_shown(settings.show_phases)
     }
@@ -92,6 +97,7 @@ export default class PhaseMarker extends EventLine {
     handle_event(event_name: string, payload: any) {
         if (event_name === constants.EVENT_DISPLAY_SETTINGS) { this.handle_display_settings(payload) }
         if (event_name === constants.EVENT_PHASE_HOVER) { this._handle_phase_hover(payload) }
+        if (event_name === constants.EVENT_PHASE_PEEK) { this.handle_phase_peek(payload) }
         if (event_name === constants.EVENT_ANCHOR_CHANGED) { this.handle_anchor_changed(payload) }
         super.handle_event(event_name, payload)
     }
