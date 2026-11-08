@@ -237,6 +237,7 @@ export default class FightRow {
             selected,
             hide_unselected: view.hide_unselected,
             show_all: phases,
+            selection_active: phases && view.phase_selection.length > 0,
             timestamps: view.timestamps,
             align_origin: this.align_origin,
             cursor_origin: this.cursor_origin,

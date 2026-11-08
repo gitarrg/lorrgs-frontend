@@ -22,7 +22,6 @@ import { toMMSS } from "../../utils"
 import { level_for_scale } from "./ruler_levels"
 import { get_pull_color, get_pull_label } from "../../pulls"
 import type { Pull } from "../../types/fight"
-import type TimeMap from "./TimeMap"
 import type { TimeMapRef } from "./TimeMap"
 import { format_duration, get_pull_at, get_time_info, hide_tooltip, show_tooltip, type TooltipInfo } from "./tooltip"
 import { RULER_HINTS, clear_phase_selection, is_select_click, select_phase } from "./phase_selection"
@@ -211,8 +210,8 @@ export default class PullRow {
             context.stroke()
         }
         bands
-            // phases: none for P1 (it starts on pull); none when the phase markers are hidden, unless highlighted
-            .filter(({ pull, i }) => !this.is_phases || (pull.start >= MIN_PHASE_START && (this.show_phases || this.is_highlighted(i))))
+            // phases: none for P1 (it starts on pull) and none when the phase markers are hidden, unless highlighted
+            .filter(({ pull, i }) => !this.is_phases || this.is_highlighted(i) || (pull.start >= MIN_PHASE_START && this.show_phases))
             .forEach(draw_band)
         context.setAttr("globalAlpha", 1)
 
@@ -233,7 +232,7 @@ export default class PullRow {
         // names: in front of the ticks
         bands.forEach(({ pull, i, x0, x1, color }) => {
             if (this.is_phases && !this.show_phases) { return }  // (the hover highlight stays)
-            if (this.is_phases && pull.start < MIN_PHASE_START) { return }  // "on pull": no label (the band can still be clicked)
+            if (this.is_phases && pull.start < MIN_PHASE_START && !this.is_highlighted(i)) { return }  // "on pull": no label unless highlighted (the band can still be clicked)
             this.draw_strip(context, get_pull_label(pull, i), color, x0, x1, !this.is_phases && i === this.hovered)
         })
 
@@ -357,7 +356,6 @@ export default class PullRow {
     /** run time ranges (s) and the run time (s) they count from, for the timestamps setting */
     private label_intervals(map: TimeMap, aligned_start?: number): { start: number, end: number, origin: number }[] {
         const whole = { start: -Infinity, end: Infinity }
-        if (map.timestamps == "cursor" && map.cursor_origin !== undefined) { return [{ ...whole, origin: map.cursor_origin }] }
         if (map.timestamps == "aligned" && aligned_start !== undefined) { return [{ ...whole, origin: aligned_start / 1000 }] }
         if (map.timestamps != "phase" || !map.phase_ranges.length) { return [{ ...whole, origin: 0 }] }
 

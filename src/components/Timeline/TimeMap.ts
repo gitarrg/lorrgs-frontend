@@ -63,6 +63,8 @@ export interface TimeMapOptions {
     hide_unselected?: boolean
     /** dimmed: show the whole fight (the unselected time dimmed) instead of cropping it to the selected pulls (phases) */
     show_all?: boolean
+    /** whether something is selected at all (in any fight): `selected` empty then means "nothing of it in this fight" */
+    selection_active?: boolean
     /** what the labels count from */
     timestamps?: TimestampMode
     /** run time (s) where the aligned phase starts in this fight (for "aligned") */
@@ -132,8 +134,8 @@ export default class TimeMap {
         return new TimeMap([{ start: 0, end: duration, offset: 0 }])
     }
 
-    static build({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, timestamps = "pull", align_origin, cursor_origin }: TimeMapOptions) {
-        const map = TimeMap.build_map({ duration, pulls, selected, hide_unselected, show_all, timestamps })
+    static build({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, timestamps = "pull", selection_active = false, align_origin, cursor_origin }: TimeMapOptions) {
+        const map = TimeMap.build_map({ duration, pulls, selected, hide_unselected, show_all, timestamps, selection_active })
         map.timestamps = timestamps
         map.align_origin = align_origin
         map.cursor_origin = cursor_origin
@@ -141,18 +143,19 @@ export default class TimeMap {
         return map
     }
 
-    private static build_map({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, timestamps = "pull" }: TimeMapOptions) {
+    private static build_map({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, timestamps = "pull", selection_active = false }: TimeMapOptions) {
 
         const ranges = selected
             .map(i => pulls[i])
             .filter(pull => pull && pull.end > pull.start)
             .map(pull => ({ start: pull.start / 1000, end: pull.end / 1000 }))
 
-        // nothing selected: the whole fight
-        if (ranges.length == 0) { return TimeMap.identity(duration) }
+        // nothing selected anywhere: the whole fight. (A selection that matches nothing in this fight, eg. a phase it doesn't have,
+        // is no exception: all of its time is unselected, so it is dimmed or cut out like any other.)
+        if (ranges.length == 0 && !selection_active) { return TimeMap.identity(duration) }
 
         const shown = merge_ranges(ranges)
-        const crop: TimeRange = { start: shown[0].start, end: shown[shown.length - 1].end }
+        const crop: TimeRange = { start: shown[0]?.start ?? 0, end: shown[shown.length - 1]?.end ?? 0 }
 
         if (hide_unselected) {
             let offset = 0
@@ -161,7 +164,7 @@ export default class TimeMap {
                 offset += range.end - range.start
                 return segment
             })
-            return new TimeMap(segments, [], timestamps)
+            return new TimeMap(segments.length ? segments : [{ start: 0, end: 0, offset: 0 }], [], timestamps)  // (cut out: an empty row)
         }
 
         // dim: the gaps between the selected pulls
