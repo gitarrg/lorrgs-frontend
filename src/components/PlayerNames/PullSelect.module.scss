@@ -17,21 +17,23 @@
     align-items: center;
     gap: 0.25rem;
 
-    background: none;
+    color: hsl(190, 20%, 80%);
+    background: hsl(195, 40%, 30%);
+
     border: none;
-    color: hsl(0, 0%, 80%);
     font-size: 0.9rem;
     text-align: left;
 
     &:hover,
     &.open {
-        background: hsl(0, 0%, 30%);
-        color: white;
+        /* color: white; */
     }
 }
 
 .summary {
     flex-grow: 1;
+    min-width: 0;
+    display: flex;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -70,19 +72,6 @@
     font-size: 0.75rem;
     font-weight: normal;
     opacity: 0.6;
-}
-
-.clear {
-    padding: 0 0.5rem;
-    background: transparent;
-    border: 1px solid hsl(0, 0%, 50%);
-    border-radius: 3px;
-    color: inherit;
-    font-weight: normal;
-
-    &:disabled {
-        opacity: 0.4;
-    }
 }
 
 .chips {
