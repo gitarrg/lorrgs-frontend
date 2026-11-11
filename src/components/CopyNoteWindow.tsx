@@ -12,7 +12,6 @@ import * as ui_store from "../store/ui"
 import SimpleCaptcha from "./shared/SimpleCaptcha";
 import style from "./CopyNoteWindow.module.scss";
 import type Actor from "../types/actor";
-import type Boss from "../types/boss";
 import type Fight from "../types/fight";
 import type Phase from "../types/phase";
 import useCopyRateLimit from "../hooks/useCopyRateLimit";
@@ -59,6 +58,36 @@ function get_phase_at_time(fight: Fight, timestamp: number): Phase | null {
 
     return result;
 }
+
+/** What the note is for: a raid encounter (with its id) or a dungeon run (no id). */
+interface NoteEncounter {
+    /** encounter id of the raid boss (0: none or unknown) */
+    id: number
+    name: string
+    /** a raid boss whose encounter id we don't know: the note can't be matched to the fight */
+    unknown: boolean
+}
+
+
+/**
+ * The encounter of a fight, for the note header.
+ * A dungeon run is told apart by `fight.dungeon` (it has no encounter id).
+ * A raid boss: its id from the zone data (no fallback to the selected boss: that gave wrong ids).
+ */
+function useNoteEncounter(fight: Fight | null | undefined): NoteEncounter {
+    const boss_slug = fight?.boss?.boss_slug
+    const boss = useAppSelector(state => boss_slug ? get_boss(state, boss_slug) : null)
+    const dungeon = useAppSelector(state => fight?.dungeon ? get_dungeon(state, fight.dungeon) : undefined)
+
+    if (fight?.dungeon) {
+        return { id: 0, name: dungeon?.name ?? fight.dungeon, unknown: false }
+    }
+
+    const id = boss?.id || 0
+    const name = boss?.full_name ?? fight?.boss?.name ?? boss_slug ?? "Unknown"
+    return { id, name, unknown: !id }
+}
+
 
 /**
  * One NSRT line: ordered `key:value` segments separated by `;`, trailing `;`.
@@ -113,24 +142,23 @@ function get_note_nsrt(
     name: string,
     player: Actor,
     fight: Fight,
-    boss: Boss | null,
-    dungeon_name: string | undefined,
+    encounter: NoteEncounter,
     spell_display: SpellDisplayMap,
 ): string {
 
     const rows: string[] = [];
 
-    // a dungeon run has no boss (and so no encounter id)
-    if (boss) {
+    // a dungeon run has no encounter id
+    if (encounter.id) {
         rows.push(
             format_nsrt_row([
-                ["EncounterID", boss.id],
+                ["EncounterID", encounter.id],
                 ["Difficulty", get_difficulty_name(fight.difficulty)],
-                ["Name", boss.full_name],
+                ["Name", encounter.name],
             ]),
         );
     } else {
-        rows.push(format_nsrt_row([["Name", dungeon_name ?? "Unknown"]]));
+        rows.push(format_nsrt_row([["Name", encounter.name]]));
     }
 
     player.casts.forEach((cast) => {
@@ -185,14 +213,12 @@ function get_formatted_note(
     name: string,
     noteFormat: NoteFormat,
     dynamic: boolean,
+    encounter: NoteEncounter,
 ): string {
 
     const player = useAppSelector(ui_store.get_copynote_player);
     const spell_display = useAppSelector(get_spell_display) as SpellDisplayMap;
     const fight = useAppSelector(ui_store.get_copynote_fight);
-    // no fallback to the selected boss: a dungeon run has none
-    const boss = useAppSelector(state => fight?.boss?.boss_slug ? get_boss(state, fight.boss.boss_slug) : null);
-    const dungeon = useAppSelector(state => get_dungeon(state, fight?.dungeon ?? undefined));
 
     if (!player) {
         return "no player selected";
@@ -215,8 +241,7 @@ function get_formatted_note(
                 name,
                 player,
                 fight,
-                boss,
-                dungeon?.name,
+                encounter,
                 spell_display,
             );
     }
@@ -317,7 +342,8 @@ export default function CopyNoteWindow() {
     const dynamic = phasesAvailable && useDynamicTimer;
 
     // Generate Note
-    let note = get_formatted_note(name, noteFormat, dynamic);
+    const encounter = useNoteEncounter(fight);
+    let note = get_formatted_note(name, noteFormat, dynamic, encounter);
     if (showCaptcha) {
         note = "You have reached the maximum number of copies for this note.\nPlease wait 15 minutes and try again.";
     }
@@ -500,6 +526,11 @@ export default function CopyNoteWindow() {
                 </div>
 
                 {/* Info & Disclaimer */}
+                {noteFormat === NoteFormat.NSRT && encounter.unknown &&
+                    <div className="p-2 text-warning">
+                        ⚠️ Unknown encounter: add its <code>EncounterID:</code> to the first line, or NSRT can't match the note to the boss.
+                    </div>
+                }
                 <div className="p-2 wow-mage">
                     🛈 Show/hide Spells on the Timeline to include/exclude them in the Note
                 </div>

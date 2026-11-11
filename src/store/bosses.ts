@@ -173,7 +173,8 @@ export function load_boss_spells(boss_slug: string) {
             // Request
             const spells: RaidZoneAPIResponse | null = await fetch_versioned(`/bosses/${boss_slug}/spells`);
 
-            spells && dispatch(SLICE.actions.set_boss_spells({ boss_slug, spells }))
+            // (an unknown boss comes back as an error)
+            spells && !(spells as { error?: string }).error && dispatch(SLICE.actions.set_boss_spells({ boss_slug, spells }))
         } finally {
             dispatch({ type: "ui/set_loading", payload: { key: load_key, value: false } })
         }
