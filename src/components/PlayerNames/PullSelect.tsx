@@ -44,6 +44,7 @@ export default function PullSelect({ fight, dungeon }: { fight: Fight, dungeon: 
     const dispatch = useAppDispatch()
     const selected = useAppSelector(state => get_pull_selection(state, fight))
     const settings = useAppSelector(get_view_settings)
+    const aligned_phase = useAppSelector(state => state.ui.aligned_phase)
     const [open, set_open_state] = useState(false)
     const [pinned, set_pinned] = useState(false)  // clicked or used: stays open when the mouse leaves
     const close_timer = useRef<number>(undefined)
@@ -196,11 +197,13 @@ export default function PullSelect({ fight, dungeon }: { fight: Fight, dungeon: 
                             Time relative to
                             <select
                                 className={styles.select}
-                                value={settings.timestamps}
-                                onChange={event => dispatch(set_view_setting("timestamps", event.target.value as "pull" | "phase"))}
+                                value={settings.timestamps == "aligned" && !aligned_phase ? "pull" : settings.timestamps}
+                                onChange={event => dispatch(set_view_setting("timestamps", event.target.value as typeof settings.timestamps))}
                             >
                                 <option value="pull">Dungeon start</option>
                                 <option value="phase">Current pull</option>
+                                <option value="aligned" disabled={!aligned_phase}>Aligned phase</option>
+                                <option value="cursor">Cursor</option>
                             </select>
                         </label>
                     </div>

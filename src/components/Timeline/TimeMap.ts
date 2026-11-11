@@ -130,8 +130,8 @@ export default class TimeMap {
     }
 
     /** "display = run time" for a fight of the given length (s) */
-    static identity(duration: number = Infinity) {
-        return new TimeMap([{ start: 0, end: duration, offset: 0 }])
+    static identity(duration: number = Infinity, timestamps: TimestampMode = "pull") {
+        return new TimeMap([{ start: 0, end: duration, offset: 0 }], [], timestamps)
     }
 
     static build({ duration, pulls = [], selected = [], hide_unselected = false, show_all = false, timestamps = "pull", selection_active = false, align_origin, cursor_origin }: TimeMapOptions) {
@@ -151,7 +151,7 @@ export default class TimeMap {
 
         // nothing selected anywhere: the whole fight. (A selection that matches nothing in this fight, eg. a phase it doesn't have,
         // is no exception: all of its time is unselected, so it is dimmed or cut out like any other.)
-        if (ranges.length == 0 && !selection_active) { return TimeMap.identity(duration) }
+        if (ranges.length == 0 && !selection_active) { return TimeMap.identity(duration, timestamps) }
 
         const shown = merge_ranges(ranges)
         const crop: TimeRange = { start: shown[0]?.start ?? 0, end: shown[shown.length - 1]?.end ?? 0 }
